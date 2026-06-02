@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -48,6 +48,7 @@ class CommitPoint(Base):
 
 class TimelineBranch(Base):
     __tablename__ = "timeline_branches"
+    __table_args__ = (UniqueConstraint("session_id", "branch_name", name="uq_timeline_branch_session_name"),)
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id: Mapped[str] = mapped_column(String, ForeignKey("sessions.id"), nullable=False)

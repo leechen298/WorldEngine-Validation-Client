@@ -68,7 +68,6 @@ body {
 }
 
 .session-item {
-  cursor: pointer;
   border: 1px solid #3e4c7f;
   border-radius: 8px;
   margin-bottom: 8px;
@@ -76,8 +75,26 @@ body {
   background: var(--panel-soft);
 }
 
-.session-item:hover {
+.session-button {
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+}
+
+.session-button:hover {
   border-color: var(--accent);
+}
+
+.branch-item {
+  border: 1px solid #3e4c7f;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: var(--panel-soft);
 }
 
 .runtime-grid {
@@ -101,10 +118,17 @@ body {
 .input-row {
   display: flex;
   gap: 8px;
+  align-items: center;
   margin-top: 8px;
 }
 
-.input-row input {
+.input-row input,
+.control-column input {
   flex: 1;
   padding: 8px 10px;
+}
+
+.error-text {
+  color: var(--danger);
+  margin-top: 0;
 }

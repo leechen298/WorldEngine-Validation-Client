@@ -6,7 +6,7 @@ export function TimelineBranchList({ branches }: { branches: BranchSummary[] }) 
       <h3>分支列表</h3>
       <ul className="session-list">
         {branches.map((branch) => (
-          <li className="session-item" key={branch.id}>
+          <li className="branch-item" key={branch.id}>
             {branch.branch_name} (tick {branch.tick})
           </li>
         ))}

@@ -6,7 +6,7 @@ export interface HealthResponse {
 }
 
 export interface HealthWorldEngineResponse {
-  status: string;
+  status: "ok" | "degraded";
   worldengine: {
     reachable: boolean;
     health: Record<string, unknown> | null;
@@ -42,5 +42,4 @@ export interface CreateSessionRequest {
 export interface CreateBranchRequest {
   branch_name: string;
   commit_point_id: string;
-  snapshot_reference?: string | null;
 }

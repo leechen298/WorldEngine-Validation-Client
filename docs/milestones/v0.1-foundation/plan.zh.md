@@ -1,6 +1,6 @@
 # v0.1 Foundation 实现计划
 
-状态：待实现
+状态：代码骨架已实现 / v0.1-review-fix 验证通过 / 原始实现未按逐 task 提交流程完成
 
 ## 实现目标
 
@@ -290,3 +290,15 @@ docs/milestones/v0.1-foundation/review.zh.md
 ## 提交建议
 
 每完成 1-2 个任务提交一次，避免一个大提交吞掉所有实现。
+
+## 状态说明
+
+2026-06-02 复核结论：
+
+- Task 1-10 的代码骨架已经存在。
+- 原始 v0.1 主体实现集中在 `116f566 chore: finalize v0.1 foundation fixes`，
+  没有满足当前 `workflow.md` 的“每个 numbered task 独立实现、验证、记录、提交”
+  要求。
+- 本计划不重写历史；后续 milestone 必须按 `workflow.md` 的 task loop 执行。
+- 本轮 `v0.1-review-fix` 修复审核发现的问题，并在 `review.zh.md` 记录当前会话
+  验证结果。

@@ -1,4 +1,11 @@
-import type { BranchSummary, CreateBranchRequest, CreateSessionRequest, HealthResponse, SessionSummary } from "./types";
+import type {
+  BranchSummary,
+  CreateBranchRequest,
+  CreateSessionRequest,
+  HealthResponse,
+  HealthWorldEngineResponse,
+  SessionSummary,
+} from "./types";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8765";
 
@@ -21,8 +28,8 @@ export async function getHealth(): Promise<HealthResponse> {
   return request<HealthResponse>("/health");
 }
 
-export async function getWorldEngineHealth() {
-  return request<{ status: string; worldengine: Record<string, unknown> }>("/health/worldengine");
+export async function getWorldEngineHealth(): Promise<HealthWorldEngineResponse> {
+  return request<HealthWorldEngineResponse>("/health/worldengine");
 }
 
 export async function getSessions(): Promise<{ sessions: SessionSummary[] }> {

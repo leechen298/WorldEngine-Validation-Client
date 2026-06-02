@@ -1,15 +1,23 @@
 import { create } from "zustand";
-import { createBranch as apiCreateBranch, createSession, getBranches, getHealth, getSessions } from "../api/client";
-import type { BranchSummary, SessionSummary } from "../api/types";
+import {
+  createBranch as apiCreateBranch,
+  createSession,
+  getBranches,
+  getHealth,
+  getSessions,
+  getWorldEngineHealth,
+} from "../api/client";
+import type { BranchSummary, HealthWorldEngineResponse, SessionSummary } from "../api/types";
 
 interface SessionState {
   sessions: SessionSummary[];
   isLoading: boolean;
   error: string | null;
   connectionStatus: {
-    status: string;
-    worldengine?: { reachable?: boolean };
+    status: "loading" | "ok" | "degraded" | "error";
+    worldengine?: HealthWorldEngineResponse["worldengine"];
     worldengineApiBase?: string;
+    healthText?: string;
   } | null;
   lastBranches: Record<string, BranchSummary[]>;
   loadSessions: () => Promise<void>;
@@ -40,28 +48,62 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const health = await getHealth();
+      try {
+        const worldengineHealth = await getWorldEngineHealth();
+        set({
+          connectionStatus: {
+            status: worldengineHealth.status,
+            worldengine: worldengineHealth.worldengine,
+            worldengineApiBase: health.worldengine_api_base,
+            healthText: worldengineHealth.worldengine.errors.join("; "),
+          },
+          isLoading: false,
+        });
+      } catch (worldengineError) {
+        set({
+          connectionStatus: {
+            status: "degraded",
+            worldengine: {
+              reachable: false,
+              health: null,
+              manifest: null,
+              errors: [(worldengineError as Error).message],
+            },
+            worldengineApiBase: health.worldengine_api_base,
+            healthText: (worldengineError as Error).message,
+          },
+          isLoading: false,
+        });
+      }
+    } catch (error) {
       set({
         connectionStatus: {
-          status: health.status,
-          worldengineApiBase: health.worldengine_api_base,
+          status: "error",
+          healthText: (error as Error).message,
         },
+        error: (error as Error).message,
         isLoading: false,
       });
-    } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
     }
   },
 
   loadBranches: async (sessionId: string) => {
-    const payload = await getBranches(sessionId);
-    const state = get();
-    set({
-      lastBranches: {
-        ...state.lastBranches,
-        [sessionId]: payload.branches,
-      },
-    });
-    return payload.branches;
+    set({ isLoading: true, error: null });
+    try {
+      const payload = await getBranches(sessionId);
+      const state = get();
+      set({
+        lastBranches: {
+          ...state.lastBranches,
+          [sessionId]: payload.branches,
+        },
+        isLoading: false,
+      });
+      return payload.branches;
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      return [];
+    }
   },
 
   createNewSession: async (name: string) => {
@@ -78,18 +120,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   createBranch: async (sessionId: string, branchName: string, commitPointId: string) => {
     set({ isLoading: true, error: null });
-    const branch = await apiCreateBranch(sessionId, {
-      branch_name: branchName,
-      commit_point_id: commitPointId,
-    });
-    const state = get();
-    set({
-      lastBranches: {
-        ...state.lastBranches,
-        [sessionId]: [...(state.lastBranches[sessionId] || []), branch],
-      },
-      isLoading: false,
-    });
-    return branch;
+    try {
+      const branch = await apiCreateBranch(sessionId, {
+        branch_name: branchName,
+        commit_point_id: commitPointId,
+      });
+      const state = get();
+      set({
+        lastBranches: {
+          ...state.lastBranches,
+          [sessionId]: [...(state.lastBranches[sessionId] || []), branch],
+        },
+        isLoading: false,
+      });
+      return branch;
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
   },
 }));

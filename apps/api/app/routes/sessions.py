@@ -97,12 +97,25 @@ def create_branch(session_id: str, payload: BranchCreatePayload, db: Session = D
     if not commit_point or commit_point.session_id != session_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Commit point not found")
 
+    existing_branch = (
+        db.execute(
+            select(TimelineBranch).where(
+                TimelineBranch.session_id == session_id,
+                TimelineBranch.branch_name == payload.branch_name,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if existing_branch:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Branch name already exists")
+
     branch = TimelineBranch(
         session_id=session_id,
         branch_name=payload.branch_name,
         commit_point_id=payload.commit_point_id,
         tick=commit_point.tick,
-        snapshot_reference=payload.snapshot_reference,
+        snapshot_reference=commit_point.snapshot_id,
         is_main=False,
     )
     db.add(branch)

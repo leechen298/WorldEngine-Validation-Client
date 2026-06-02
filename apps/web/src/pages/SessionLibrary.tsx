@@ -43,16 +43,17 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
   return (
     <section>
       <ConnectionStatus
-        status={error ? "error" : isLoading ? "loading" : "ok"}
+        status={connectionStatus?.status || (error ? "error" : isLoading ? "loading" : "ok")}
         worldengineBase={connectionStatus?.worldengineApiBase}
-        healthText={error || ""}
+        healthText={connectionStatus?.healthText || error || ""}
       />
 
       <section className="page-card">
         <h2>会话库</h2>
         <form onSubmit={onSubmit}>
           <div className="input-row">
-            <input value={sessionName} onChange={(event) => setSessionName(event.target.value)} />
+            <label htmlFor="session-name">Session 名称</label>
+            <input id="session-name" value={sessionName} onChange={(event) => setSessionName(event.target.value)} />
             <button type="submit" disabled={creating}>
               创建 session
             </button>
@@ -64,10 +65,12 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
         ) : (
           <ul className="session-list">
             {sessions.map((session) => (
-              <li className="session-item" key={session.id} onClick={() => onOpenSession(session.id)}>
-                <strong>{session.session_name}</strong>
-                <div>分支：{session.branch_count}</div>
-                <div>状态：{session.status}</div>
+              <li key={session.id}>
+                <button className="session-item session-button" type="button" onClick={() => onOpenSession(session.id)}>
+                  <strong>{session.session_name}</strong>
+                  <span>分支：{session.branch_count}</span>
+                  <span>状态：{session.status}</span>
+                </button>
               </li>
             ))}
           </ul>

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -42,9 +42,10 @@ class CommitPointRef(BaseModel):
 
 
 class BranchCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     branch_name: str = Field(min_length=1, max_length=120)
     commit_point_id: str = Field(min_length=1)
-    snapshot_reference: Optional[str] = None
 
 
 class BranchResponse(BaseModel):

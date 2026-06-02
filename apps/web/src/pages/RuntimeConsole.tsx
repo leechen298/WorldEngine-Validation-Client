@@ -10,7 +10,7 @@ interface RuntimeConsoleProps {
 
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
-  const { loadBranches, lastBranches } = useSessionStore();
+  const { error, loadBranches, lastBranches } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
   const branches = lastBranches[sessionId] || [];
 
@@ -44,9 +44,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
       <div className="runtime-grid">
         <section className="page-card control-column">
           <h3>运行控制</h3>
-          <p>导演引导：</p>
           <form onSubmit={submitDirectorCommand}>
-            <input value={command} onChange={(event) => setCommand(event.target.value)} />
+            <label htmlFor="director-command">导演引导</label>
+            <input id="director-command" value={command} onChange={(event) => setCommand(event.target.value)} />
             <button type="submit" style={{ marginTop: 8 }}>
               发送
             </button>
@@ -56,6 +56,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
         <PixelWorldCanvas />
 
         <section>
+          {error ? <p className="error-text">分支加载失败：{error}</p> : null}
           <TimelineBranchList branches={branches} />
           <section className="page-card">
             <h3>事件日志占位</h3>

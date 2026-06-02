@@ -1,6 +1,6 @@
 # v0.1 Foundation
 
-状态：计划完成 / 待实现
+状态：代码骨架已实现 / v0.1-review-fix 验证通过 / 历史流程偏离已记录
 
 ## 目标
 
@@ -43,3 +43,18 @@ docs/milestones/v0.1-foundation/review.zh.md
 ```
 
 然后按 `plan.zh.md` 实现，并在完成后更新 `review.zh.md`。
+
+## 当前结论
+
+截至 2026-06-02，本 milestone 的代码骨架可以运行，并已完成一次
+`v0.1-review-fix`：
+
+- 前端会话库现在展示真实 `/health/worldengine` 结果，而不是把本地 FastAPI
+  `/health` 误报为 WorldEngine 连接状态。
+- 默认 SQLite 路径固定解析到 `apps/api/.worldengine-validation-client/client.sqlite3`。
+- branch 创建的 `snapshot_reference` 来自 commit point，不接受客户端任意覆盖。
+- branch 加载和创建失败会收尾 loading 状态，并在运行控制台展示错误。
+- `review.zh.md` 已补充历史流程偏离说明和本轮验证证据。
+
+限制：v0.1 主体实现历史没有按当前 `workflow.md` 做逐 task 独立提交，因此不把
+原始 v0.1 历史声明为“按强流程 clean pass”。该事实只能记录，不能通过补丁伪造。

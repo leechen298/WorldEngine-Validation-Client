@@ -3,12 +3,14 @@ from pathlib import Path
 import os
 from typing import Tuple
 
+API_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _resolve_database_path(raw_path: str) -> str:
     candidate = Path(raw_path)
     if candidate.is_absolute():
         return str(candidate)
-    return str((Path.cwd() / candidate).resolve())
+    return str((API_ROOT / candidate).resolve())
 
 
 def _parse_allowed_origins(raw_value: str) -> Tuple[str, ...]:

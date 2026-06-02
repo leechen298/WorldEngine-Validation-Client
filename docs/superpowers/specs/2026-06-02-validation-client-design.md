@@ -217,19 +217,21 @@ WorldEngine authoritative runtime state.
 
 The user can branch from a historical tick.
 
-A fork is similar to a code branch. It records where the new branch came from,
-but it does not create a parent-child hierarchy between timelines.
+The timeline model is similar to code commits and branches. Each reconstructable
+tick or event point acts like a commit point. A branch is a named line that
+continues from a selected commit point.
 
-A fork records:
+A branch records:
 
-- source timeline or branch id.
-- fork base tick.
-- fork base snapshot reference.
-- optional fork reason or director guidance.
-- new timeline id.
+- branch id.
+- branch name.
+- commit point id.
+- tick.
+- snapshot reference.
+- optional branch reason or director guidance.
 
-The new timeline then continues as an independent peer branch. It does not
-overwrite or become subordinate to the source timeline.
+The new branch then continues as its own line. It does not overwrite existing
+branches.
 
 ### Export Evidence Bundle
 
@@ -271,7 +273,8 @@ Storage rules:
 - Store state changes as forward diffs.
 - Store complete snapshots every N ticks or at key events.
 - Reconstruct historical visual state from snapshot plus forward diffs.
-- Use timeline branches instead of overwriting history.
+- Model reconstructable ticks or event points as commit points.
+- Use named timeline branches instead of overwriting history.
 - Prefer readable JSON in the first version.
 - Add gzip or zstd compression for large snapshots or exported bundles after
   the basic model is working.

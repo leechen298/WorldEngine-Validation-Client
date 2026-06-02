@@ -205,19 +205,19 @@ Agent 必须根据自身状态、记忆、目标、历史、关系和感知到�
 
 用户可以从历史 tick 创建分支。
 
-分叉世界线类似代码分支。它记录新分支从哪里来，但不表达 timeline 之间的父
-子从属关系。
+时间线模型类似代码提交和分支。每个可重建的 tick 或事件点都像一个 commit
+point。branch 是从某个 commit point 继续推进的一条命名世界线。
 
-一次分叉记录：
+一次 branch 创建记录：
 
-- source timeline 或 branch id。
-- fork base tick。
-- fork base snapshot 引用。
-- 可选 fork reason 或 director guidance。
-- 新 timeline id。
+- branch id。
+- branch name。
+- commit point id。
+- tick。
+- snapshot 引用。
+- 可选 branch reason 或 director guidance。
 
-新 timeline 之后作为独立的同级分支继续推进。它不覆盖 source timeline，
-也不从属于 source timeline。
+新 branch 之后作为自己的世界线继续推进，不覆盖已有 branch。
 
 ### 导出 Evidence Bundle
 
@@ -259,7 +259,8 @@ Agent 必须根据自身状态、记忆、目标、历史、关系和感知到�
 - 将状态变化保存为正向 diff。
 - 每 N tick 或关键事件保存完整 snapshot。
 - 用 snapshot 加正向 diff 重建历史可视化状态。
-- 用 timeline branch 表达世界线分叉，而不是覆盖历史。
+- 将可重建的 tick 或事件点建模为 commit point。
+- 用命名 timeline branch 表达世界线分叉，而不是覆盖历史。
 - 第一版优先使用可读 JSON。
 - 基础模型稳定后，再对大 snapshot 或导出 bundle 增加 gzip 或 zstd 压缩。
 

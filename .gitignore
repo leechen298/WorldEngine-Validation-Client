@@ -1,1 +1,25 @@
+# Environment
+.env
 .superpowers/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# SQLite
+apps/api/.worldengine-validation-client/*.sqlite3
+apps/api/.worldengine-validation-client/*.sqlite3-journal
+
+# Node
+node_modules/
+dist/
+
+# Frontend build
+apps/web/node_modules/
+apps/web/dist/

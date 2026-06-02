@@ -1,0 +1,16 @@
+{
+  "name": "worldengine-validation-client",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test:api": "uv run --project apps/api pytest -q",
+    "test:web": "pnpm --dir apps/web test",
+    "test": "pnpm run test:web && pnpm run test:api",
+    "build:api": "echo \"No build step for FastAPI\"",
+    "build:web": "pnpm --dir apps/web build",
+    "dev:web": "pnpm --dir apps/web dev",
+    "dev:api": "uv run --project apps/api uvicorn app.main:app --reload --app-dir apps/api",
+    "build": "pnpm run build:web"
+  }
+}

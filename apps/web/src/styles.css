@@ -1,0 +1,110 @@
+:root {
+  --bg: #0f1220;
+  --panel: #171d31;
+  --panel-soft: #1f2740;
+  --text: #f1f3ff;
+  --muted: #9ca0b9;
+  --accent: #6de0ff;
+  --accent-2: #a68cff;
+  --danger: #ff7f9c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", "PingFang SC", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #1a2150 0%, transparent 40%),
+    radial-gradient(circle at 85% 10%, #2b1e4a 0%, transparent 35%),
+    linear-gradient(135deg, #0b1124, #0b0e1d);
+}
+
+#root {
+  width: 100%;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.app-header h1 {
+  margin: 0 0 16px 0;
+  font-size: 1.7rem;
+}
+
+.page-card {
+  background: var(--panel);
+  border: 1px solid #344172;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.status-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.status-ok {
+  color: #81ffa3;
+}
+
+.status-bad {
+  color: var(--danger);
+}
+
+.session-list {
+  margin-top: 12px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.session-item {
+  cursor: pointer;
+  border: 1px solid #3e4c7f;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: var(--panel-soft);
+}
+
+.session-item:hover {
+  border-color: var(--accent);
+}
+
+.runtime-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 220px minmax(200px, 2fr) 320px;
+}
+
+.control-column button {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.canvas-box {
+  min-height: 280px;
+  border: 1px dashed #3b4d86;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 8px 10px;
+}

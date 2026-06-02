@@ -217,16 +217,19 @@ WorldEngine authoritative runtime state.
 
 The user can branch from a historical tick.
 
+A fork is similar to a code branch. It records where the new branch came from,
+but it does not create a parent-child hierarchy between timelines.
+
 A fork records:
 
-- parent timeline id.
-- fork tick.
-- fork snapshot reference.
+- source timeline or branch id.
+- fork base tick.
+- fork base snapshot reference.
 - optional fork reason or director guidance.
 - new timeline id.
 
-The new timeline then continues as a separate run. It does not overwrite the
-parent timeline.
+The new timeline then continues as an independent peer branch. It does not
+overwrite or become subordinate to the source timeline.
 
 ### Export Evidence Bundle
 

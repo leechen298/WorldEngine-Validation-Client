@@ -205,15 +205,19 @@ Agent 必须根据自身状态、记忆、目标、历史、关系和感知到�
 
 用户可以从历史 tick 创建分支。
 
+分叉世界线类似代码分支。它记录新分支从哪里来，但不表达 timeline 之间的父
+子从属关系。
+
 一次分叉记录：
 
-- 父 timeline id。
-- fork tick。
-- fork snapshot 引用。
+- source timeline 或 branch id。
+- fork base tick。
+- fork base snapshot 引用。
 - 可选 fork reason 或 director guidance。
 - 新 timeline id。
 
-新 timeline 之后作为独立运行线继续推进，不覆盖父 timeline。
+新 timeline 之后作为独立的同级分支继续推进。它不覆盖 source timeline，
+也不从属于 source timeline。
 
 ### 导出 Evidence Bundle
 

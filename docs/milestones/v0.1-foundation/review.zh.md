@@ -201,7 +201,7 @@ v0.1 当前是可运行的本地验证客户端骨架，但原始实现历史不
 
 ### Review Fix: 修复审核阻塞项
 
-- Commit: `7683744`
+- Commit: `cfb9c3b`
 - Files:
   - `apps/api/app/config.py`
   - `apps/api/app/models.py`

@@ -198,7 +198,7 @@ commit point 浏览、branch 切换和从 commit point 创建 branch 的基础 U
 
 ### Review Fix 1: 修复新建 branch 后立即 replay 的基准 snapshot 查询
 
-- Commit: `待提交`
+- Commit: `f1fa4cb`
 - Files:
   - `apps/api/app/routes/sessions.py`
   - `apps/api/tests/test_sessions.py`

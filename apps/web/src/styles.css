@@ -115,6 +115,24 @@ body {
   padding: 16px;
 }
 
+.pixel-canvas-host {
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+  border: 1px solid #33436f;
+  background: #101729;
+}
+
+.pixel-canvas-host canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.canvas-meta {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
 .input-row {
   display: flex;
   gap: 8px;

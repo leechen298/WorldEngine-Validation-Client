@@ -8,6 +8,45 @@ vi.mock("../api/client", () => ({
   getSessionEvents: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("pixi.js", () => {
+  class MockApplication {
+    canvas = document.createElement("canvas");
+    stage = { addChild: vi.fn() };
+
+    async init() {
+      return undefined;
+    }
+
+    destroy() {
+      return undefined;
+    }
+  }
+
+  class MockContainer {
+    addChild = vi.fn();
+  }
+
+  class MockGraphics {
+    rect() {
+      return this;
+    }
+
+    circle() {
+      return this;
+    }
+
+    fill() {
+      return this;
+    }
+  }
+
+  return {
+    Application: MockApplication,
+    Container: MockContainer,
+    Graphics: MockGraphics,
+  };
+});
+
 describe("RuntimeConsole", () => {
   it("renders runtime controls", async () => {
     useSessionStore.setState({
@@ -41,7 +80,7 @@ describe("RuntimeConsole", () => {
     expect(screen.getByRole("button", { name: "Run" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Single Tick" })).toBeInTheDocument();
-    expect(screen.getByText("PixiJS 像素画布占位")).toBeInTheDocument();
+    expect(screen.getByText("公开像素地图")).toBeInTheDocument();
     expect(screen.getByText("分支列表")).toBeInTheDocument();
     expect(await screen.findByText("暂无公开事件。")).toBeInTheDocument();
   });
@@ -176,5 +215,125 @@ describe("RuntimeConsole", () => {
     render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
 
     expect(await screen.findByText("运行视图加载失败：Runtime unavailable")).toBeInTheDocument();
+  });
+
+  it("passes runtime visualization data to the pixel canvas", async () => {
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 4,
+          visualization: {
+            tiles: [{ x: 0, y: 0, terrain: "grass" }],
+            entities: [{ id: "agent-1", x: 1, y: 2, sprite: "person" }],
+          },
+          public_agents: [],
+          world_log: [],
+          agent_life_log: [],
+          latest_event: null,
+        },
+      },
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(screen.getByText("公开像素地图")).toBeInTheDocument();
+    expect(screen.getByLabelText("公开可视化画布")).toBeInTheDocument();
+    expect(screen.getByText("tiles 1 / entities 1")).toBeInTheDocument();
+  });
+
+  it("shows an empty state when runtime visualization is missing", async () => {
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {},
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(screen.getByText("暂无公开可视化数据。")).toBeInTheDocument();
+  });
+
+  it("does not infer map positions for visualization items without coordinates", async () => {
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 4,
+          visualization: {
+            tiles: [{ terrain: "water" }],
+            entities: [{ id: "agent-1", sprite: "person" }],
+          },
+          public_agents: [],
+          world_log: [],
+          agent_life_log: [],
+          latest_event: null,
+        },
+      },
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(screen.getByText("暂无公开可视化数据。")).toBeInTheDocument();
+    expect(screen.queryByLabelText("公开可视化画布")).not.toBeInTheDocument();
   });
 });

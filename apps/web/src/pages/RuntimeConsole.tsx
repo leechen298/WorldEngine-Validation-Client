@@ -12,12 +12,21 @@ interface RuntimeConsoleProps {
 
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
-  const { error, loadBranches, loadRuntimeView, lastBranches, runtimeErrorBySession, sessions } = useSessionStore();
+  const {
+    error,
+    loadBranches,
+    loadRuntimeView,
+    lastBranches,
+    runtimeErrorBySession,
+    runtimeViewBySession,
+    sessions,
+  } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
   const [events, setEvents] = useState<SessionEvent[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const branches = lastBranches[sessionId] || [];
   const session = sessions.find((item) => item.id === sessionId);
+  const runtimeView = runtimeViewBySession[sessionId];
   const latestEvent = events[events.length - 1] || null;
   const runtimeError = runtimeErrorBySession[sessionId];
 
@@ -83,7 +92,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           </form>
         </section>
 
-        <PixelWorldCanvas />
+        <PixelWorldCanvas visualization={runtimeView?.visualization} />
 
         <section>
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}

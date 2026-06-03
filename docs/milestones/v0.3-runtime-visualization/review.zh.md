@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：Task 3 已完成 / milestone 进行中
+状态：Task 4 已完成 / milestone 进行中
 
 日期：2026-06-03
 
@@ -11,8 +11,8 @@ PixiJS 和面板展示公开 tick、地图、Agent 公开状态、事件气泡�
 life log。
 
 当前已完成 v0.3 里程碑文档、后端 public runtime view API、前端 runtime view
-typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态面板、事件气泡和
-总体验证仍未完成，不能声明 v0.3 已实现或通过。
+typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent 公开状态面板、
+事件气泡和总体验证仍未完成，不能声明 v0.3 已实现或通过。
 
 ## Task Records
 
@@ -84,6 +84,31 @@ typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态�
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
+### Task 4: PixiJS 基础地图画面
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/components/PixelWorldCanvas.tsx`
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `apps/web/src/styles.css`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test files，`11 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - `PixelWorldCanvas` 接收 runtime visualization payload，并用 PixiJS 静态绘制
+    allowlist tiles / entities。
+  - 缺少公开 visualization payload 时展示 empty state；测试中 mock PixiJS，生产
+    build 使用真实 PixiJS。
+- Notes:
+  - 本 task 不展示 Agent 公开状态面板、不实现事件气泡、world log 或 Agent life
+    log UI；这些仍留给 Task 5。
+  - 画布只消费后端 Task 2 已过滤的 `visualization` 字段，不从摘要字符串推断权威
+    世界事实。
+  - subagent reviewer 指出缺失坐标时默认渲染到 `(0,0)` 会推断位置；已改为只渲染
+    finite `x` / `y` 的 tiles / entities，并增加 malformed payload 回归测试。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；仅
@@ -97,9 +122,10 @@ typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态�
 - 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 2 是；
   runtime view 使用 allowlist 输出并覆盖私有字段反例。
   Task 3 是；仅新增 typed client/store 和错误展示，未展示 Agent 状态内容。
+  Task 4 是；仅渲染公开 visualization 的 tiles / entities。
 
 ## 遗留问题
 
-- Task 4-6 尚未开始。
+- Task 5-6 尚未开始。
 - 实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完整 evidence
   bundle 导出仍属于后续 milestone。

@@ -23,7 +23,7 @@ from ..schemas import (
     SessionSummary,
     WorldEngineSessionCreatePayload,
 )
-from ..worldengine_client import create_world_via_public_api
+from ..worldengine_client import create_world_via_public_api, submit_director_guidance_via_public_api
 
 router = APIRouter(prefix="/sessions")
 
@@ -327,7 +327,7 @@ def list_sessions(db: Session = Depends(get_db)):
 
 
 @router.post("/{session_id}/director-intents", response_model=DirectorIntentResponse, status_code=status.HTTP_201_CREATED)
-def create_director_intent(
+async def create_director_intent(
     session_id: str,
     payload: DirectorIntentCreatePayload,
     db: Session = Depends(get_db),
@@ -358,6 +358,58 @@ def create_director_intent(
         status="pending",
     )
     db.add(intent)
+    db.flush()
+
+    if db_session.worldengine_world_id:
+        try:
+            result = await submit_director_guidance_via_public_api(
+                world_id=db_session.worldengine_world_id,
+                instruction_text=payload.instruction_text,
+                branch_id=payload.branch_id,
+                tick=payload.tick,
+                public_context={"session_id": session_id},
+            )
+            intent.status = result["status"]
+            intent.public_explanation = result["public_explanation"]
+            intent.applied_event_id = result["applied_event_id"]
+            intent.error_message = result["error_message"]
+            trace_payload = result["api_trace"]
+            db.add(
+                ApiTrace(
+                    session_id=session_id,
+                    method=trace_payload["method"],
+                    url_path=trace_payload["url_path"],
+                    status_code=trace_payload["status_code"],
+                    request_summary_json=trace_payload["request_summary_json"],
+                    response_summary_json=trace_payload["response_summary_json"],
+                    error_message=trace_payload["error_message"],
+                    llm_keys_included=False,
+                    private_worldengine_internals_included=False,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            intent.error_message = str(exc)
+            db.add(
+                ApiTrace(
+                    session_id=session_id,
+                    method="POST",
+                    url_path="/director-guidance",
+                    status_code=None,
+                    request_summary_json=json.dumps(
+                        {
+                            "world_id": db_session.worldengine_world_id,
+                            "instruction_text_length": len(payload.instruction_text),
+                            "branch_id": payload.branch_id,
+                            "tick": payload.tick,
+                        }
+                    ),
+                    response_summary_json="{}",
+                    error_message=str(exc),
+                    llm_keys_included=False,
+                    private_worldengine_internals_included=False,
+                )
+            )
+
     db.commit()
     db.refresh(intent)
 

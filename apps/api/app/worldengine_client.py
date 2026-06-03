@@ -14,17 +14,24 @@ PRIVATE_PAYLOAD_KEY_PARTS = (
     "authorization",
     "credential",
     "file_path",
+    "goal",
     "helper",
+    "hidden_context",
+    "identity",
     "internal",
     "key",
+    "memory",
     "oracle",
     "password",
     "path",
     "private",
     "prompt",
     "provider",
+    "relationship",
     "secret",
     "source_path",
+    "self_state",
+    "thought",
     "token",
 )
 
@@ -86,6 +93,37 @@ def _world_creation_endpoint(openapi: Dict[str, Any] | None) -> str | None:
     return None
 
 
+def _director_guidance_endpoint(openapi: Dict[str, Any] | None) -> str | None:
+    if not openapi:
+        return None
+    paths = openapi.get("paths")
+    if not isinstance(paths, dict):
+        return None
+    for path, methods in paths.items():
+        if not isinstance(methods, dict) or "post" not in methods:
+            continue
+        normalized_path = str(path).rstrip("/").lower()
+        if any(part in normalized_path for part in PRIVATE_ENDPOINT_PARTS):
+            continue
+        operation = methods.get("post")
+        operation_id = ""
+        tags: list[str] = []
+        if isinstance(operation, dict):
+            operation_id = str(operation.get("operationId", "")).lower()
+            raw_tags = operation.get("tags", [])
+            if isinstance(raw_tags, list):
+                tags = [str(tag).lower() for tag in raw_tags]
+        path_mentions_director = "director" in normalized_path
+        path_mentions_guidance = "guidance" in normalized_path or "intent" in normalized_path
+        operation_mentions_director = "director" in operation_id or "director" in tags
+        operation_mentions_guidance = "guidance" in operation_id or "intent" in operation_id
+        if path_mentions_director and path_mentions_guidance:
+            return str(path)
+        if operation_mentions_director and operation_mentions_guidance:
+            return str(path)
+    return None
+
+
 def _summarize_openapi(payload: Dict[str, Any]) -> Dict[str, Any]:
     info = payload.get("info") if isinstance(payload.get("info"), dict) else {}
     return {
@@ -93,6 +131,11 @@ def _summarize_openapi(payload: Dict[str, Any]) -> Dict[str, Any]:
         "version": info.get("version"),
         "world_creation_endpoint": _world_creation_endpoint(payload),
     }
+
+
+def _format_director_guidance_path(endpoint: str, world_id: str) -> str:
+    url_path = endpoint if endpoint.startswith("/") else f"/{endpoint}"
+    return url_path.replace("{world_id}", world_id).replace("{worldId}", world_id)
 
 
 async def create_world_via_public_api(world_prompt: str) -> Dict[str, Any]:
@@ -132,6 +175,69 @@ async def create_world_via_public_api(world_prompt: str) -> Dict[str, Any]:
             "status_code": create_resp.status_code,
             "request_summary_json": json.dumps({"world_prompt_length": len(world_prompt)}),
             "response_summary_json": json.dumps(response_summary),
+            "error_message": None,
+        },
+    }
+
+
+async def submit_director_guidance_via_public_api(
+    *,
+    world_id: str,
+    instruction_text: str,
+    branch_id: str | None,
+    tick: int,
+    public_context: Dict[str, Any],
+) -> Dict[str, Any]:
+    base_url = get_settings().worldengine_api_base.rstrip("/")
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        openapi_resp = await client.get(f"{base_url}/openapi.json")
+        openapi_resp.raise_for_status()
+        openapi_payload = openapi_resp.json()
+        endpoint = _director_guidance_endpoint(openapi_payload)
+        if endpoint is None:
+            raise RuntimeError("WorldEngine public director guidance endpoint not found")
+
+        request_payload = {
+            "world_id": world_id,
+            "instruction_text": instruction_text,
+            "branch_id": branch_id,
+            "tick": tick,
+            "public_context": _public_payload_summary(public_context),
+        }
+        url_path = _format_director_guidance_path(endpoint, world_id)
+        submit_resp = await client.post(f"{base_url}{url_path}", json=request_payload)
+        submit_resp.raise_for_status()
+        payload = _public_payload_summary(submit_resp.json())
+
+    status = str(payload.get("status") or "accepted")
+    public_explanation = payload.get("public_explanation") or payload.get("explanation")
+    applied_event_id = payload.get("applied_event_id") or payload.get("event_id")
+    error_message = payload.get("error_message")
+    response_summary = {
+        "status": status,
+        "public_explanation": public_explanation,
+        "applied_event_id": applied_event_id,
+        "error_message": error_message,
+    }
+    return {
+        "status": status,
+        "public_explanation": public_explanation,
+        "applied_event_id": applied_event_id,
+        "error_message": error_message,
+        "api_trace": {
+            "method": "POST",
+            "url_path": endpoint if endpoint.startswith("/") else f"/{endpoint}",
+            "status_code": submit_resp.status_code,
+            "request_summary_json": json.dumps(
+                {
+                    "world_id": world_id,
+                    "instruction_text_length": len(instruction_text),
+                    "branch_id": branch_id,
+                    "tick": tick,
+                    "public_context": _public_payload_summary(public_context),
+                }
+            ),
+            "response_summary_json": json.dumps(_public_payload_summary(response_summary)),
             "error_message": None,
         },
     }

@@ -12,7 +12,7 @@ from app.models import (
     StateDiff,
     TimelineBranch,
 )
-from app.worldengine_client import create_world_via_public_api
+from app.worldengine_client import create_world_via_public_api, submit_director_guidance_via_public_api
 
 
 def test_create_session_auto_creates_main_branch(client):
@@ -247,6 +247,114 @@ async def test_worldengine_client_rejects_private_world_creation_endpoint(monkey
 
     with pytest.raises(RuntimeError, match="endpoint not found"):
         await create_world_via_public_api("A small public world")
+
+
+@pytest.mark.asyncio
+async def test_worldengine_client_submits_director_guidance_via_discovered_public_endpoint(monkeypatch):
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append((request.method, request.url.path, request.content))
+        if request.url.path == "/openapi.json":
+            return httpx.Response(
+                200,
+                json={
+                    "paths": {
+                        "/worlds/{world_id}/director-guidance": {
+                            "post": {"operationId": "submitDirectorGuidance", "tags": ["director"]}
+                        }
+                    }
+                },
+            )
+        if request.url.path == "/worlds/world-123/director-guidance":
+            return httpx.Response(
+                202,
+                json={
+                    "status": "accepted",
+                    "public_explanation": "Weather trend guidance accepted",
+                    "applied_event_id": "event-42",
+                    "private_prompt": "hidden",
+                    "provider_secret": "hidden",
+                },
+            )
+        return httpx.Response(404)
+
+    original_async_client = httpx.AsyncClient
+
+    class MockAsyncClient:
+        def __init__(self, timeout):
+            self.client = original_async_client(transport=httpx.MockTransport(handler), timeout=timeout)
+
+        async def __aenter__(self):
+            return self.client
+
+        async def __aexit__(self, exc_type, exc, tb):
+            await self.client.aclose()
+
+    monkeypatch.setenv("WORLDENGINE_API_BASE", "http://worldengine.example")
+    monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
+
+    result = await submit_director_guidance_via_public_api(
+        world_id="world-123",
+        instruction_text="让天气逐渐转晴",
+        branch_id="branch-1",
+        tick=4,
+        public_context={"session_id": "session-1", "private_path": "/hidden"},
+    )
+
+    assert result["status"] == "accepted"
+    assert result["public_explanation"] == "Weather trend guidance accepted"
+    assert result["applied_event_id"] == "event-42"
+    assert result["error_message"] is None
+    assert result["api_trace"]["url_path"] == "/worlds/{world_id}/director-guidance"
+    assert result["api_trace"]["status_code"] == 202
+    assert requests[0][0:2] == ("GET", "/openapi.json")
+    assert requests[1][0:2] == ("POST", "/worlds/world-123/director-guidance")
+    assert b"world-123" in requests[1][2]
+    assert b"private_path" not in requests[1][2]
+    assert "private_prompt" not in result["api_trace"]["response_summary_json"]
+    assert "provider_secret" not in result["api_trace"]["response_summary_json"]
+
+
+@pytest.mark.asyncio
+async def test_worldengine_client_rejects_private_director_guidance_endpoint(monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/openapi.json":
+            return httpx.Response(
+                200,
+                json={
+                    "paths": {
+                        "/internal/director-guidance": {
+                            "post": {"operationId": "submitDirectorGuidance", "tags": ["director"]}
+                        }
+                    }
+                },
+            )
+        return httpx.Response(404)
+
+    original_async_client = httpx.AsyncClient
+
+    class MockAsyncClient:
+        def __init__(self, timeout):
+            self.client = original_async_client(transport=httpx.MockTransport(handler), timeout=timeout)
+
+        async def __aenter__(self):
+            return self.client
+
+        async def __aexit__(self, exc_type, exc, tb):
+            await self.client.aclose()
+
+    monkeypatch.setenv("WORLDENGINE_API_BASE", "http://worldengine.example")
+    monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
+
+    with pytest.raises(RuntimeError, match="director guidance endpoint not found"):
+        await submit_director_guidance_via_public_api(
+            world_id="world-123",
+            instruction_text="让天气逐渐转晴",
+            branch_id=None,
+            tick=0,
+            public_context={},
+        )
 
 
 def test_create_worldengine_session_persists_public_initial_state(client, monkeypatch):
@@ -897,3 +1005,56 @@ def test_create_director_intent_rejects_extra_private_control_fields(client):
         stored_count = db.query(DirectorIntent).filter(DirectorIntent.session_id == session_id).count()
 
     assert stored_count == 0
+
+
+def test_create_director_intent_submits_to_worldengine_public_api_and_records_trace(client, monkeypatch):
+    async def fake_submit_director_guidance(**kwargs):
+        assert kwargs["world_id"] == "world-123"
+        assert kwargs["instruction_text"] == "让市场附近的天气逐渐转晴"
+        assert kwargs["branch_id"] is None
+        assert kwargs["tick"] == 2
+        assert kwargs["public_context"] == {"session_id": session_id}
+        return {
+            "status": "accepted",
+            "public_explanation": "WorldEngine accepted the public weather trend",
+            "applied_event_id": "event-42",
+            "error_message": None,
+            "api_trace": {
+                "method": "POST",
+                "url_path": "/worlds/{world_id}/director-guidance",
+                "status_code": 202,
+                "request_summary_json": '{"world_id": "world-123", "instruction_text_length": 13, "tick": 2}',
+                "response_summary_json": '{"status": "accepted", "applied_event_id": "event-42"}',
+                "error_message": None,
+            },
+        }
+
+    monkeypatch.setattr("app.routes.sessions.submit_director_guidance_via_public_api", fake_submit_director_guidance)
+    session_payload = client.post("/sessions", json={"session_name": "Bound Director"}).json()
+    session_id = session_payload["id"]
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = db.get(DbSession, session_id)
+        db_session.worldengine_world_id = "world-123"
+        db_session.public_world_status = "running"
+        db.commit()
+
+    response = client.post(
+        f"/sessions/{session_id}/director-intents",
+        json={"instruction_text": "让市场附近的天气逐渐转晴", "tick": 2},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["status"] == "accepted"
+    assert payload["public_explanation"] == "WorldEngine accepted the public weather trend"
+    assert payload["applied_event_id"] == "event-42"
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        intent = db.query(DirectorIntent).filter(DirectorIntent.session_id == session_id).one()
+        trace = db.query(ApiTrace).filter(ApiTrace.session_id == session_id).one()
+
+    assert intent.status == "accepted"
+    assert trace.url_path == "/worlds/{world_id}/director-guidance"
+    assert trace.llm_keys_included is False
+    assert trace.private_worldengine_internals_included is False

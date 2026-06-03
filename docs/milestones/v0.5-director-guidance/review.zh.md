@@ -9,9 +9,9 @@
 v0.5 目标是基础 Director Guidance：运行控制台提交高层自然语言方向，后端记录
 director intent，并在可用时通过 WorldEngine public API 提交和记录公开状态。
 
-当前已完成 milestone 文档创建和后端 director intent 本地 API。WorldEngine public
-director guidance 提交适配、前端 typed client / store 和运行控制台真实提交 UI
-尚未实现，不能声明 v0.5 已完成。
+当前已完成 milestone 文档创建、后端 director intent 本地 API，以及 WorldEngine
+public director guidance 提交适配。前端 typed client / store 和运行控制台真实
+提交 UI 尚未实现，不能声明 v0.5 已完成。
 
 ## Task Records
 
@@ -67,21 +67,55 @@ director guidance 提交适配、前端 typed client / store 和运行控制台�
   - WorldEngine public director guidance 提交适配留给 Task 3。
   - Task 2 commit hash 已在后续 docs-only 记录提交中补充。
 
+### Task 3: WorldEngine public director guidance 提交适配
+
+- Commit: `待提交`
+- Files:
+  - `apps/api/app/worldengine_client.py`
+  - `apps/api/app/routes/sessions.py`
+  - `apps/api/tests/test_sessions.py`
+  - `docs/milestones/v0.5-director-guidance/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q -k "director_guidance or director_intent"`:
+    红灯，collection error，原因是 `submit_director_guidance_via_public_api` 尚未实现。
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q -k "director_guidance or director_intent"`:
+    通过，`6 passed, 1 warning`
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: 通过，`25 passed, 1 warning`
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增 `submit_director_guidance_via_public_api()`，从 WorldEngine public OpenAPI
+    中发现 director guidance endpoint，拒绝 `/internal`、`/private`、helper 等私有
+    endpoint。
+  - 对 WorldEngine 的请求只包含 world id、instruction text、branch id、tick 和
+    public context 摘要；public context 会过滤 private path / prompt / secret /
+    provider / Agent internal state 相关字段。
+  - WorldEngine 返回 accepted / applied / rejected / failed 等公开状态时，route 会
+    更新本地 director intent 的 status、public explanation、applied event id 或
+    error message。
+  - 绑定 `worldengine_world_id` 的 session 会保存脱敏 `ApiTrace`，并保持
+    `llm_keys_included=False`、`private_worldengine_internals_included=False`。
+  - public endpoint 不可用或请求失败时，不伪造 applied 结果；本地 intent 保持
+    `pending` 并记录可读 error message 和脱敏失败 trace。
+- Notes:
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
+  - 本 task 不实现前端 typed client / store 或运行控制台真实提交 UI。
+
 ## 范围审核
 
-- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 未新增
-  WorldEngine 调用。
-- 是否未引入客户端 LLM key 管理：Task 2 是。
-- 是否未直接调用 LLM provider：Task 2 是。
-- 是否未生成权威世界事实：Task 2 是；只记录用户提交的本地 director intent。
+- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 3 是；仅从
+  public OpenAPI 发现 director guidance endpoint。
+- 是否未引入客户端 LLM key 管理：Task 2 / Task 3 是。
+- 是否未直接调用 LLM provider：Task 2 / Task 3 是。
+- 是否未生成权威世界事实：Task 2 / Task 3 是；WorldEngine 未证明 applied 时不
+  编造公开影响结果。
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
-  Task 2 是；extra field 拒绝覆盖 agent goal / private prompt 反例。
-- 是否未展示私有 Agent 内部状态、隐藏推理或私有 prompt：Task 2 是；未新增前端展示。
-- 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 是。
+  Task 2 / Task 3 是；extra field 和 public payload filtering 覆盖相关反例。
+- 是否未展示私有 Agent 内部状态、隐藏推理或私有 prompt：Task 2 / Task 3 是；
+  未新增前端展示，后端 trace 摘要过滤私有字段。
+- 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 / Task 3 是。
 
 ## 遗留问题
 
-- WorldEngine public director guidance 提交适配尚未实现。
 - 前端 typed client / store 尚未实现。
 - 运行控制台导演引导 UI 尚未接入真实 API。
 - 完整 evidence bundle 导出仍属于后续 milestone。

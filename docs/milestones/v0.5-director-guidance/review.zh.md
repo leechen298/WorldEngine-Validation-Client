@@ -69,7 +69,7 @@ public director guidance 提交适配。前端 typed client / store 和运行控
 
 ### Task 3: WorldEngine public director guidance 提交适配
 
-- Commit: `待提交`
+- Commit: `a2e51b8`
 - Files:
   - `apps/api/app/worldengine_client.py`
   - `apps/api/app/routes/sessions.py`
@@ -99,6 +99,7 @@ public director guidance 提交适配。前端 typed client / store 和运行控
 - Notes:
   - warning 来自现有 Starlette TestClient/httpx 兼容提示。
   - 本 task 不实现前端 typed client / store 或运行控制台真实提交 UI。
+  - Task 3 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

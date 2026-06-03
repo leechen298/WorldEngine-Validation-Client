@@ -152,7 +152,7 @@ review 收口记录。
 
 ### Task 7: 总体验证和 review 收口
 
-- Commit: `pending`
+- Commit: `f09061e`
 - Files:
   - `docs/milestones/v0.2-worldengine-integration/review.zh.md`
 - Commands:

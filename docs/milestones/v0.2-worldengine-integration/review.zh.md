@@ -1,14 +1,18 @@
 # v0.2 WorldEngine Integration Review
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / 总体验证通过 / review 收口待提交记录
 
 日期：2026-06-03
 
 ## 结论
 
-v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-level evidence。
-在所有 planned tasks 完成、验证通过、逐 task 提交且工作区无相关未提交变更前，
-不得声明 v0.2 complete 或 clean pass。
+v0.2 已完成 WorldEngine public API 集成闭环：能力发现、public world creation
+代理、本地公开状态/visualization 摘要落库、脱敏 API trace、前端创建世界入口和
+运行控制台公开状态摘要。
+
+本轮按 `docs/agent-guides/workflow.md` 的 numbered task loop 执行；Task 1-6
+均已有 task-scoped implementation commit 和 review record。Task 7 为总体验证和
+review 收口记录。
 
 ## Task Records
 
@@ -152,27 +156,34 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 - Files:
   - `docs/milestones/v0.2-worldengine-integration/review.zh.md`
 - Commands:
-  - `cd apps/api && uv run pytest -q`: `pending`
-  - `pnpm --dir apps/web test`: `pending`
-  - `pnpm --dir apps/web build`: `pending`
-  - `pnpm run test`: `pending`
-  - `pnpm run build`: `pending`
-  - `git diff --check`: `pending`
+  - `cd apps/api && uv run pytest -q`: 通过，`25 passed, 1 warning`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`7 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `pnpm run test`: sandbox 内因 `~/.cache/uv` 权限失败；提升权限重跑通过，web
+    `7 passed`，API `25 passed, 1 warning`
+  - `pnpm run build`: 通过
+  - `git diff --check`: 通过
 - Scope review:
-  - `pending`
+  - v0.2 仅通过 `WORLDENGINE_API_BASE` 下 public `/health`、`/manifest`、
+    `/openapi.json` 和发现到的 public world creation endpoint 与 WorldEngine 通信。
+    前端只调用本地 FastAPI；未实现实时 tick streaming、完整 PixiJS 渲染、完整
+    evidence bundle 导出或玩家角色控制。
 - Notes:
-  - `pending`
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
+  - root `pnpm run test` 的首次失败是 sandbox cache 权限问题，不是测试失败。
 
 ## 范围审核
 
-- 是否只通过 public API 连接 WorldEngine：待验证。
-- 是否未引入客户端 LLM key 管理：待验证。
-- 是否未直接调用 LLM provider：待验证。
-- 是否未生成权威世界事实：待验证。
-- 是否未引入玩家角色控制：待验证。
-- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待验证。
-- timeline branch 是否保持命名世界线语义、不表达 parent-child ownership：待验证。
+- 是否只通过 public API 连接 WorldEngine：是。
+- 是否未引入客户端 LLM key 管理：是。
+- 是否未直接调用 LLM provider：是。
+- 是否未生成权威世界事实：是；仅保存 WorldEngine public response 的脱敏摘要。
+- 是否未引入玩家角色控制：是。
+- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：是。
+- timeline branch 是否保持命名世界线语义、不表达 parent-child ownership：是。
 
 ## 遗留问题
 
-- v0.2 代码实现尚未开始。
+- 实时 tick streaming、完整 PixiJS 像素渲染、回放/分支操作深化和完整 evidence bundle
+  导出仍属于后续 milestone。
+- `StarletteDeprecationWarning` 来自当前 TestClient/httpx 组合，未影响本轮通过结论。

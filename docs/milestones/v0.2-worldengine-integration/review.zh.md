@@ -129,7 +129,7 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 
 ### Task 6: 运行控制台公开状态摘要
 
-- Commit: `pending`
+- Commit: `8a02bbf`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`

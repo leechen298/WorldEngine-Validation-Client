@@ -35,15 +35,25 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 - Commit: `pending`
 - Files:
   - `apps/api/app/worldengine_client.py`
-  - `apps/api/app/routes/health.py`
   - `apps/api/app/schemas.py`
   - `apps/api/tests/test_health.py`
 - Commands:
-  - `cd apps/api && uv run pytest tests/test_health.py -q`: `pending`
+  - `cd apps/api && uv run pytest tests/test_health.py -q`: 通过，`8 passed, 1 warning`
+  - `git diff --check`: 通过
+  - `rg -n "worldengine|WORLDENGINE|openapi|manifest|api_key|apikey|secret|token|password|credential|authorization|private_path|file_path|source_path|internal|helper|provider" apps/api/app apps/api/tests docs/milestones/v0.2-worldengine-integration/review.zh.md`: 通过；命中项为 public API 名称、测试用脱敏 fixture 和边界说明，未发现生产代码透传 secret/private/internal payload。
 - Scope review:
-  - `pending`
+  - 能力发现只调用 `WORLDENGINE_API_BASE` 下 public `/health`、`/manifest`、
+    `/openapi.json`；OpenAPI 失败只记录 capability/error，不阻塞
+    `/health/worldengine` reachable；响应只返回白名单安全摘要，不透传原始
+    manifest/OpenAPI payload。
 - Notes:
-  - `pending`
+  - `apps/api/app/routes/health.py` 未改动；既有 route 通过新的 response model
+    返回结构化 capability 摘要。
+  - subagent reviewer 指出原始 discovery payload 暴露面过大；已改为 health status、
+    manifest version/capability names、OpenAPI title/version/world creation endpoint 摘要。
+  - subagent re-review 指出 summary-only world creation 仍有误判风险；已移除 summary
+    heuristic，并新增回归测试。
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
 
 ### Task 3: 本地 world creation 存储模型
 

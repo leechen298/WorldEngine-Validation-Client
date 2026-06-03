@@ -11,9 +11,39 @@ class HealthResponse(BaseModel):
     database_path: str
 
 
+class WorldEngineCapabilitySummary(BaseModel):
+    manifest_available: bool
+    openapi_available: bool
+    world_creation: str
+
+
+class WorldEngineHealthSummary(BaseModel):
+    status: str
+
+
+class WorldEngineManifestSummary(BaseModel):
+    version: Optional[str]
+    capabilities: List[str] = []
+
+
+class WorldEngineOpenAPISummary(BaseModel):
+    title: Optional[str]
+    version: Optional[str]
+    world_creation_endpoint: Optional[str]
+
+
+class WorldEngineProbeResponse(BaseModel):
+    reachable: bool
+    health: Optional[WorldEngineHealthSummary]
+    manifest: Optional[WorldEngineManifestSummary]
+    openapi: Optional[WorldEngineOpenAPISummary]
+    capabilities: WorldEngineCapabilitySummary
+    errors: List[str]
+
+
 class HealthWorldEngineResponse(BaseModel):
     status: str
-    worldengine: dict
+    worldengine: WorldEngineProbeResponse
 
 
 class SessionCreatePayload(BaseModel):

@@ -14,7 +14,7 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 
 ### Task 1: v0.2 里程碑文档
 
-- Commit: `9002da8`
+- Commit: `ce54663`（task-scoped docs commit；后续 hash 记录由 review 跟进提交补充）
 - Files:
   - `docs/README.zh.md`
   - `docs/milestones/v0.2-worldengine-integration/README.zh.md`
@@ -27,6 +27,8 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
     验证命令和逐 task commit 要求。
 - Notes:
   - v0.2 代码实现尚未开始。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ### Task 2: WorldEngine 能力发现客户端
 

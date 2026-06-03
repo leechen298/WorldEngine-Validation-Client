@@ -1,6 +1,6 @@
 # v0.2 WorldEngine Integration Review
 
-状态：实现完成 / 总体验证通过 / review 收口待提交记录
+状态：实现完成 / 总体验证通过 / review 已收口
 
 日期：2026-06-03
 

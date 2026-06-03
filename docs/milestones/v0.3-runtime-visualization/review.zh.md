@@ -114,7 +114,7 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
 
 ### Task 5: Agent 公开状态和事件日志面板
 
-- Commit: `待提交`
+- Commit: `60662a1`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
@@ -131,6 +131,8 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
 - Notes:
   - 本 task 不实现实时 tick streaming、director guidance 提交闭环、回放重建或
     branch 深化。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ## 范围审核
 

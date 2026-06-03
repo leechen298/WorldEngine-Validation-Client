@@ -13,9 +13,14 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const {
     error,
     commitPointsBySession = {},
+    createDirectorIntent = async () => null,
     createBranch,
+    directorIntentErrorBySession = {},
+    directorIntentSubmittingBySession = {},
+    directorIntentsBySession = {},
     loadBranches,
     loadCommitPoints = async () => [],
+    loadDirectorIntents = async () => [],
     loadReplayView = async () => null,
     loadRuntimeView,
     lastBranches,
@@ -37,6 +42,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const displayView = replayView || runtimeView;
   const runtimeError = runtimeErrorBySession[sessionId];
   const replayError = replayErrorBySession[sessionId];
+  const directorIntentError = directorIntentErrorBySession[sessionId];
+  const directorIntentSubmitting = directorIntentSubmittingBySession[sessionId] || false;
+  const directorIntents = directorIntentsBySession[sessionId] || [];
   const runtimeLatestEvent = displayView?.latest_event;
   const commitPoints = commitPointsBySession[sessionId] || [];
   const selectedBranchId =
@@ -65,9 +73,25 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     loadRuntimeView(sessionId);
   }, [loadRuntimeView, sessionId]);
 
-  const submitDirectorCommand = (event: FormEvent) => {
+  useEffect(() => {
+    loadDirectorIntents(sessionId);
+  }, [loadDirectorIntents, sessionId]);
+
+  const submitDirectorCommand = async (event: FormEvent) => {
     event.preventDefault();
-    setCommand("");
+    const instructionText = command.trim();
+    if (!instructionText) {
+      return;
+    }
+    const intent = await createDirectorIntent(sessionId, {
+      instruction_text: instructionText,
+      branch_id: selectedBranchId || null,
+      tick: targetTick,
+    });
+    if (intent) {
+      setCommand("");
+      await loadDirectorIntents(sessionId);
+    }
   };
 
   const loadReplayAtTick = (tick: number) => {
@@ -126,10 +150,10 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
         <section className="page-card control-column">
           <h3>运行控制</h3>
           <form onSubmit={submitDirectorCommand}>
-            <label htmlFor="director-command">导演引导</label>
+            <label htmlFor="director-command">高层方向 / 外部世界趋势</label>
             <input id="director-command" value={command} onChange={(event) => setCommand(event.target.value)} />
-            <button type="submit" style={{ marginTop: 8 }}>
-              发送
+            <button disabled={directorIntentSubmitting} type="submit" style={{ marginTop: 8 }}>
+              提交引导
             </button>
           </form>
         </section>
@@ -140,6 +164,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}
           {runtimeError ? <p className="error-text">运行视图加载失败：{runtimeError}</p> : null}
           {replayError ? <p className="error-text">回放视图加载失败：{replayError}</p> : null}
+          {directorIntentError ? <p className="error-text">导演引导提交失败：{directorIntentError}</p> : null}
           <section className="page-card">
             <h3>公开状态摘要</h3>
             <p>WorldEngine world：{session?.worldengine_world_id || "未绑定"}</p>
@@ -208,6 +233,27 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
               </ul>
             ) : (
               <p>暂无 Agent 公开状态。</p>
+            )}
+          </section>
+          <section className="page-card">
+            <h3>导演引导状态</h3>
+            {directorIntents.length ? (
+              <ul className="runtime-list">
+                {directorIntents.map((intent) => (
+                  <li key={intent.id}>
+                    <span>
+                      branch {intent.branch_id || "main"} / Tick {intent.tick}
+                    </span>
+                    <strong>{intent.instruction_text}</strong>
+                    <span>状态：{intent.status}</span>
+                    {intent.public_explanation ? <span>{intent.public_explanation}</span> : null}
+                    {intent.applied_event_id ? <span>applied event：{intent.applied_event_id}</span> : null}
+                    {intent.error_message ? <span>{intent.error_message}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>暂无导演引导。</p>
             )}
           </section>
           <section className="page-card event-bubble-card">

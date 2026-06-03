@@ -899,4 +899,163 @@ describe("RuntimeConsole", () => {
     );
     expect(useSessionStore.getState().directorIntentSubmittingBySession["session-id"]).toBe(false);
   });
+
+  it("submits director guidance from the runtime console and shows intent status", async () => {
+    const loadDirectorIntents = vi.fn().mockResolvedValue([]);
+    const createDirectorIntentFromStore = vi.fn().mockResolvedValue({
+      id: "intent-2",
+      session_id: "session-id",
+      branch_id: "branch-1",
+      tick: 2,
+      instruction_text: "让广场附近出现更多公共活动",
+      status: "accepted",
+      public_explanation: "WorldEngine accepted the public trend",
+      applied_event_id: "event-2",
+      error_message: null,
+      created_at: "2026-06-03T00:01:00Z",
+    });
+    useSessionStore.setState({
+      sessions: [
+        {
+          id: "session-id",
+          session_name: "World Session",
+          status: "running",
+          worldengine_world_id: "world-123",
+          public_world_status: "running",
+          initial_state_summary: null,
+          visualization_payload_summary: null,
+          branch_count: 1,
+          main_branch_id: "branch-1",
+          main_commit_point_id: "cp-1",
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 2,
+          visualization: {},
+          public_agents: [],
+          world_log: [],
+          agent_life_log: [],
+          latest_event: null,
+        },
+      },
+      directorIntentsBySession: {
+        "session-id": [
+          {
+            id: "intent-1",
+            session_id: "session-id",
+            branch_id: "branch-1",
+            tick: 2,
+            instruction_text: "让市场附近的天气逐渐转晴",
+            status: "accepted",
+            public_explanation: "WorldEngine accepted the public weather trend",
+            applied_event_id: "event-1",
+            error_message: null,
+            created_at: "2026-06-03T00:00:00Z",
+          },
+        ],
+      },
+      directorIntentErrorBySession: {},
+      directorIntentSubmittingBySession: {},
+      selectedBranchBySession: { "session-id": "branch-1" },
+      replayTickBySession: { "session-id": 2 },
+      replayViewBySession: {},
+      replayErrorBySession: {},
+      commitPointsBySession: {},
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      loadCommitPoints: async () => [],
+      loadReplayView: async () => null,
+      loadDirectorIntents,
+      createDirectorIntent: createDirectorIntentFromStore,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(loadDirectorIntents).toHaveBeenCalledWith("session-id");
+    expect(screen.getByText("导演引导状态")).toBeInTheDocument();
+    expect(screen.getByText("让市场附近的天气逐渐转晴")).toBeInTheDocument();
+    expect(screen.getByText("状态：accepted")).toBeInTheDocument();
+    expect(screen.getByText("WorldEngine accepted the public weather trend")).toBeInTheDocument();
+    expect(screen.getByText("applied event：event-1")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("高层方向 / 外部世界趋势"), {
+      target: { value: "让广场附近出现更多公共活动" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "提交引导" }));
+
+    await waitFor(() =>
+      expect(createDirectorIntentFromStore).toHaveBeenCalledWith("session-id", {
+        instruction_text: "让广场附近出现更多公共活动",
+        branch_id: "branch-1",
+        tick: 2,
+      }),
+    );
+    expect(loadDirectorIntents).toHaveBeenCalledTimes(2);
+    expect(screen.getByLabelText("高层方向 / 外部世界趋势")).toHaveValue("");
+  });
+
+  it("keeps director guidance input when submit fails", async () => {
+    const createDirectorIntentFromStore = vi.fn().mockImplementation(async () => {
+      useSessionStore.setState({
+        directorIntentErrorBySession: { "session-id": "WorldEngine public endpoint unavailable" },
+        directorIntentSubmittingBySession: { "session-id": false },
+      } as any);
+      return null;
+    });
+    useSessionStore.setState({
+      sessions: [],
+      runtimeViewBySession: {},
+      directorIntentsBySession: {},
+      directorIntentErrorBySession: {},
+      directorIntentSubmittingBySession: {},
+      selectedBranchBySession: { "session-id": "branch-1" },
+      replayTickBySession: { "session-id": 2 },
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      loadCommitPoints: async () => [],
+      loadReplayView: async () => null,
+      loadDirectorIntents: async () => [],
+      createDirectorIntent: createDirectorIntentFromStore,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    fireEvent.change(screen.getByLabelText("高层方向 / 外部世界趋势"), {
+      target: { value: "让市场附近的天气逐渐转晴" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "提交引导" }));
+
+    expect(await screen.findByText("导演引导提交失败：WorldEngine public endpoint unavailable")).toBeInTheDocument();
+    expect(screen.getByLabelText("高层方向 / 外部世界趋势")).toHaveValue("让市场附近的天气逐渐转晴");
+  });
 });

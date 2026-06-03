@@ -10,8 +10,9 @@ v0.5 目标是基础 Director Guidance：运行控制台提交高层自然语言
 director intent，并在可用时通过 WorldEngine public API 提交和记录公开状态。
 
 当前已完成 milestone 文档创建、后端 director intent 本地 API、WorldEngine
-public director guidance 提交适配，以及前端 director guidance typed client / store。
-运行控制台真实提交 UI 尚未实现，不能声明 v0.5 已完成。
+public director guidance 提交适配、前端 director guidance typed client / store，以及
+运行控制台导演引导真实提交 UI 和状态列表。总体验证和 review 收口尚未完成，不能
+声明 v0.5 已完成。
 
 ## Task Records
 
@@ -132,6 +133,34 @@ public director guidance 提交适配，以及前端 director guidance typed cli
   - 本 task 不改运行控制台 UI 的表单行为；真实提交和列表展示留给 Task 5。
   - Task 4 commit hash 已在后续 docs-only 记录提交中补充。
 
+### Task 5: 运行控制台导演引导 UI 和状态列表
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.5-director-guidance/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 红灯，2 failed，原因是
+    运行控制台尚未加载 director intents、表单仍未接入真实提交、缺少状态列表。
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test
+    files，`21 passed`；存在既有 React async store `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过。
+  - `git diff --check`: 通过。
+- Scope review:
+  - 运行控制台挂载时加载当前 session 的 director intents。
+  - 导演引导表单现在调用 store/API，提交 payload 包含 instruction text、当前
+    branch id 和 target tick。
+  - 提交成功后清空输入并刷新 director intent 列表；提交失败时保留输入内容并展示
+    可读错误。
+  - 新增 director intent 状态列表，展示输入文本、状态、branch / tick、公开解释、
+    applied event id 和错误信息。
+  - UI 文案使用“高层方向 / 外部世界趋势”，不暗示直接控制 Agent 内心、记忆、目标、
+    身份、关系或行动。
+  - 状态列表只读取后端返回的 public fields，不展示 raw/private payload。
+- Notes:
+  - 本 task 不新增运行推进 API，不实现完整 evidence bundle 导出。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 3 是；仅从
@@ -143,10 +172,10 @@ public director guidance 提交适配，以及前端 director guidance typed cli
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
   Task 2 / Task 3 是；extra field 和 public payload filtering 覆盖相关反例。
 - 是否未展示私有 Agent 内部状态、隐藏推理或私有 prompt：Task 2 / Task 3 是；
-  Task 4 未新增相关前端字段，后端 trace 摘要过滤私有字段。
-- 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 / Task 3 是。
+  Task 4 / Task 5 未新增相关前端字段，后端 trace 摘要过滤私有字段。
+- 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 / Task 3 / Task 5 是。
 
 ## 遗留问题
 
-- 运行控制台导演引导 UI 尚未接入真实 API。
+- 总体验证和 review 收口尚未完成。
 - 完整 evidence bundle 导出仍属于后续 milestone。

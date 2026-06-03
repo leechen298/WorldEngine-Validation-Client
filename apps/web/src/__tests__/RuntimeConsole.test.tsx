@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { getCommitPoints, getReplayView, getSessionEvents } from "../api/client";
 import { useSessionStore } from "../store/sessionStore";
 import { RuntimeConsole } from "../pages/RuntimeConsole";
@@ -49,8 +49,11 @@ vi.mock("pixi.js", () => {
   };
 });
 
+const initialSessionStoreState = useSessionStore.getState();
+
 describe("RuntimeConsole", () => {
   beforeEach(() => {
+    useSessionStore.setState(initialSessionStoreState, true);
     vi.mocked(getCommitPoints).mockClear();
     vi.mocked(getCommitPoints).mockResolvedValue([]);
     vi.mocked(getReplayView).mockClear();
@@ -564,6 +567,115 @@ describe("RuntimeConsole", () => {
     expect(useSessionStore.getState().replayTickBySession["session-id"]).toBe(2);
     expect(useSessionStore.getState().replayViewBySession["session-id"]?.snapshot_id).toBe("snapshot-2");
     expect(useSessionStore.getState().replayErrorBySession["session-id"]).toBe("");
+  });
+
+  it("shows timeline scrubber and loads replay view from selected commit points", async () => {
+    const loadCommitPoints = vi.fn().mockResolvedValue([]);
+    const loadReplayView = vi.fn().mockResolvedValue(null);
+    useSessionStore.setState({
+      sessions: [
+        {
+          id: "session-id",
+          session_name: "World Session",
+          status: "running",
+          worldengine_world_id: "world-123",
+          public_world_status: "running",
+          initial_state_summary: null,
+          visualization_payload_summary: null,
+          branch_count: 1,
+          main_branch_id: "branch-1",
+          main_commit_point_id: "cp-1",
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+      runtimeViewBySession: {},
+      replayViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          branch_id: "branch-1",
+          snapshot_id: "snapshot-2",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 2,
+          visualization: {},
+          public_agents: [],
+          world_log: [
+            {
+              id: "world-event",
+              tick: 2,
+              event_kind: "world_change",
+              text: "Market opens",
+              agent_id: null,
+              payload: { private_prompt: "hidden" },
+              created_at: "2026-01-01T00:00:02Z",
+            },
+          ],
+          agent_life_log: [],
+          latest_event: null,
+        },
+      },
+      replayErrorBySession: {},
+      selectedBranchBySession: { "session-id": "branch-1" },
+      replayTickBySession: { "session-id": 2 },
+      commitPointsBySession: {
+        "session-id": [
+          {
+            id: "cp-1",
+            session_id: "session-id",
+            tick: 1,
+            event_id: "event-1",
+            snapshot_id: "snapshot-1",
+            payload_summary: "World starts",
+            branch_ids: ["branch-1"],
+            branch_names: ["main"],
+            created_at: "2026-01-01T00:00:01Z",
+          },
+          {
+            id: "cp-2",
+            session_id: "session-id",
+            tick: 2,
+            event_id: "event-2",
+            snapshot_id: "snapshot-2",
+            payload_summary: "Market opens",
+            branch_ids: ["branch-1"],
+            branch_names: ["main"],
+            created_at: "2026-01-01T00:00:02Z",
+          },
+        ],
+      },
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      loadCommitPoints,
+      loadReplayView,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(await screen.findByText("时间线回放")).toBeInTheDocument();
+    expect(loadCommitPoints).toHaveBeenCalledWith("session-id");
+    expect(screen.getByLabelText("目标 tick")).toHaveValue("2");
+    expect(screen.getByText("Commit Points")).toBeInTheDocument();
+    expect(screen.getByText("World starts")).toBeInTheDocument();
+    expect(screen.getAllByText("Market opens").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("branch main").length).toBe(2);
+    expect(screen.queryByText("private_prompt")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "跳转到 tick 1 World starts" }));
+
+    expect(loadReplayView).toHaveBeenCalledWith("session-id", { branchId: "branch-1", tick: 1 });
   });
 
   it("records readable replay load failures in the store", async () => {

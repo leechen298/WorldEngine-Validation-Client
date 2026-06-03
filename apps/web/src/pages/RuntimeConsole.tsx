@@ -12,9 +12,16 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
   const {
     error,
+    commitPointsBySession = {},
     loadBranches,
+    loadCommitPoints = async () => [],
+    loadReplayView = async () => null,
     loadRuntimeView,
     lastBranches,
+    replayErrorBySession = {},
+    replayTickBySession = {},
+    replayViewBySession = {},
+    selectedBranchBySession = {},
     runtimeErrorBySession,
     runtimeViewBySession,
     sessions,
@@ -23,12 +30,28 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const branches = lastBranches[sessionId] || [];
   const session = sessions.find((item) => item.id === sessionId);
   const runtimeView = runtimeViewBySession[sessionId];
+  const replayView = replayViewBySession[sessionId];
+  const displayView = replayView || runtimeView;
   const runtimeError = runtimeErrorBySession[sessionId];
-  const runtimeLatestEvent = runtimeView?.latest_event;
+  const replayError = replayErrorBySession[sessionId];
+  const runtimeLatestEvent = displayView?.latest_event;
+  const commitPoints = commitPointsBySession[sessionId] || [];
+  const selectedBranchId =
+    selectedBranchBySession[sessionId] ||
+    session?.main_branch_id ||
+    branches.find((branch) => branch.is_main)?.id ||
+    branches[0]?.id ||
+    "";
+  const maxTick = Math.max(displayView?.tick || 0, ...commitPoints.map((item) => item.tick), 0);
+  const targetTick = replayTickBySession[sessionId] ?? displayView?.tick ?? 0;
 
   useEffect(() => {
     loadBranches(sessionId);
   }, [loadBranches, sessionId]);
+
+  useEffect(() => {
+    loadCommitPoints(sessionId);
+  }, [loadCommitPoints, sessionId]);
 
   useEffect(() => {
     loadRuntimeView(sessionId);
@@ -37,6 +60,13 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const submitDirectorCommand = (event: FormEvent) => {
     event.preventDefault();
     setCommand("");
+  };
+
+  const loadReplayAtTick = (tick: number) => {
+    loadReplayView(sessionId, {
+      branchId: selectedBranchId || undefined,
+      tick,
+    });
   };
 
   return (
@@ -69,24 +99,62 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           </form>
         </section>
 
-        <PixelWorldCanvas visualization={runtimeView?.visualization} />
+        <PixelWorldCanvas visualization={displayView?.visualization} />
 
         <section>
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}
           {runtimeError ? <p className="error-text">运行视图加载失败：{runtimeError}</p> : null}
+          {replayError ? <p className="error-text">回放视图加载失败：{replayError}</p> : null}
           <section className="page-card">
             <h3>公开状态摘要</h3>
             <p>WorldEngine world：{session?.worldengine_world_id || "未绑定"}</p>
             <p>公开状态：{session?.public_world_status || session?.status || "unknown"}</p>
             <p>初始状态摘要：{session?.initial_state_summary || "无"}</p>
             <p>Visualization 摘要：{session?.visualization_payload_summary || "无"}</p>
-            {runtimeView ? <p className="tick-chip">Tick {runtimeView.tick}</p> : null}
+            {displayView ? <p className="tick-chip">Tick {displayView.tick}</p> : null}
+          </section>
+          <section className="page-card">
+            <h3>时间线回放</h3>
+            <div className="scrubber-row">
+              <label htmlFor="replay-target-tick">目标 tick</label>
+              <input
+                id="replay-target-tick"
+                max={maxTick}
+                min={0}
+                onChange={(event) => loadReplayAtTick(Number(event.target.value))}
+                type="range"
+                value={targetTick}
+              />
+              <span className="tick-chip">Tick {targetTick}</span>
+            </div>
+            <h4>Commit Points</h4>
+            {commitPoints.length ? (
+              <ul className="runtime-list">
+                {commitPoints.map((commitPoint) => {
+                  const summary = commitPoint.payload_summary || `tick ${commitPoint.tick}`;
+                  return (
+                    <li key={commitPoint.id}>
+                      <span>Tick {commitPoint.tick}</span>
+                      <strong>{summary}</strong>
+                      {commitPoint.branch_names.length ? (
+                        <span>{commitPoint.branch_names.map((name) => `branch ${name}`).join(" / ")}</span>
+                      ) : null}
+                      <button type="button" onClick={() => loadReplayAtTick(commitPoint.tick)}>
+                        跳转到 tick {commitPoint.tick} {summary}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p>暂无 commit point。</p>
+            )}
           </section>
           <section className="page-card">
             <h3>Agent 公开状态</h3>
-            {runtimeView?.public_agents.length ? (
+            {displayView?.public_agents.length ? (
               <ul className="runtime-list">
-                {runtimeView.public_agents.map((agent) => (
+                {displayView.public_agents.map((agent) => (
                   <li key={agent.agent_id}>
                     <strong>{agent.display_name || agent.agent_id}</strong>
                     <span>{[agent.location, agent.public_status].filter(Boolean).join(" / ") || "unknown"}</span>
@@ -111,9 +179,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           </section>
           <section className="page-card">
             <h3>World Log</h3>
-            {runtimeView?.world_log.length ? (
+            {displayView?.world_log.length ? (
               <ul className="runtime-list">
-                {runtimeView.world_log.map((item) => (
+                {displayView.world_log.map((item) => (
                   <li key={item.id}>
                     <span>Tick {item.tick}</span>
                     <strong>{item.text}</strong>
@@ -126,9 +194,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           </section>
           <section className="page-card">
             <h3>Agent Life Log</h3>
-            {runtimeView?.agent_life_log.length ? (
+            {displayView?.agent_life_log.length ? (
               <ul className="runtime-list">
-                {runtimeView.agent_life_log.map((item) => (
+                {displayView.agent_life_log.map((item) => (
                   <li key={item.id}>
                     <span>Tick {item.tick}</span>
                     <strong>{item.text}</strong>

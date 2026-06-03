@@ -141,6 +141,17 @@ body {
   color: var(--accent);
 }
 
+.scrubber-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(120px, 1fr) auto;
+  align-items: center;
+}
+
+.scrubber-row input {
+  width: 100%;
+}
+
 .runtime-list {
   display: grid;
   gap: 8px;

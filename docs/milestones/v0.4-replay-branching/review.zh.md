@@ -89,7 +89,7 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 
 ### Task 4: 前端 replay / branch typed client 和状态
 
-- Commit: `待提交`
+- Commit: `b0530e1`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`
@@ -112,6 +112,31 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   - 本 task 不新增 scrubber UI、不新增 commit point browser UI、不实现 branch
     切换和创建 UI。
 
+### Task 5: 运行控制台时间线 scrubber 和 commit point 浏览
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `apps/web/src/styles.css`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test
+    files，`16 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - 运行控制台新增时间线回放区域，展示目标 tick range scrubber、当前 replay tick
+    和 commit point 列表。
+  - commit point browser 只展示公开 `payload_summary`、tick 和 branch 名称，不展示
+    raw payload / snapshot / diff JSON。
+  - 点击 commit point 可按当前 branch 加载目标 tick 的 replay view；页面优先展示
+    replay view，缺失时回退 runtime view。
+  - replay view 加载失败时展示可读错误。
+- Notes:
+  - 新增测试先红灯复现缺少“时间线回放”UI，再实现后转绿。
+  - 本 task 不实现 branch 切换和从 commit point 创建 branch；这些仍留给 Task 6。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；
@@ -123,9 +148,11 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 - 是否未引入 parent / child timeline 层级语义：Task 3 是。
 - 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 4 是；
   前端新增类型和 store 状态不引入 raw payload 展示。
+- 是否不从摘要文本推断权威世界事实：Task 5 是；commit point browser 只显示后端
+  提供的公开摘要和 tick。
 - 是否未引入玩家角色控制：待实现后验证。
 - 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后验证。
 
 ## 遗留问题
 
-- 时间线 scrubber、commit point 浏览、branch 切换和创建 UI 尚未实现。
+- branch 切换和创建 UI 尚未实现。

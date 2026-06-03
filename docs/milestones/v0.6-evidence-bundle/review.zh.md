@@ -9,9 +9,9 @@
 v0.6 目标是完整 Evidence Bundle：在不越过 WorldEngine public API 和本地客户端
 证据边界的前提下，导出可下载、可审计、可脱敏检查的本地 session 证据包。
 
-当前已完成 milestone 文档创建和后端 evidence bundle schema / manifest。后续
-必须从 `plan.zh.md` Task 3 开始，按 numbered task 顺序实现、验证、记录并逐
-task 提交。
+当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest，以及后端
+bundle 内容组装和脱敏检查。后续必须从 `plan.zh.md` Task 4 开始，按 numbered
+task 顺序实现、验证、记录并逐 task 提交。
 
 ## Task Records
 
@@ -38,7 +38,7 @@ task 提交。
 
 ### Task 2: 后端 evidence bundle schema 和 manifest
 
-- Commit: `pending`
+- Commit: `3817aa8`
 - Files:
   - `apps/api/app/schemas.py`
   - `apps/api/app/routes/evidence.py`
@@ -75,23 +75,60 @@ task 提交。
     留给 Task 3。
   - 本 task 不实现下载 endpoint；下载行为留给 Task 4。
 
+### Task 3: 后端 bundle 内容组装和脱敏检查
+
+- Commit: `pending`
+- Files:
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/app/schemas.py`
+  - `apps/api/tests/test_evidence.py`
+  - `docs/milestones/v0.6-evidence-bundle/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，1 failed，原因是
+    records 仍是 Task 2 空容器，尚未导出真实 bundle 内容。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，1 failed，原因是
+    subagent 审查指出的 `replay_index` 计数不一致、字符串值和 director intent 字段
+    未参与敏感扫描。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 通过，`6 passed`；
+    存在既有 Starlette TestClient/httpx 兼容 warning。
+  - `git diff --check`: 通过
+- Scope review:
+  - manifest endpoint 现在按稳定顺序导出 timeline branches、commit points、
+    events、state diffs、snapshots、director intents 和 api traces。
+  - replay index 基于 commit point 和关联 branch 生成，包含 commit point、tick、
+    event、snapshot 和 branch 摘要。
+  - API trace records 只包含 method、url path、status code、request summary、
+    response summary、error message 和脱敏标志。
+  - request / response summary、event payload、state diff、snapshot 会做保守敏感键
+    和敏感字符串值过滤；director intent 的 instruction text、public explanation 和
+    error message 也会参与扫描。发现敏感内容时从 records 中移除或替换为
+    `[redacted]`，并在 manifest warnings 中记录
+    `sensitive content redacted from evidence records`。
+  - manifest redaction flags 会结合既有 `ApiTrace` 标志和本次 payload 扫描结果；
+    扫描发现 `api_key` / secret 类字段时不会标记为 clean。
+  - manifest `counts.replay_index` 与实际 replay index records 数量保持一致。
+  - 没有公开 evaluator 输出时不伪造结果，records 中 `evaluator_outputs` 为空，并在
+    manifest warnings 中记录 `public evaluator outputs unavailable`。
+- Notes:
+  - 本 task 不实现下载 endpoint；下载行为留给 Task 4。
+
 ## 范围审核
 
-- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 未新增
-  WorldEngine 调用。
-- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 是。
-- 是否未直接调用 LLM provider：Task 1 / Task 2 是。
-- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 是。
+- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3
+  未新增 WorldEngine 调用。
+- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 是。
+- 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 是。
+- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 是。
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
-  Task 1 / Task 2 是。
+  Task 1 / Task 2 / Task 3 是。
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
-  Task 1 / Task 2 是。
-- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 2
+  Task 1 / Task 2 / Task 3 是。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 3
   进行中。
 - 是否 broad checks 已通过：否，尚未进入总体验证。
 
 ## 遗留问题
 
-- 后端 bundle 内容组装、排序、脱敏检查和下载 endpoint 尚未实现。
+- 后端可下载 JSON endpoint 尚未实现。
 - 前端 typed client / store / evidence panel / 下载入口尚未实现。
 - v0.6 尚未完成总体验证和 review 收口。

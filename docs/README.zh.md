@@ -21,6 +21,10 @@ docs/
       README.zh.md
       plan.zh.md
       review.zh.md
+    v0.3-runtime-visualization/
+      README.zh.md
+      plan.zh.md
+      review.zh.md
   adr/
     0001-tech-stack.zh.md
 ```
@@ -45,6 +49,7 @@ docs/
 继续 v0.1
 审核 v0.1
 开发 v0.2
+开发 v0.3
 ```
 
 Agent 应先读取对应 milestone：

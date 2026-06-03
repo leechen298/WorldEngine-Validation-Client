@@ -29,6 +29,10 @@ docs/
       README.zh.md
       plan.zh.md
       review.zh.md
+    v0.5-director-guidance/
+      README.zh.md
+      plan.zh.md
+      review.zh.md
   adr/
     0001-tech-stack.zh.md
 ```
@@ -55,6 +59,7 @@ docs/
 开发 v0.2
 开发 v0.3
 开发 v0.4
+开发 v0.5
 ```
 
 Agent 应先读取对应 milestone：

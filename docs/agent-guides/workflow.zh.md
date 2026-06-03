@@ -79,6 +79,16 @@ docs: complete v0.1 foundation review
 
 除非用户明确要求，不得用一个大提交完成整个 milestone。
 
+## 分支发布纪律
+
+以 `-local` 结尾的分支只作为本地工作分支。
+
+不得 push 任何 `*-local` 分支。如果本地工作需要共享，必须先把 patch 等价提
+交合入或重放到对应的非 local 目标分支，再用 `git cherry`、`git
+range-diff` 和双向空 diff 验证等价性。
+
+只有用户明确要求 push 时，才可以推送非 local 目标分支。
+
 ## 测试纪律
 
 只有当前工作会话实际运行过的命令，才可以声明通过。

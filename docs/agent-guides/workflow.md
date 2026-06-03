@@ -87,6 +87,18 @@ docs: complete v0.1 foundation review
 Do not make one large commit for an entire milestone unless the user explicitly
 requests it.
 
+## Branch Publishing Discipline
+
+Branches ending in `-local` are local-only working branches.
+
+Never push a `*-local` branch. If local-only work must be shared, first merge or
+replay its patch-equivalent commits onto the matching non-local target branch,
+then verify equivalence with `git cherry`, `git range-diff`, and an empty
+bidirectional diff.
+
+Push only the non-local target branch, and only when the user explicitly asks
+for a push.
+
 ## Testing Discipline
 
 A task may claim pass only for commands that ran in the current work session.

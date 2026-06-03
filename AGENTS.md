@@ -65,6 +65,10 @@ Detailed rules live in `docs/agent-guides/workflow.md`. The short version:
 - Do not mark a milestone complete while related implementation files remain
   unstaged or uncommitted.
 - Do not claim a check passed unless it ran in the current work session.
+- Branches ending in `-local` are local-only working branches. Never push a
+  `*-local` branch; when sharing work, merge or replay its patch-equivalent
+  commits onto the matching non-local branch first, then push only that target
+  branch when the user explicitly requests a push.
 
 ## Boundary Rules
 

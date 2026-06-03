@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：Task 5 已完成 / milestone 进行中
+状态：实现完成 / 总体验证通过
 
 日期：2026-06-03
 
@@ -12,8 +12,7 @@ life log。
 
 当前已完成 v0.3 里程碑文档、后端 public runtime view API、前端 runtime view
 typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent 公开状态面板、
-事件气泡、world / Agent life log 也已完成。总体验证仍未完成，不能声明 v0.3
-已实现或通过。
+事件气泡、world / Agent life log 也已完成，并通过当前会话总体验证。
 
 ## Task Records
 
@@ -134,16 +133,41 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
+### Task 6: 总体验证和 review 收口
+
+- Commit: `待提交`
+- Files:
+  - `docs/milestones/v0.3-runtime-visualization/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest -q`: sandbox 内因 `~/.cache/uv` 权限失败；提升权限重跑通过，`30 passed, 1 warning`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`12 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `pnpm run test`: sandbox 内 API 阶段因 `~/.cache/uv` 权限失败；提升权限重跑通过，web `12 passed`，API `30 passed, 1 warning`
+  - `pnpm run build`: 通过
+  - `git diff --check`: 通过
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|reasoning|hidden_context|raw_response" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.3-runtime-visualization`: 通过；命中项为过滤常量、边界文档、既有 redaction flag 和测试反例，未发现新增运行 UI 展示私有字段。
+- Scope review:
+  - v0.3 仅基于本地公开 runtime evidence 展示 Runtime Visualization，不新增
+    WorldEngine 私有接口调用、不引入 LLM key 管理、不直接调用 LLM provider。
+  - 前端展示公开 tick、地图、Agent public state、事件气泡、world log 和 Agent
+    life log；未实现玩家控制、实时 tick streaming、完整回放重建、branch 深化或
+    完整 evidence bundle 导出。
+- Notes:
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示和 React async store 测试
+    提示，不影响当前通过结论。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
+
 ## 范围审核
 
-- 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；仅
-  读取本地公开 snapshot / event。
-- 是否未引入客户端 LLM key 管理：Task 2 是。
-- 是否未直接调用 LLM provider：Task 2 是。
+- 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：是；v0.3 仅
+  读取本地公开 snapshot / event / runtime view。
+- 是否未引入客户端 LLM key 管理：是。
+- 是否未直接调用 LLM provider：是。
 - 是否未生成权威世界事实：Task 2 是；仅规整本地公开 runtime view，缺 main branch
   时不混合 branch 数据。
-- 是否未引入玩家角色控制：待实现后确认。
-- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：Task 2 是。
+- 是否未引入玩家角色控制：是。
+- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：是。
 - 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 2 是；
   runtime view 使用 allowlist 输出并覆盖私有字段反例。
   Task 3 是；仅新增 typed client/store 和错误展示，未展示 Agent 状态内容。
@@ -152,6 +176,5 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
 
 ## 遗留问题
 
-- Task 6 尚未开始。
 - 实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完整 evidence
   bundle 导出仍属于后续 milestone。

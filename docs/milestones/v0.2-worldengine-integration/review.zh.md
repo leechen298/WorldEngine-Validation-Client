@@ -106,7 +106,7 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 
 ### Task 5: 前端创建世界入口
 
-- Commit: `pending`
+- Commit: `e101932`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`

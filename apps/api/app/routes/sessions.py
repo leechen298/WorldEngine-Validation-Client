@@ -1,17 +1,18 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, TimelineBranch
+from ..models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, StateDiff, TimelineBranch
 from ..schemas import (
     BranchResponse,
     BranchCreatePayload,
     EventResponse,
     PublicAgentState,
+    ReplayViewResponse,
     RuntimeLogItem,
     RuntimeViewResponse,
     SessionCreatePayload,
@@ -168,6 +169,18 @@ def _runtime_log_item(event: Event) -> RuntimeLogItem:
         payload=payload,
         created_at=event.created_at,
     )
+
+
+def _merge_public_patch(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
+    public_patch = _public_payload(patch)
+    for key, value in public_patch.items():
+        if any(part in key.lower() for part in PRIVATE_PAYLOAD_KEY_PARTS):
+            continue
+        if isinstance(base.get(key), dict) and isinstance(value, dict):
+            base[key] = _merge_public_patch(dict(base[key]), value)
+        else:
+            base[key] = value
+    return base
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=SessionSummary)
@@ -397,6 +410,91 @@ def get_runtime_view(session_id: str, db: Session = Depends(get_db)):
         tick=tick,
         visualization=visualization if isinstance(visualization, dict) else {},
         public_agents=_public_agents(snapshot_payload),
+        world_log=world_log,
+        agent_life_log=agent_life_log,
+        latest_event=log_items[-1] if log_items else None,
+    )
+
+
+@router.get("/{session_id}/replay-view", response_model=ReplayViewResponse)
+def get_replay_view(
+    session_id: str,
+    branch_id: str | None = Query(default=None),
+    tick: int | None = Query(default=None, ge=0),
+    db: Session = Depends(get_db),
+):
+    db_session = db.get(DbSession, session_id)
+    if not db_session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    branch_query = select(TimelineBranch).where(TimelineBranch.session_id == session_id)
+    if branch_id:
+        branch_query = branch_query.where(TimelineBranch.id == branch_id)
+    else:
+        branch_query = branch_query.where(TimelineBranch.is_main.is_(True)).order_by(TimelineBranch.created_at.asc())
+    branch = db.execute(branch_query.limit(1)).scalars().first()
+    if not branch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Branch not found")
+
+    target_tick = tick if tick is not None else branch.tick
+    snapshot = (
+        db.execute(
+            select(Snapshot)
+            .where(Snapshot.session_id == session_id, Snapshot.branch_id == branch.id, Snapshot.tick <= target_tick)
+            .order_by(Snapshot.tick.desc(), Snapshot.created_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+    if not snapshot:
+        raise HTTPException(
+            status_code=422,
+            detail="No replay snapshot is available at or before the requested tick",
+        )
+
+    replay_payload = _load_json_object(snapshot.snapshot_json)
+    diffs = (
+        db.execute(
+            select(StateDiff)
+            .where(
+                StateDiff.session_id == session_id,
+                StateDiff.branch_id == branch.id,
+                StateDiff.tick > snapshot.tick,
+                StateDiff.tick <= target_tick,
+            )
+            .order_by(StateDiff.tick.asc(), StateDiff.created_at.asc())
+        )
+        .scalars()
+        .all()
+    )
+    for diff in diffs:
+        replay_payload = _merge_public_patch(replay_payload, _load_json_object(diff.diff_json))
+
+    events = (
+        db.execute(
+            select(Event)
+            .where(Event.session_id == session_id, Event.branch_id == branch.id, Event.tick <= target_tick)
+            .order_by(Event.tick.asc(), Event.created_at.asc())
+        )
+        .scalars()
+        .all()
+    )
+    log_items = [_runtime_log_item(event) for event in events]
+    agent_life_log = [
+        item for item in log_items if item.agent_id is not None or item.event_kind.lower().startswith("agent_")
+    ]
+    world_log = [item for item in log_items if item not in agent_life_log]
+
+    return ReplayViewResponse(
+        session_id=db_session.id,
+        branch_id=branch.id,
+        snapshot_id=snapshot.id,
+        worldengine_world_id=db_session.worldengine_world_id,
+        world_status=db_session.public_world_status or db_session.status,
+        tick=target_tick,
+        visualization=_public_visualization(replay_payload),
+        public_agents=_public_agents(replay_payload),
         world_log=world_log,
         agent_life_log=agent_life_log,
         latest_event=log_items[-1] if log_items else None,

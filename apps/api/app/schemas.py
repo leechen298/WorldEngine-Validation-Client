@@ -142,6 +142,11 @@ class RuntimeViewResponse(BaseModel):
     latest_event: Optional[RuntimeLogItem]
 
 
+class ReplayViewResponse(RuntimeViewResponse):
+    branch_id: str
+    snapshot_id: str
+
+
 class EvidenceBundleMetadata(BaseModel):
     session_id: str
     session_name: str

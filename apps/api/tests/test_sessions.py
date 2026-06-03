@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from app.db import get_sessionmaker
-from app.models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, TimelineBranch
+from app.models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, StateDiff, TimelineBranch
 from app.worldengine_client import create_world_via_public_api
 
 
@@ -537,3 +537,137 @@ def test_runtime_view_returns_404_for_missing_session(client):
     response = client.get("/sessions/missing/runtime-view")
 
     assert response.status_code == 404
+
+
+def test_replay_view_reconstructs_public_branch_tick_from_snapshot_and_diffs(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(
+            session_name="Replay Session",
+            worldengine_world_id="world-123",
+            public_world_status="running",
+        )
+        db.add(db_session)
+        db.flush()
+        snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=1,
+            snapshot_json=(
+                '{"visualization":{"tiles":[{"x":0,"y":0,"terrain":"grass"}]},'
+                '"initial_state":{"agents":[{"id":"agent-1","display_name":"Ada",'
+                '"public_status":"walking","memory":"private"}]}}'
+            ),
+        )
+        db.add(snapshot)
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=1, snapshot_id=snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="main",
+            commit_point_id=commit_point.id,
+            tick=3,
+            snapshot_reference=snapshot.id,
+            is_main=True,
+        )
+        db.add(branch)
+        db.flush()
+        snapshot.branch_id = branch.id
+        db.add_all(
+            [
+                StateDiff(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=2,
+                    diff_json=(
+                        '{"visualization":{"tiles":[{"x":1,"y":0,"terrain":"road",'
+                        '"private_path":"/tmp/hidden"}]},'
+                        '"initial_state":{"agents":[{"id":"agent-1","display_name":"Ada",'
+                        '"public_status":"trading","thought":"hidden"}]},'
+                        '"private_prompt":"hidden"}'
+                    ),
+                ),
+                StateDiff(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=4,
+                    diff_json='{"visualization":{"tiles":[{"x":4,"y":0,"terrain":"future"}]}}',
+                ),
+                Event(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=2,
+                    event_kind="world_change",
+                    payload_json='{"text":"Road appears","secret":"hidden"}',
+                ),
+                Event(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=4,
+                    event_kind="world_future",
+                    payload_json='{"text":"Future should not appear"}',
+                ),
+            ]
+        )
+        db.commit()
+        session_id = db_session.id
+        branch_id = branch.id
+        snapshot_id = snapshot.id
+
+    response = client.get(f"/sessions/{session_id}/replay-view", params={"branch_id": branch_id, "tick": 3})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["session_id"] == session_id
+    assert payload["branch_id"] == branch_id
+    assert payload["snapshot_id"] == snapshot_id
+    assert payload["tick"] == 3
+    assert payload["visualization"]["tiles"] == [{"x": 1, "y": 0, "terrain": "road"}]
+    assert payload["public_agents"][0]["public_status"] == "trading"
+    assert "memory" not in str(payload)
+    assert "thought" not in str(payload)
+    assert "private_prompt" not in str(payload)
+    assert "private_path" not in str(payload)
+    assert payload["world_log"][0]["text"] == "Road appears"
+    assert payload["latest_event"]["event_kind"] == "world_change"
+
+
+def test_replay_view_defaults_to_main_branch_and_rejects_tick_before_snapshot(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(session_name="Replay Main", public_world_status="running")
+        db.add(db_session)
+        db.flush()
+        snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=5,
+            snapshot_json='{"visualization":{"tiles":[{"x":5,"y":0,"terrain":"main"}]}}',
+        )
+        db.add(snapshot)
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=5, snapshot_id=snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        main_branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="main",
+            commit_point_id=commit_point.id,
+            tick=5,
+            snapshot_reference=snapshot.id,
+            is_main=True,
+        )
+        db.add(main_branch)
+        db.flush()
+        snapshot.branch_id = main_branch.id
+        db.commit()
+        session_id = db_session.id
+        branch_id = main_branch.id
+
+    ok_response = client.get(f"/sessions/{session_id}/replay-view", params={"tick": 5})
+    early_response = client.get(f"/sessions/{session_id}/replay-view", params={"tick": 4})
+
+    assert ok_response.status_code == 200
+    assert ok_response.json()["branch_id"] == branch_id
+    assert early_response.status_code == 422
+    assert "No replay snapshot" in early_response.json()["detail"]

@@ -16,18 +16,21 @@ life log。
 
 ### Task 1: v0.3 里程碑文档
 
-- Commit: `待提交`
+- Commit: `e991210`
 - Files:
   - `docs/README.zh.md`
   - `docs/milestones/v0.3-runtime-visualization/README.zh.md`
   - `docs/milestones/v0.3-runtime-visualization/plan.zh.md`
   - `docs/milestones/v0.3-runtime-visualization/review.zh.md`
 - Commands:
-  - `git diff --check`: `待运行`
+  - `git diff --check`: 通过
 - Scope review:
-  - 待记录。
+  - 已创建 v0.3 milestone 文档，明确 Runtime Visualization 目标、范围、非目标、
+    task 顺序、验证命令和逐 task commit 要求。
 - Notes:
   - Task 1 仅创建 v0.3 milestone 文档，不包含产品代码实现。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ## 范围审核
 

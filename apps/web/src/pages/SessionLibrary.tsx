@@ -15,9 +15,10 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
     connectionStatus,
     loadSessions,
     loadHealth,
-    createNewSession,
+    createWorldEngineSession,
   } = useSessionStore();
   const [sessionName, setSessionName] = useState("World Demo");
+  const [worldPrompt, setWorldPrompt] = useState("一个可观察的小型像素世界");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -27,10 +28,10 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!sessionName.trim()) return;
+    if (!sessionName.trim() || !worldPrompt.trim()) return;
     setCreating(true);
     try {
-      const created = await createNewSession(sessionName.trim());
+      const created = await createWorldEngineSession(sessionName.trim(), worldPrompt.trim());
       onOpenSession(created.id);
     } catch (_error) {
       // 统一通过 store 的全局 error 状态展示，不在页面重复抛错
@@ -51,17 +52,24 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
       <section className="page-card">
         <h2>会话库</h2>
         <form onSubmit={onSubmit}>
-          <div className="input-row">
+          <div className="input-stack">
             <label htmlFor="session-name">Session 名称</label>
             <input id="session-name" value={sessionName} onChange={(event) => setSessionName(event.target.value)} />
+            <label htmlFor="world-prompt">世界观</label>
+            <textarea
+              id="world-prompt"
+              value={worldPrompt}
+              onChange={(event) => setWorldPrompt(event.target.value)}
+              rows={4}
+            />
             <button type="submit" disabled={creating}>
-              创建 session
+              创建世界
             </button>
           </div>
         </form>
 
         {sessions.length === 0 ? (
-          <p>还没有本地会话，点击“创建 session”。</p>
+          <p>还没有本地会话，点击“创建世界”。</p>
         ) : (
           <ul className="session-list">
             {sessions.map((session) => (
@@ -70,6 +78,7 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
                   <strong>{session.session_name}</strong>
                   <span>分支：{session.branch_count}</span>
                   <span>状态：{session.status}</span>
+                  {session.worldengine_world_id ? <span>WorldEngine：{session.worldengine_world_id}</span> : null}
                 </button>
               </li>
             ))}

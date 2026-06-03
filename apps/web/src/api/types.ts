@@ -9,8 +9,14 @@ export interface HealthWorldEngineResponse {
   status: "ok" | "degraded";
   worldengine: {
     reachable: boolean;
-    health: Record<string, unknown> | null;
-    manifest: Record<string, unknown> | null;
+    health: { status: string } | null;
+    manifest: { version: string | null; capabilities: string[] } | null;
+    openapi: { title: string | null; version: string | null; world_creation_endpoint: string | null } | null;
+    capabilities: {
+      manifest_available: boolean;
+      openapi_available: boolean;
+      world_creation: string;
+    };
     errors: string[];
   };
 }
@@ -19,6 +25,10 @@ export interface SessionSummary {
   id: string;
   session_name: string;
   status: string;
+  worldengine_world_id: string | null;
+  public_world_status: string | null;
+  initial_state_summary: string | null;
+  visualization_payload_summary: string | null;
   branch_count: number;
   main_branch_id: string | null;
   main_commit_point_id: string | null;
@@ -37,6 +47,11 @@ export interface BranchSummary {
 
 export interface CreateSessionRequest {
   session_name: string;
+}
+
+export interface CreateWorldSessionRequest {
+  session_name: string;
+  world_prompt: string;
 }
 
 export interface CreateBranchRequest {

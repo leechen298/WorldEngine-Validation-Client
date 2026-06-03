@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   createBranch as apiCreateBranch,
   createSession,
+  createWorldSession,
   getBranches,
   getHealth,
   getSessions,
@@ -24,6 +25,7 @@ interface SessionState {
   loadHealth: () => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
   createNewSession: (name: string) => Promise<SessionSummary>;
+  createWorldEngineSession: (name: string, worldPrompt: string) => Promise<SessionSummary>;
   createBranch: (sessionId: string, branchName: string, commitPointId: string) => Promise<BranchSummary>;
 }
 
@@ -67,6 +69,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
               reachable: false,
               health: null,
               manifest: null,
+              openapi: null,
+              capabilities: {
+                manifest_available: false,
+                openapi_available: false,
+                world_creation: "unknown",
+              },
               errors: [(worldengineError as Error).message],
             },
             worldengineApiBase: health.worldengine_api_base,
@@ -111,6 +119,22 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     try {
       const newSession = await createSession({ session_name: name });
       set({ sessions: [...get().sessions, newSession], isLoading: false });
+      return newSession;
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  createWorldEngineSession: async (name: string, worldPrompt: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const newSession = await createWorldSession({
+        session_name: name,
+        world_prompt: worldPrompt,
+      });
+      const payload = await getSessions();
+      set({ sessions: payload.sessions, isLoading: false });
       return newSession;
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });

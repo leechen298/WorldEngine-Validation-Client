@@ -2,6 +2,7 @@ import type {
   BranchSummary,
   CreateBranchRequest,
   CreateSessionRequest,
+  CreateWorldSessionRequest,
   HealthResponse,
   HealthWorldEngineResponse,
   SessionSummary,
@@ -18,7 +19,16 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let message = `Request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (typeof payload.detail === "string") {
+        message = payload.detail;
+      }
+    } catch (_error) {
+      // Keep the status-only fallback when the response body is not JSON.
+    }
+    throw new Error(message);
   }
 
   return (await response.json()) as T;
@@ -38,6 +48,13 @@ export async function getSessions(): Promise<{ sessions: SessionSummary[] }> {
 
 export async function createSession(payload: CreateSessionRequest): Promise<SessionSummary> {
   return request<SessionSummary>("/sessions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createWorldSession(payload: CreateWorldSessionRequest): Promise<SessionSummary> {
+  return request<SessionSummary>("/sessions/worldengine", {
     method: "POST",
     body: JSON.stringify(payload),
   });

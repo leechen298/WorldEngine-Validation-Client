@@ -113,12 +113,19 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
   - `apps/web/src/store/sessionStore.ts`
   - `apps/web/src/pages/SessionLibrary.tsx`
   - `apps/web/src/__tests__/SessionLibrary.test.tsx`
+  - `apps/web/src/styles.css`
 - Commands:
-  - `pnpm --dir apps/web test -- SessionLibrary.test.tsx`: `pending`
+  - `pnpm --dir apps/web test -- SessionLibrary.test.tsx`: 通过，`2 passed` test files，`6 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
 - Scope review:
-  - `pending`
+  - 会话库创建入口改为输入 session name 和世界观，调用本地 FastAPI
+    `/sessions/worldengine`，成功后刷新本地 session store 并打开运行控制台，失败时展示
+    可读错误。
 - Notes:
-  - `pending`
+  - `apps/web/src/styles.css` 是表单布局所需窄改动。
+  - subagent reviewer 指出创建成功后应重新拉取 session 列表、错误应展示后端
+    `detail`；已补 `getSessions()` refresh 和 JSON error parsing 回归测试。
 
 ### Task 6: 运行控制台公开状态摘要
 

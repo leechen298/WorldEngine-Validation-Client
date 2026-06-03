@@ -113,6 +113,32 @@ class EventResponse(BaseModel):
     created_at: datetime
 
 
+class DirectorIntentCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    instruction_text: str = Field(min_length=1, max_length=5000)
+    branch_id: Optional[str] = Field(default=None, min_length=1)
+    tick: int = Field(default=0, ge=0)
+
+
+class DirectorIntentResponse(BaseModel):
+    id: str
+    session_id: str
+    branch_id: Optional[str]
+    tick: int
+    instruction_text: str
+    status: str
+    public_explanation: Optional[str]
+    applied_event_id: Optional[str]
+    error_message: Optional[str]
+    created_at: datetime
+
+
+class DirectorIntentListResponse(BaseModel):
+    session_id: str
+    director_intents: List[DirectorIntentResponse]
+
+
 class PublicAgentState(BaseModel):
     agent_id: str
     display_name: Optional[str]

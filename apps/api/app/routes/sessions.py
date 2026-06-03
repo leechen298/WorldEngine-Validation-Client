@@ -6,10 +6,13 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, StateDiff, TimelineBranch
+from ..models import ApiTrace, CommitPoint, DirectorIntent, Event, Session as DbSession, Snapshot, StateDiff, TimelineBranch
 from ..schemas import (
     BranchResponse,
     BranchCreatePayload,
+    DirectorIntentCreatePayload,
+    DirectorIntentListResponse,
+    DirectorIntentResponse,
     EventResponse,
     PublicAgentState,
     ReplayViewResponse,
@@ -67,6 +70,21 @@ def _session_summary(db_session: DbSession, branch_count: int, main_branch: Time
         main_commit_point_id=main_branch.commit_point_id if main_branch else None,
         created_at=db_session.created_at,
         updated_at=db_session.updated_at,
+    )
+
+
+def _director_intent_response(intent: DirectorIntent) -> DirectorIntentResponse:
+    return DirectorIntentResponse(
+        id=intent.id,
+        session_id=intent.session_id,
+        branch_id=intent.branch_id,
+        tick=intent.tick,
+        instruction_text=intent.instruction_text,
+        status=intent.status,
+        public_explanation=intent.public_explanation,
+        applied_event_id=intent.applied_event_id,
+        error_message=intent.error_message,
+        created_at=intent.created_at,
     )
 
 
@@ -306,6 +324,66 @@ def list_sessions(db: Session = Depends(get_db)):
         )
 
     return SessionListResponse(sessions=result)
+
+
+@router.post("/{session_id}/director-intents", response_model=DirectorIntentResponse, status_code=status.HTTP_201_CREATED)
+def create_director_intent(
+    session_id: str,
+    payload: DirectorIntentCreatePayload,
+    db: Session = Depends(get_db),
+):
+    db_session = db.get(DbSession, session_id)
+    if not db_session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    if payload.branch_id:
+        branch = (
+            db.execute(
+                select(TimelineBranch).where(
+                    TimelineBranch.id == payload.branch_id,
+                    TimelineBranch.session_id == session_id,
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if not branch:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Branch not found")
+
+    intent = DirectorIntent(
+        session_id=session_id,
+        branch_id=payload.branch_id,
+        tick=payload.tick,
+        instruction_text=payload.instruction_text,
+        status="pending",
+    )
+    db.add(intent)
+    db.commit()
+    db.refresh(intent)
+
+    return _director_intent_response(intent)
+
+
+@router.get("/{session_id}/director-intents", response_model=DirectorIntentListResponse)
+def list_director_intents(session_id: str, db: Session = Depends(get_db)):
+    db_session = db.get(DbSession, session_id)
+    if not db_session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    intents = (
+        db.execute(
+            select(DirectorIntent)
+            .where(DirectorIntent.session_id == session_id)
+            .order_by(DirectorIntent.created_at.desc(), DirectorIntent.id.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+    return DirectorIntentListResponse(
+        session_id=session_id,
+        director_intents=[_director_intent_response(intent) for intent in intents],
+    )
 
 
 @router.post("/{session_id}/branches", response_model=BranchResponse, status_code=status.HTTP_201_CREATED)

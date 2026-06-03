@@ -2,7 +2,16 @@ import httpx
 import pytest
 
 from app.db import get_sessionmaker
-from app.models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, StateDiff, TimelineBranch
+from app.models import (
+    ApiTrace,
+    CommitPoint,
+    DirectorIntent,
+    Event,
+    Session as DbSession,
+    Snapshot,
+    StateDiff,
+    TimelineBranch,
+)
 from app.worldengine_client import create_world_via_public_api
 
 
@@ -816,3 +825,75 @@ def test_replay_view_prefers_branch_local_snapshot_over_referenced_snapshot(clie
     payload = response.json()
     assert payload["snapshot_id"] == branch_snapshot_id
     assert payload["visualization"]["tiles"] == [{"x": 2, "y": 1, "terrain": "branch-local"}]
+
+
+def test_create_director_intent_records_pending_public_guidance(client):
+    session_response = client.post("/sessions", json={"session_name": "Director Session"})
+    session_payload = session_response.json()
+    session_id = session_payload["id"]
+    branch_id = session_payload["main_branch_id"]
+
+    response = client.post(
+        f"/sessions/{session_id}/director-intents",
+        json={
+            "instruction_text": "让市场附近的天气逐渐转晴，鼓励居民外出交流",
+            "branch_id": branch_id,
+            "tick": 4,
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["session_id"] == session_id
+    assert payload["branch_id"] == branch_id
+    assert payload["tick"] == 4
+    assert payload["instruction_text"] == "让市场附近的天气逐渐转晴，鼓励居民外出交流"
+    assert payload["status"] == "pending"
+    assert payload["public_explanation"] is None
+    assert payload["applied_event_id"] is None
+    assert payload["error_message"] is None
+
+    list_response = client.get(f"/sessions/{session_id}/director-intents")
+
+    assert list_response.status_code == 200
+    list_payload = list_response.json()
+    assert list_payload["session_id"] == session_id
+    assert [item["id"] for item in list_payload["director_intents"]] == [payload["id"]]
+
+
+def test_create_director_intent_rejects_branch_from_other_session(client):
+    first_session = client.post("/sessions", json={"session_name": "First"}).json()
+    second_session = client.post("/sessions", json={"session_name": "Second"}).json()
+
+    response = client.post(
+        f"/sessions/{first_session['id']}/director-intents",
+        json={
+            "instruction_text": "让村庄外的道路更热闹",
+            "branch_id": second_session["main_branch_id"],
+            "tick": 0,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Branch not found"
+
+
+def test_create_director_intent_rejects_extra_private_control_fields(client):
+    session_payload = client.post("/sessions", json={"session_name": "Boundary Session"}).json()
+    session_id = session_payload["id"]
+
+    response = client.post(
+        f"/sessions/{session_id}/director-intents",
+        json={
+            "instruction_text": "让广场附近的气氛更轻松",
+            "agent_goal": "force Ada to visit the square",
+            "private_prompt": "hidden override",
+        },
+    )
+
+    assert response.status_code == 422
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        stored_count = db.query(DirectorIntent).filter(DirectorIntent.session_id == session_id).count()
+
+    assert stored_count == 0

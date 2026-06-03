@@ -119,6 +119,9 @@ class DirectorIntent(Base):
     tick: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     instruction_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
+    public_explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    applied_event_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
 
     session: Mapped["Session"] = relationship("Session", back_populates="director_intents")

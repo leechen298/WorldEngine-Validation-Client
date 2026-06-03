@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
+import { getSessionEvents } from "../api/client";
+import type { SessionEvent } from "../api/types";
 import { PixelWorldCanvas } from "../components/PixelWorldCanvas";
 import { TimelineBranchList } from "../components/TimelineBranchList";
 import { useSessionStore } from "../store/sessionStore";
@@ -10,13 +12,36 @@ interface RuntimeConsoleProps {
 
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
-  const { error, loadBranches, lastBranches } = useSessionStore();
+  const { error, loadBranches, lastBranches, sessions } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
+  const [events, setEvents] = useState<SessionEvent[]>([]);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const branches = lastBranches[sessionId] || [];
+  const session = sessions.find((item) => item.id === sessionId);
+  const latestEvent = events[events.length - 1] || null;
 
   useEffect(() => {
     loadBranches(sessionId);
   }, [loadBranches, sessionId]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    getSessionEvents(sessionId)
+      .then((items) => {
+        if (isCurrent) {
+          setEvents(items);
+          setEventsError(null);
+        }
+      })
+      .catch((loadError) => {
+        if (isCurrent) {
+          setEventsError((loadError as Error).message);
+        }
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [sessionId]);
 
   const submitDirectorCommand = (event: FormEvent) => {
     event.preventDefault();
@@ -57,10 +82,25 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
 
         <section>
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}
+          {eventsError ? <p className="error-text">事件加载失败：{eventsError}</p> : null}
+          <section className="page-card">
+            <h3>公开状态摘要</h3>
+            <p>WorldEngine world：{session?.worldengine_world_id || "未绑定"}</p>
+            <p>公开状态：{session?.public_world_status || session?.status || "unknown"}</p>
+            <p>初始状态摘要：{session?.initial_state_summary || "无"}</p>
+            <p>Visualization 摘要：{session?.visualization_payload_summary || "无"}</p>
+          </section>
           <TimelineBranchList branches={branches} />
           <section className="page-card">
-            <h3>事件日志占位</h3>
-            <p>待接入 WorldEngine event stream。</p>
+            <h3>最新公开事件</h3>
+            {latestEvent ? (
+              <>
+                <p>{latestEvent.event_kind}</p>
+                <p>{latestEvent.payload_json}</p>
+              </>
+            ) : (
+              <p>暂无公开事件。</p>
+            )}
           </section>
         </section>
       </div>

@@ -45,6 +45,16 @@ export interface BranchSummary {
   created_at: string;
 }
 
+export interface SessionEvent {
+  id: string;
+  session_id: string;
+  branch_id: string | null;
+  tick: number;
+  event_kind: string;
+  payload_json: string;
+  created_at: string;
+}
+
 export interface CreateSessionRequest {
   session_name: string;
 }

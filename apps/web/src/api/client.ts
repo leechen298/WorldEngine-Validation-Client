@@ -5,6 +5,7 @@ import type {
   CreateWorldSessionRequest,
   HealthResponse,
   HealthWorldEngineResponse,
+  SessionEvent,
   SessionSummary,
 } from "./types";
 
@@ -58,6 +59,10 @@ export async function createWorldSession(payload: CreateWorldSessionRequest): Pr
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
+  return request<SessionEvent[]>(`/sessions/${sessionId}/events`);
 }
 
 export async function getBranches(sessionId: string): Promise<{ session_id: string; branches: BranchSummary[] }> {

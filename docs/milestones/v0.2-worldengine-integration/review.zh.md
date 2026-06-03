@@ -136,12 +136,15 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
 - Commands:
-  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: `pending`
-  - `pnpm --dir apps/web build`: `pending`
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test files，`7 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
 - Scope review:
-  - `pending`
+  - 运行控制台展示 session 绑定的 WorldEngine world id、公开状态、初始状态摘要、
+    visualization payload 摘要和最新公开事件；Run/Pause/Single Tick 仍保持占位。
 - Notes:
-  - `pending`
+  - 事件读取只调用本地 FastAPI `/sessions/{session_id}/events`。
+  - subagent reviewer 未发现 P1/P2；已补多事件测试锁定“最新公开事件”选择逻辑。
 
 ### Task 7: 总体验证和 review 收口
 

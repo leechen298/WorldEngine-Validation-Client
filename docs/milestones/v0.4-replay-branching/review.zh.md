@@ -167,7 +167,7 @@ commit point 浏览、branch 切换和从 commit point 创建 branch 的基础 U
 
 ### Task 7: 总体验证和 review 收口
 
-- Commit: `待提交`
+- Commit: `07f4dd8`
 - Files:
   - `docs/milestones/v0.4-replay-branching/README.zh.md`
   - `docs/milestones/v0.4-replay-branching/plan.zh.md`
@@ -193,6 +193,39 @@ commit point 浏览、branch 切换和从 commit point 创建 branch 的基础 U
     提示，不影响当前通过结论。
   - 实时 tick streaming、运行推进 API、导演引导提交闭环和完整 evidence bundle
     导出仍属于后续 milestone。
+
+## Post-Review Fix Records
+
+### Review Fix 1: 修复新建 branch 后立即 replay 的基准 snapshot 查询
+
+- Commit: `待提交`
+- Files:
+  - `apps/api/app/routes/sessions.py`
+  - `apps/api/tests/test_sessions.py`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: 通过，`19 passed, 1 warning`
+  - `cd apps/api && uv run pytest tests/test_sessions.py tests/test_timelines.py -q`: 通过，
+    `24 passed, 1 warning`
+  - `cd apps/api && uv run pytest -q`: 通过，`35 passed, 1 warning`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`17 passed`；存在既有
+    React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `pnpm run test`: 通过；web `17 passed`，API `35 passed, 1 warning`
+  - `pnpm run build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增回归测试覆盖从 main commit point 创建新 branch 后，立即
+    `GET /sessions/{session_id}/replay-view?branch_id=<new>&tick=<commit tick>`。
+  - `replay-view` 现在优先使用目标 branch 自己的 snapshot；没有 branch-local snapshot
+    时，允许使用该 branch 的 `snapshot_reference` 或 commit point snapshot 作为基准。
+  - 后续 `StateDiff` 和 `Event` 查询仍严格使用目标 branch id，避免混入 main branch
+    的 diff / event。
+  - 回归测试覆盖 branch-local snapshot 优先、main branch diff/event 不混入，以及
+    target branch 自己的 diff/event 可应用。
+- Notes:
+  - 修复前新增测试红灯，复现 `422 No replay snapshot is available...`。
+  - 本修复不复制 snapshot 行，不新增 WorldEngine 调用，不改变 branch 平铺语义。
 
 ## 范围审核
 

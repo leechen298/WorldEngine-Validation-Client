@@ -450,6 +450,23 @@ def get_replay_view(
         .first()
     )
     if not snapshot:
+        referenced_snapshot_id = branch.snapshot_reference
+        if not referenced_snapshot_id:
+            branch_commit_point = db.get(CommitPoint, branch.commit_point_id)
+            referenced_snapshot_id = branch_commit_point.snapshot_id if branch_commit_point else None
+        if referenced_snapshot_id:
+            snapshot = (
+                db.execute(
+                    select(Snapshot).where(
+                        Snapshot.session_id == session_id,
+                        Snapshot.id == referenced_snapshot_id,
+                        Snapshot.tick <= target_tick,
+                    )
+                )
+                .scalars()
+                .first()
+            )
+    if not snapshot:
         raise HTTPException(
             status_code=422,
             detail="No replay snapshot is available at or before the requested tick",

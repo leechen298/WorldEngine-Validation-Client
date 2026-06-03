@@ -671,3 +671,148 @@ def test_replay_view_defaults_to_main_branch_and_rejects_tick_before_snapshot(cl
     assert ok_response.json()["branch_id"] == branch_id
     assert early_response.status_code == 422
     assert "No replay snapshot" in early_response.json()["detail"]
+
+
+def test_replay_view_uses_commit_point_snapshot_immediately_after_branch_creation(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(session_name="Fork Replay", public_world_status="running")
+        db.add(db_session)
+        db.flush()
+        snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=2,
+            snapshot_json='{"visualization":{"tiles":[{"x":2,"y":0,"terrain":"market"}]}}',
+        )
+        db.add(snapshot)
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=2, snapshot_id=snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        main_branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="main",
+            commit_point_id=commit_point.id,
+            tick=2,
+            snapshot_reference=snapshot.id,
+            is_main=True,
+        )
+        db.add(main_branch)
+        db.flush()
+        snapshot.branch_id = main_branch.id
+        db.add_all(
+            [
+                StateDiff(
+                    session_id=db_session.id,
+                    branch_id=main_branch.id,
+                    tick=3,
+                    diff_json='{"visualization":{"tiles":[{"x":3,"y":0,"terrain":"main-future"}]}}',
+                ),
+                Event(
+                    session_id=db_session.id,
+                    branch_id=main_branch.id,
+                    tick=3,
+                    event_kind="world_main_future",
+                    payload_json='{"text":"Main future should not appear"}',
+                ),
+            ]
+        )
+        db.commit()
+        session_id = db_session.id
+        commit_point_id = commit_point.id
+
+    branch_response = client.post(
+        f"/sessions/{session_id}/branches",
+        json={"branch_name": "market-fork", "commit_point_id": commit_point_id},
+    )
+    branch_id = branch_response.json()["id"]
+
+    replay_response = client.get(f"/sessions/{session_id}/replay-view", params={"branch_id": branch_id, "tick": 2})
+
+    assert branch_response.status_code == 201
+    assert replay_response.status_code == 200
+    payload = replay_response.json()
+    assert payload["branch_id"] == branch_id
+    assert payload["snapshot_id"] == snapshot.id
+    assert payload["tick"] == 2
+    assert payload["visualization"]["tiles"] == [{"x": 2, "y": 0, "terrain": "market"}]
+    assert payload["world_log"] == []
+    assert payload["latest_event"] is None
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                StateDiff(
+                    session_id=session_id,
+                    branch_id=branch_id,
+                    tick=3,
+                    diff_json='{"visualization":{"tiles":[{"x":3,"y":0,"terrain":"fork-road"}]}}',
+                ),
+                Event(
+                    session_id=session_id,
+                    branch_id=branch_id,
+                    tick=3,
+                    event_kind="world_fork_change",
+                    payload_json='{"text":"Fork road appears"}',
+                ),
+            ]
+        )
+        db.commit()
+
+    branch_replay_response = client.get(
+        f"/sessions/{session_id}/replay-view",
+        params={"branch_id": branch_id, "tick": 3},
+    )
+
+    assert branch_replay_response.status_code == 200
+    branch_payload = branch_replay_response.json()
+    assert branch_payload["visualization"]["tiles"] == [{"x": 3, "y": 0, "terrain": "fork-road"}]
+    assert branch_payload["world_log"][0]["text"] == "Fork road appears"
+    assert branch_payload["latest_event"]["event_kind"] == "world_fork_change"
+    assert "main-future" not in str(branch_payload)
+    assert "Main future should not appear" not in str(branch_payload)
+
+
+def test_replay_view_prefers_branch_local_snapshot_over_referenced_snapshot(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(session_name="Branch Local Snapshot", public_world_status="running")
+        db.add(db_session)
+        db.flush()
+        source_snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=2,
+            snapshot_json='{"visualization":{"tiles":[{"x":2,"y":0,"terrain":"source"}]}}',
+        )
+        branch_snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=2,
+            snapshot_json='{"visualization":{"tiles":[{"x":2,"y":1,"terrain":"branch-local"}]}}',
+        )
+        db.add_all([source_snapshot, branch_snapshot])
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=2, snapshot_id=source_snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="fork",
+            commit_point_id=commit_point.id,
+            tick=2,
+            snapshot_reference=source_snapshot.id,
+            is_main=False,
+        )
+        db.add(branch)
+        db.flush()
+        branch_snapshot.branch_id = branch.id
+        db.commit()
+        session_id = db_session.id
+        branch_id = branch.id
+        branch_snapshot_id = branch_snapshot.id
+
+    response = client.get(f"/sessions/{session_id}/replay-view", params={"branch_id": branch_id, "tick": 2})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["snapshot_id"] == branch_snapshot_id
+    assert payload["visualization"]["tiles"] == [{"x": 2, "y": 1, "terrain": "branch-local"}]

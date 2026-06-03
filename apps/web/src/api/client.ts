@@ -6,6 +6,8 @@ import type {
   CreateSessionRequest,
   CreateWorldSessionRequest,
   DirectorIntent,
+  EvidenceBundleDownload,
+  EvidenceBundleResponse,
   HealthResponse,
   HealthWorldEngineResponse,
   ReplayView,
@@ -120,4 +122,36 @@ export async function createDirectorIntent(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function getEvidenceBundleManifest(sessionId: string): Promise<EvidenceBundleResponse> {
+  return request<EvidenceBundleResponse>(`/sessions/${sessionId}/evidence/bundle/manifest`);
+}
+
+export async function downloadEvidenceBundle(sessionId: string): Promise<EvidenceBundleDownload> {
+  const response = await fetch(`${API_BASE}/sessions/${sessionId}/evidence/bundle/download`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    let message = `Request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (typeof payload.detail === "string") {
+        message = payload.detail;
+      }
+    } catch (_error) {
+      // Keep the status-only fallback when the response body is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  const disposition = response.headers.get("content-disposition") || "";
+  const filenameMatch = disposition.match(/filename="([^"]+)"/);
+  return {
+    filename: filenameMatch?.[1] || `evidence-bundle-${sessionId}.json`,
+    bundle: (await response.json()) as EvidenceBundleResponse,
+  };
 }

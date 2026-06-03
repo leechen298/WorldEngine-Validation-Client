@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   createDirectorIntent,
+  downloadEvidenceBundle,
+  getEvidenceBundleManifest,
   getCommitPoints,
   getDirectorIntents,
   getReplayView,
@@ -12,6 +14,8 @@ import { RuntimeConsole } from "../pages/RuntimeConsole";
 
 vi.mock("../api/client", () => ({
   createDirectorIntent: vi.fn(),
+  downloadEvidenceBundle: vi.fn(),
+  getEvidenceBundleManifest: vi.fn(),
   getCommitPoints: vi.fn().mockResolvedValue([]),
   getDirectorIntents: vi.fn().mockResolvedValue({ session_id: "session-id", director_intents: [] }),
   getReplayView: vi.fn().mockResolvedValue(null),
@@ -64,6 +68,85 @@ describe("RuntimeConsole", () => {
     useSessionStore.setState(initialSessionStoreState, true);
     vi.mocked(getCommitPoints).mockClear();
     vi.mocked(getCommitPoints).mockResolvedValue([]);
+    vi.mocked(getEvidenceBundleManifest).mockClear();
+    vi.mocked(getEvidenceBundleManifest).mockResolvedValue({
+      manifest: {
+        bundle_schema_version: "0.6.0",
+        generated_at: "2026-06-04T00:00:00Z",
+        session_id: "session-id",
+        session_name: "Evidence Session",
+        worldengine_world_id: null,
+        world_status: "created",
+        counts: {
+          branches: 1,
+          events: 0,
+          state_diffs: 0,
+          snapshots: 0,
+          commit_points: 1,
+          director_intents: 0,
+          api_traces: 0,
+          evaluator_outputs: 0,
+          replay_index: 1,
+        },
+        redaction_flags: {
+          llm_keys_included: false,
+          private_worldengine_internals_included: false,
+        },
+        warnings: ["public evaluator outputs unavailable"],
+      },
+      records: {
+        branches: [],
+        commit_points: [],
+        events: [],
+        state_diffs: [],
+        snapshots: [],
+        director_intents: [],
+        api_traces: [],
+        evaluator_outputs: [],
+        replay_index: [],
+      },
+    });
+    vi.mocked(downloadEvidenceBundle).mockClear();
+    vi.mocked(downloadEvidenceBundle).mockResolvedValue({
+      filename: "evidence-bundle-session-id-2026-06-04.json",
+      bundle: {
+        manifest: {
+          bundle_schema_version: "0.6.0",
+          generated_at: "2026-06-04T00:00:00Z",
+          session_id: "session-id",
+          session_name: "Evidence Session",
+          worldengine_world_id: null,
+          world_status: "created",
+          counts: {
+            branches: 1,
+            events: 0,
+            state_diffs: 0,
+            snapshots: 0,
+            commit_points: 1,
+            director_intents: 0,
+            api_traces: 0,
+            evaluator_outputs: 0,
+            replay_index: 1,
+          },
+          redaction_flags: {
+            llm_keys_included: false,
+            private_worldengine_internals_included: false,
+          },
+          warnings: [],
+        },
+        records: {
+          branches: [],
+          commit_points: [],
+          events: [],
+          state_diffs: [],
+          snapshots: [],
+          director_intents: [],
+          api_traces: [],
+          evaluator_outputs: [],
+          replay_index: [],
+        },
+      },
+    });
     vi.mocked(getDirectorIntents).mockClear();
     vi.mocked(getDirectorIntents).mockResolvedValue({ session_id: "session-id", director_intents: [] });
     vi.mocked(getReplayView).mockClear();
@@ -898,6 +981,49 @@ describe("RuntimeConsole", () => {
       "WorldEngine public endpoint unavailable",
     );
     expect(useSessionStore.getState().directorIntentSubmittingBySession["session-id"]).toBe(false);
+  });
+
+  it("loads evidence bundle manifest through the store", async () => {
+    useSessionStore.setState({
+      evidenceBundleBySession: {},
+      evidenceBundleErrorBySession: {},
+      evidenceBundleLoadingBySession: {},
+    } as any);
+
+    const bundle = await useSessionStore.getState().loadEvidenceBundle("session-id");
+
+    expect(getEvidenceBundleManifest).toHaveBeenCalledWith("session-id");
+    expect(bundle?.manifest.counts.branches).toBe(1);
+    expect(useSessionStore.getState().evidenceBundleBySession["session-id"]?.manifest.session_id).toBe("session-id");
+    expect(useSessionStore.getState().evidenceBundleErrorBySession["session-id"]).toBe("");
+    expect(useSessionStore.getState().evidenceBundleLoadingBySession["session-id"]).toBe(false);
+  });
+
+  it("records evidence download failures without clearing runtime state", async () => {
+    vi.mocked(downloadEvidenceBundle).mockRejectedValueOnce(new Error("Download failed"));
+    const runtimeView = {
+      session_id: "session-id",
+      worldengine_world_id: null,
+      world_status: "created",
+      tick: 1,
+      visualization: {},
+      public_agents: [],
+      world_log: [],
+      agent_life_log: [],
+      latest_event: null,
+    };
+    useSessionStore.setState({
+      runtimeViewBySession: { "session-id": runtimeView },
+      evidenceBundleErrorBySession: {},
+      evidenceBundleLoadingBySession: {},
+    } as any);
+
+    const result = await useSessionStore.getState().downloadEvidenceBundle("session-id");
+
+    expect(result).toBeNull();
+    expect(useSessionStore.getState().runtimeViewBySession["session-id"]).toBe(runtimeView);
+    expect(useSessionStore.getState().evidenceBundleErrorBySession["session-id"]).toBe("Download failed");
+    expect(useSessionStore.getState().evidenceBundleLoadingBySession["session-id"]).toBe(false);
   });
 
   it("submits director guidance from the runtime console and shows intent status", async () => {

@@ -126,6 +126,59 @@ export interface ReplayView extends RuntimeView {
   snapshot_id: string;
 }
 
+export type EvidenceBundleWarning = string;
+
+export interface EvidenceBundleCounts {
+  branches: number;
+  events: number;
+  state_diffs: number;
+  snapshots: number;
+  commit_points: number;
+  director_intents: number;
+  api_traces: number;
+  evaluator_outputs: number;
+  replay_index: number;
+}
+
+export interface EvidenceBundleRedactionFlags {
+  llm_keys_included: boolean;
+  private_worldengine_internals_included: boolean;
+}
+
+export interface EvidenceBundleManifest {
+  bundle_schema_version: string;
+  generated_at: string;
+  session_id: string;
+  session_name: string;
+  worldengine_world_id: string | null;
+  world_status: string;
+  counts: EvidenceBundleCounts;
+  redaction_flags: EvidenceBundleRedactionFlags;
+  warnings: EvidenceBundleWarning[];
+}
+
+export interface EvidenceBundleRecords {
+  branches: Record<string, unknown>[];
+  commit_points: Record<string, unknown>[];
+  events: Record<string, unknown>[];
+  state_diffs: Record<string, unknown>[];
+  snapshots: Record<string, unknown>[];
+  director_intents: Record<string, unknown>[];
+  api_traces: Record<string, unknown>[];
+  evaluator_outputs: Record<string, unknown>[];
+  replay_index: Record<string, unknown>[];
+}
+
+export interface EvidenceBundleResponse {
+  manifest: EvidenceBundleManifest;
+  records: EvidenceBundleRecords;
+}
+
+export interface EvidenceBundleDownload {
+  filename: string;
+  bundle: EvidenceBundleResponse;
+}
+
 export interface CreateSessionRequest {
   session_name: string;
 }

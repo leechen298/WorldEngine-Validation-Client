@@ -10,9 +10,9 @@ v0.6 目标是完整 Evidence Bundle：在不越过 WorldEngine public API 和�
 证据边界的前提下，导出可下载、可审计、可脱敏检查的本地 session 证据包。
 
 当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest、后端
-bundle 内容组装和脱敏检查，以及后端可下载 JSON endpoint。后续必须从
-`plan.zh.md` Task 5 开始，按 numbered task 顺序实现、验证、记录并逐 task
-提交。
+bundle 内容组装和脱敏检查、后端可下载 JSON endpoint，以及前端 evidence bundle
+typed client 和状态。后续必须从 `plan.zh.md` Task 6 开始，按 numbered task
+顺序实现、验证、记录并逐 task 提交。
 
 ## Task Records
 
@@ -115,7 +115,7 @@ bundle 内容组装和脱敏检查，以及后端可下载 JSON endpoint。后�
 
 ### Task 4: 后端可下载 JSON endpoint
 
-- Commit: `pending`
+- Commit: `eccd60f`
 - Files:
   - `apps/api/app/routes/evidence.py`
   - `apps/api/tests/test_evidence.py`
@@ -138,22 +138,53 @@ bundle 内容组装和脱敏检查，以及后端可下载 JSON endpoint。后�
 - Notes:
   - 本 task 不实现前端 typed client / store；前端下载行为留给 Task 5 / Task 6。
 
+### Task 5: 前端 evidence bundle typed client 和状态
+
+- Commit: `pending`
+- Files:
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.6-evidence-bundle/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 红灯，2 failed，原因是
+    Zustand store 尚无 `loadEvidenceBundle` / `downloadEvidenceBundle`。
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test files，
+    `23 passed`；存在既有 React async store `act(...)` warning。
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增 evidence bundle counts、redaction flags、manifest、records、response 和
+    download TypeScript 类型。
+  - 新增 `getEvidenceBundleManifest()` typed client 方法，读取
+    `/sessions/{session_id}/evidence/bundle/manifest`。
+  - 新增 `downloadEvidenceBundle()` client helper，读取下载 endpoint，解析 attachment
+    filename，并返回 `{ filename, bundle }`，便于后续 UI 触发浏览器下载。
+  - Zustand store 新增每 session 的 evidence bundle、加载中状态和可读错误状态。
+  - store 新增 `loadEvidenceBundle()` 和 `downloadEvidenceBundle()`；失败时保留当前
+    runtime state，只记录 evidence bundle 错误和加载结束状态。
+  - 前端类型和 store 未新增 raw private response、LLM key、provider secret、
+    private prompt 或 Agent private state 字段；仅保留后端公开 redaction flags。
+- Notes:
+  - 本 task 不新增运行控制台 evidence panel；UI 展示和点击下载留给 Task 6。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3 /
-  Task 4 未新增 WorldEngine 调用。
-- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 / Task 4 是。
-- 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 / Task 4 是。
-- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 / Task 4 是。
+  Task 4 / Task 5 未新增 WorldEngine 调用。
+- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 / Task 4 / Task 5 是。
+- 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 / Task 4 / Task 5 是。
+- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 / Task 4 /
+  Task 5 是。
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
-  Task 1 / Task 2 / Task 3 / Task 4 是。
+  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 是。
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
-  Task 1 / Task 2 / Task 3 / Task 4 是。
-- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 4
+  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 是。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 5
   进行中。
 - 是否 broad checks 已通过：否，尚未进入总体验证。
 
 ## 遗留问题
 
-- 前端 typed client / store / evidence panel / 下载入口尚未实现。
+- 前端 evidence panel / 下载入口尚未实现。
 - v0.6 尚未完成总体验证和 review 收口。

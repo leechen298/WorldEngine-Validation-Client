@@ -4,6 +4,8 @@ import {
   createDirectorIntent as apiCreateDirectorIntent,
   createSession,
   createWorldSession,
+  downloadEvidenceBundle as apiDownloadEvidenceBundle,
+  getEvidenceBundleManifest,
   getBranches,
   getCommitPoints,
   getDirectorIntents,
@@ -18,6 +20,8 @@ import type {
   CommitPointSummary,
   CreateDirectorIntentRequest,
   DirectorIntent,
+  EvidenceBundleDownload,
+  EvidenceBundleResponse,
   HealthWorldEngineResponse,
   ReplayView,
   RuntimeView,
@@ -45,6 +49,9 @@ interface SessionState {
   directorIntentsBySession: Record<string, DirectorIntent[]>;
   directorIntentErrorBySession: Record<string, string>;
   directorIntentSubmittingBySession: Record<string, boolean>;
+  evidenceBundleBySession: Record<string, EvidenceBundleResponse>;
+  evidenceBundleErrorBySession: Record<string, string>;
+  evidenceBundleLoadingBySession: Record<string, boolean>;
   loadSessions: () => Promise<void>;
   loadHealth: () => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
@@ -62,6 +69,8 @@ interface SessionState {
     sessionId: string,
     payload: CreateDirectorIntentRequest,
   ) => Promise<DirectorIntent | null>;
+  loadEvidenceBundle: (sessionId: string) => Promise<EvidenceBundleResponse | null>;
+  downloadEvidenceBundle: (sessionId: string) => Promise<EvidenceBundleDownload | null>;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -80,6 +89,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   directorIntentsBySession: {},
   directorIntentErrorBySession: {},
   directorIntentSubmittingBySession: {},
+  evidenceBundleBySession: {},
+  evidenceBundleErrorBySession: {},
+  evidenceBundleLoadingBySession: {},
 
   loadSessions: async () => {
     set({ isLoading: true, error: null });
@@ -372,6 +384,92 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         },
         directorIntentErrorBySession: {
           ...state.directorIntentErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
+    }
+  },
+
+  loadEvidenceBundle: async (sessionId: string) => {
+    set((state) => ({
+      evidenceBundleLoadingBySession: {
+        ...state.evidenceBundleLoadingBySession,
+        [sessionId]: true,
+      },
+      evidenceBundleErrorBySession: {
+        ...state.evidenceBundleErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const bundle = await getEvidenceBundleManifest(sessionId);
+      set((state) => ({
+        evidenceBundleBySession: {
+          ...state.evidenceBundleBySession,
+          [sessionId]: bundle,
+        },
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return bundle;
+    } catch (error) {
+      set((state) => ({
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
+    }
+  },
+
+  downloadEvidenceBundle: async (sessionId: string) => {
+    set((state) => ({
+      evidenceBundleLoadingBySession: {
+        ...state.evidenceBundleLoadingBySession,
+        [sessionId]: true,
+      },
+      evidenceBundleErrorBySession: {
+        ...state.evidenceBundleErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const download = await apiDownloadEvidenceBundle(sessionId);
+      set((state) => ({
+        evidenceBundleBySession: {
+          ...state.evidenceBundleBySession,
+          [sessionId]: download.bundle,
+        },
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return download;
+    } catch (error) {
+      set((state) => ({
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
           [sessionId]: (error as Error).message,
         },
       }));

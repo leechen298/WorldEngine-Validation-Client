@@ -38,7 +38,7 @@ director guidance 提交适配、前端 typed client / store 和运行控制台�
 
 ### Task 2: 后端 director intent schema 和本地 API
 
-- Commit: `待提交`
+- Commit: `3717dcd`
 - Files:
   - `apps/api/app/models.py`
   - `apps/api/app/routes/sessions.py`
@@ -65,6 +65,7 @@ director guidance 提交适配、前端 typed client / store 和运行控制台�
 - Notes:
   - warning 来自现有 Starlette TestClient/httpx 兼容提示。
   - WorldEngine public director guidance 提交适配留给 Task 3。
+  - Task 2 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

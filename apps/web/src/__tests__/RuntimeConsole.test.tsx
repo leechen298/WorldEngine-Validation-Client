@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { getSessionEvents } from "../api/client";
+import { getCommitPoints, getReplayView, getSessionEvents } from "../api/client";
 import { useSessionStore } from "../store/sessionStore";
 import { RuntimeConsole } from "../pages/RuntimeConsole";
 
 vi.mock("../api/client", () => ({
+  getCommitPoints: vi.fn().mockResolvedValue([]),
+  getReplayView: vi.fn().mockResolvedValue(null),
   getSessionEvents: vi.fn().mockResolvedValue([]),
 }));
 
@@ -49,6 +51,10 @@ vi.mock("pixi.js", () => {
 
 describe("RuntimeConsole", () => {
   beforeEach(() => {
+    vi.mocked(getCommitPoints).mockClear();
+    vi.mocked(getCommitPoints).mockResolvedValue([]);
+    vi.mocked(getReplayView).mockClear();
+    vi.mocked(getReplayView).mockResolvedValue(null as any);
     vi.mocked(getSessionEvents).mockClear();
   });
 
@@ -507,5 +513,77 @@ describe("RuntimeConsole", () => {
     expect(screen.queryByText("memory")).not.toBeInTheDocument();
     expect(screen.queryByText("goal")).not.toBeInTheDocument();
     expect(screen.queryByText("thought")).not.toBeInTheDocument();
+  });
+
+  it("loads replay view and commit points through the store without raw payloads", async () => {
+    vi.mocked(getCommitPoints).mockResolvedValueOnce([
+      {
+        id: "cp-2",
+        session_id: "session-id",
+        tick: 2,
+        event_id: "event-2",
+        snapshot_id: "snapshot-2",
+        payload_summary: "Market opens",
+        branch_ids: ["branch-1"],
+        branch_names: ["main"],
+        created_at: "2026-01-01T00:00:02Z",
+      },
+    ]);
+    vi.mocked(getReplayView).mockResolvedValueOnce({
+      session_id: "session-id",
+      branch_id: "branch-1",
+      snapshot_id: "snapshot-2",
+      worldengine_world_id: "world-123",
+      world_status: "running",
+      tick: 2,
+      visualization: {},
+      public_agents: [],
+      world_log: [],
+      agent_life_log: [],
+      latest_event: null,
+    });
+    useSessionStore.setState({
+      commitPointsBySession: {},
+      replayViewBySession: {},
+      replayErrorBySession: {},
+      selectedBranchBySession: {},
+      replayTickBySession: {},
+    } as any);
+
+    const commitPoints = await useSessionStore.getState().loadCommitPoints("session-id");
+    const replayView = await useSessionStore
+      .getState()
+      .loadReplayView("session-id", { branchId: "branch-1", tick: 2 });
+
+    expect(getCommitPoints).toHaveBeenCalledWith("session-id");
+    expect(getReplayView).toHaveBeenCalledWith("session-id", { branchId: "branch-1", tick: 2 });
+    expect(commitPoints[0].payload_summary).toBe("Market opens");
+    expect("payload_json" in commitPoints[0]).toBe(false);
+    expect(replayView?.branch_id).toBe("branch-1");
+    expect(useSessionStore.getState().selectedBranchBySession["session-id"]).toBe("branch-1");
+    expect(useSessionStore.getState().replayTickBySession["session-id"]).toBe(2);
+    expect(useSessionStore.getState().replayViewBySession["session-id"]?.snapshot_id).toBe("snapshot-2");
+    expect(useSessionStore.getState().replayErrorBySession["session-id"]).toBe("");
+  });
+
+  it("records readable replay load failures in the store", async () => {
+    vi.mocked(getReplayView).mockRejectedValueOnce(new Error("No replay snapshot is available"));
+    useSessionStore.setState({
+      replayViewBySession: {},
+      replayErrorBySession: {},
+      selectedBranchBySession: {},
+      replayTickBySession: {},
+    } as any);
+
+    const replayView = await useSessionStore
+      .getState()
+      .loadReplayView("session-id", { branchId: "branch-1", tick: 4 });
+
+    expect(replayView).toBeNull();
+    expect(useSessionStore.getState().replayErrorBySession["session-id"]).toBe(
+      "No replay snapshot is available",
+    );
+    expect(useSessionStore.getState().selectedBranchBySession["session-id"]).toBe("branch-1");
+    expect(useSessionStore.getState().replayTickBySession["session-id"]).toBe(4);
   });
 });

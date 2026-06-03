@@ -64,7 +64,7 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 
 ### Task 3: 后端 commit point / branch 上下文深化
 
-- Commit: `待提交`
+- Commit: `99812a5`
 - Files:
   - `apps/api/app/routes/sessions.py`
   - `apps/api/app/routes/timelines.py`
@@ -87,6 +87,31 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   - warning 来自现有 Starlette TestClient/httpx 兼容提示。
   - 本 task 不新增前端 UI，不实现 timeline scrubber。
 
+### Task 4: 前端 replay / branch typed client 和状态
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test
+    files，`15 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增 replay view、commit point summary、branch context TypeScript 类型。
+  - 新增 `getReplayView()` 和 `getCommitPoints()` typed client 方法。
+  - Zustand store 现在可缓存 commit points、replay view、replay error、selected
+    branch 和 replay tick。
+  - store 加载 replay view 失败时记录可读错误，不展示 raw payload。
+- Notes:
+  - 新增测试先红灯复现 `loadCommitPoints` / `loadReplayView` 缺失，再实现后转绿。
+  - 本 task 不新增 scrubber UI、不新增 commit point browser UI、不实现 branch
+    切换和创建 UI。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；
@@ -96,11 +121,11 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 - 是否未生成权威世界事实：Task 2 是；缺少可重建 snapshot 时返回错误，不编造
   replay 状态。
 - 是否未引入 parent / child timeline 层级语义：Task 3 是。
+- 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 4 是；
+  前端新增类型和 store 状态不引入 raw payload 展示。
 - 是否未引入玩家角色控制：待实现后验证。
 - 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后验证。
-- 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：待实现后验证。
 
 ## 遗留问题
 
-- 前端 replay / branch typed client 和状态尚未实现。
 - 时间线 scrubber、commit point 浏览、branch 切换和创建 UI 尚未实现。

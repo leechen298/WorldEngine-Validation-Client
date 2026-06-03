@@ -1,10 +1,12 @@
 import type {
   BranchSummary,
+  CommitPointSummary,
   CreateBranchRequest,
   CreateSessionRequest,
   CreateWorldSessionRequest,
   HealthResponse,
   HealthWorldEngineResponse,
+  ReplayView,
   RuntimeView,
   SessionEvent,
   SessionSummary,
@@ -70,8 +72,27 @@ export async function getRuntimeView(sessionId: string): Promise<RuntimeView> {
   return request<RuntimeView>(`/sessions/${sessionId}/runtime-view`);
 }
 
+export async function getReplayView(
+  sessionId: string,
+  options: { branchId?: string; tick?: number } = {},
+): Promise<ReplayView> {
+  const params = new URLSearchParams();
+  if (options.branchId) {
+    params.set("branch_id", options.branchId);
+  }
+  if (options.tick !== undefined) {
+    params.set("tick", String(options.tick));
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<ReplayView>(`/sessions/${sessionId}/replay-view${suffix}`);
+}
+
 export async function getBranches(sessionId: string): Promise<{ session_id: string; branches: BranchSummary[] }> {
   return request<{ session_id: string; branches: BranchSummary[] }>(`/sessions/${sessionId}/branches`);
+}
+
+export async function getCommitPoints(sessionId: string): Promise<CommitPointSummary[]> {
+  return request<CommitPointSummary[]>(`/sessions/${sessionId}/branches/commit-points`);
 }
 
 export async function createBranch(sessionId: string, payload: CreateBranchRequest): Promise<BranchSummary> {

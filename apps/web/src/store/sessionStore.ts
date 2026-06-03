@@ -4,12 +4,21 @@ import {
   createSession,
   createWorldSession,
   getBranches,
+  getCommitPoints,
   getHealth,
+  getReplayView,
   getRuntimeView,
   getSessions,
   getWorldEngineHealth,
 } from "../api/client";
-import type { BranchSummary, HealthWorldEngineResponse, RuntimeView, SessionSummary } from "../api/types";
+import type {
+  BranchSummary,
+  CommitPointSummary,
+  HealthWorldEngineResponse,
+  ReplayView,
+  RuntimeView,
+  SessionSummary,
+} from "../api/types";
 
 interface SessionState {
   sessions: SessionSummary[];
@@ -22,12 +31,22 @@ interface SessionState {
     healthText?: string;
   } | null;
   lastBranches: Record<string, BranchSummary[]>;
+  commitPointsBySession: Record<string, CommitPointSummary[]>;
   runtimeViewBySession: Record<string, RuntimeView>;
   runtimeErrorBySession: Record<string, string>;
+  replayViewBySession: Record<string, ReplayView>;
+  replayErrorBySession: Record<string, string>;
+  selectedBranchBySession: Record<string, string>;
+  replayTickBySession: Record<string, number>;
   loadSessions: () => Promise<void>;
   loadHealth: () => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
+  loadCommitPoints: (sessionId: string) => Promise<CommitPointSummary[]>;
   loadRuntimeView: (sessionId: string) => Promise<RuntimeView | null>;
+  loadReplayView: (
+    sessionId: string,
+    options?: { branchId?: string; tick?: number },
+  ) => Promise<ReplayView | null>;
   createNewSession: (name: string) => Promise<SessionSummary>;
   createWorldEngineSession: (name: string, worldPrompt: string) => Promise<SessionSummary>;
   createBranch: (sessionId: string, branchName: string, commitPointId: string) => Promise<BranchSummary>;
@@ -39,8 +58,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   error: null,
   connectionStatus: null,
   lastBranches: {},
+  commitPointsBySession: {},
   runtimeViewBySession: {},
   runtimeErrorBySession: {},
+  replayViewBySession: {},
+  replayErrorBySession: {},
+  selectedBranchBySession: {},
+  replayTickBySession: {},
 
   loadSessions: async () => {
     set({ isLoading: true, error: null });
@@ -120,6 +144,22 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
+  loadCommitPoints: async (sessionId: string) => {
+    try {
+      const commitPoints = await getCommitPoints(sessionId);
+      set((state) => ({
+        commitPointsBySession: {
+          ...state.commitPointsBySession,
+          [sessionId]: commitPoints,
+        },
+      }));
+      return commitPoints;
+    } catch (error) {
+      set({ error: (error as Error).message });
+      return [];
+    }
+  },
+
   loadRuntimeView: async (sessionId: string) => {
     set((state) => ({
       runtimeErrorBySession: {
@@ -144,6 +184,58 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       set((state) => ({
         runtimeErrorBySession: {
           ...state.runtimeErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
+    }
+  },
+
+  loadReplayView: async (sessionId: string, options = {}) => {
+    set((state) => ({
+      selectedBranchBySession: options.branchId
+        ? {
+            ...state.selectedBranchBySession,
+            [sessionId]: options.branchId,
+          }
+        : state.selectedBranchBySession,
+      replayTickBySession:
+        options.tick !== undefined
+          ? {
+              ...state.replayTickBySession,
+              [sessionId]: options.tick,
+            }
+          : state.replayTickBySession,
+      replayErrorBySession: {
+        ...state.replayErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const replayView = await getReplayView(sessionId, options);
+      set((state) => ({
+        replayViewBySession: {
+          ...state.replayViewBySession,
+          [sessionId]: replayView,
+        },
+        selectedBranchBySession: {
+          ...state.selectedBranchBySession,
+          [sessionId]: replayView.branch_id,
+        },
+        replayTickBySession: {
+          ...state.replayTickBySession,
+          [sessionId]: replayView.tick,
+        },
+        replayErrorBySession: {
+          ...state.replayErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return replayView;
+    } catch (error) {
+      set((state) => ({
+        replayErrorBySession: {
+          ...state.replayErrorBySession,
           [sessionId]: (error as Error).message,
         },
       }));

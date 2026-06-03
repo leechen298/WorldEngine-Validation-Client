@@ -41,7 +41,21 @@ export interface BranchSummary {
   branch_name: string;
   commit_point_id: string;
   tick: number;
+  current_tick: number;
   snapshot_reference: string | null;
+  is_main: boolean;
+  created_at: string;
+}
+
+export interface CommitPointSummary {
+  id: string;
+  session_id: string;
+  tick: number;
+  event_id: string | null;
+  snapshot_id: string | null;
+  payload_summary: string | null;
+  branch_ids: string[];
+  branch_names: string[];
   created_at: string;
 }
 
@@ -84,6 +98,11 @@ export interface RuntimeView {
   world_log: RuntimeLogItem[];
   agent_life_log: RuntimeLogItem[];
   latest_event: RuntimeLogItem | null;
+}
+
+export interface ReplayView extends RuntimeView {
+  branch_id: string;
+  snapshot_id: string;
 }
 
 export interface CreateSessionRequest {

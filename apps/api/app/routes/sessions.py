@@ -1,10 +1,9 @@
-import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import CommitPoint, Event, Session as DbSession, TimelineBranch
+from ..models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, TimelineBranch
 from ..schemas import (
     BranchResponse,
     BranchCreatePayload,
@@ -12,9 +11,28 @@ from ..schemas import (
     SessionCreatePayload,
     SessionListResponse,
     SessionSummary,
+    WorldEngineSessionCreatePayload,
 )
+from ..worldengine_client import create_world_via_public_api
 
 router = APIRouter(prefix="/sessions")
+
+
+def _session_summary(db_session: DbSession, branch_count: int, main_branch: TimelineBranch | None) -> SessionSummary:
+    return SessionSummary(
+        id=db_session.id,
+        session_name=db_session.session_name,
+        status=db_session.status,
+        worldengine_world_id=db_session.worldengine_world_id,
+        public_world_status=db_session.public_world_status,
+        initial_state_summary=db_session.initial_state_summary,
+        visualization_payload_summary=db_session.visualization_payload_summary,
+        branch_count=branch_count,
+        main_branch_id=main_branch.id if main_branch else None,
+        main_commit_point_id=main_branch.commit_point_id if main_branch else None,
+        created_at=db_session.created_at,
+        updated_at=db_session.updated_at,
+    )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=SessionSummary)
@@ -40,20 +58,80 @@ def create_session(payload: SessionCreatePayload, db: Session = Depends(get_db))
     db.refresh(db_session)
     db.refresh(main_branch)
 
-    return SessionSummary(
-        id=db_session.id,
-        session_name=db_session.session_name,
-        status=db_session.status,
-        worldengine_world_id=db_session.worldengine_world_id,
-        public_world_status=db_session.public_world_status,
-        initial_state_summary=db_session.initial_state_summary,
-        visualization_payload_summary=db_session.visualization_payload_summary,
-        branch_count=1,
-        main_branch_id=main_branch.id,
-        main_commit_point_id=first_commit.id,
-        created_at=db_session.created_at,
-        updated_at=db_session.updated_at,
+    return _session_summary(db_session, 1, main_branch)
+
+
+@router.post("/worldengine", status_code=status.HTTP_201_CREATED, response_model=SessionSummary)
+async def create_worldengine_session(payload: WorldEngineSessionCreatePayload, db: Session = Depends(get_db)):
+    try:
+        world_data = await create_world_via_public_api(payload.world_prompt)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    db_session = DbSession(
+        session_name=payload.session_name,
+        worldengine_world_id=world_data["world_id"],
+        public_world_status=world_data["status"],
+        initial_state_summary=world_data["initial_state_summary"],
+        visualization_payload_summary=world_data["visualization_payload_summary"],
     )
+    db.add(db_session)
+    db.flush()
+
+    snapshot = Snapshot(session_id=db_session.id, tick=0, snapshot_json=world_data["snapshot_json"])
+    db.add(snapshot)
+    db.flush()
+
+    first_commit = CommitPoint(
+        session_id=db_session.id,
+        tick=0,
+        snapshot_id=snapshot.id,
+        payload_json=world_data["event_payload_json"],
+    )
+    db.add(first_commit)
+    db.flush()
+
+    main_branch = TimelineBranch(
+        session_id=db_session.id,
+        branch_name="main",
+        commit_point_id=first_commit.id,
+        tick=0,
+        snapshot_reference=snapshot.id,
+        is_main=True,
+    )
+    db.add(main_branch)
+    db.flush()
+    snapshot.branch_id = main_branch.id
+
+    event = Event(
+        session_id=db_session.id,
+        branch_id=main_branch.id,
+        tick=0,
+        event_kind="world_created",
+        payload_json=world_data["event_payload_json"],
+    )
+    db.add(event)
+    db.flush()
+    first_commit.event_id = event.id
+
+    trace_payload = world_data["api_trace"]
+    trace = ApiTrace(
+        session_id=db_session.id,
+        method=trace_payload["method"],
+        url_path=trace_payload["url_path"],
+        status_code=trace_payload["status_code"],
+        request_summary_json=trace_payload["request_summary_json"],
+        response_summary_json=trace_payload["response_summary_json"],
+        error_message=trace_payload["error_message"],
+        llm_keys_included=False,
+        private_worldengine_internals_included=False,
+    )
+    db.add(trace)
+    db.commit()
+    db.refresh(db_session)
+    db.refresh(main_branch)
+
+    return _session_summary(db_session, 1, main_branch)
 
 
 @router.get("", response_model=SessionListResponse)
@@ -76,20 +154,7 @@ def list_sessions(db: Session = Depends(get_db)):
         )
 
         result.append(
-            SessionSummary(
-                id=item.id,
-                session_name=item.session_name,
-                status=item.status,
-                worldengine_world_id=item.worldengine_world_id,
-                public_world_status=item.public_world_status,
-                initial_state_summary=item.initial_state_summary,
-                visualization_payload_summary=item.visualization_payload_summary,
-                branch_count=int(branch_count),
-                main_branch_id=main_branch.id if main_branch else None,
-                main_commit_point_id=main_branch.commit_point_id if main_branch else None,
-                created_at=item.created_at,
-                updated_at=item.updated_at,
-            )
+            _session_summary(item, int(branch_count), main_branch)
         )
 
     return SessionListResponse(sessions=result)

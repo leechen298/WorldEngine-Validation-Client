@@ -87,11 +87,22 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
   - `apps/api/tests/test_sessions.py`
   - `apps/api/tests/test_evidence.py`
 - Commands:
-  - `cd apps/api && uv run pytest tests/test_sessions.py tests/test_evidence.py -q`: `pending`
+  - `cd apps/api && uv run pytest tests/test_sessions.py tests/test_evidence.py -q`: 通过，`13 passed, 1 warning`
+  - `git diff --check`: 通过
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|file_path|source_path|\bpath\b|\bkey\b|private prompt|oracle|internal|helper|provider" apps/api/app apps/api/tests docs/milestones/v0.2-worldengine-integration/review.zh.md`: 通过；命中项为生产过滤表、redaction flag、测试用脱敏 fixture 和边界说明，未发现实际保存 secret/private payload。
 - Scope review:
-  - `pending`
+  - `POST /sessions/worldengine` 先通过 public OpenAPI 发现 world creation endpoint；
+    发现不到或调用失败时返回 `502` 且不创建本地 session。成功后在一个本地事务中写入
+    session、main branch、初始 snapshot、commit point、`world_created` event 和脱敏
+    `api_trace`。
 - Notes:
-  - `pending`
+  - initial state 与 visualization payload 会过滤 private/internal/helper/path/secret
+    等字段后再保存摘要和 snapshot。
+  - subagent reviewer 指出裸 `path`/`key`、缺失 world id、private/internal endpoint
+    和 commit point event 关联风险；已补过滤/拒绝逻辑和回归测试，并回填
+    `CommitPoint.event_id`。
+  - subagent re-review 确认 P1/P2 清零；已补 route 级缺失 world id 不落库回归。
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
 
 ### Task 5: 前端创建世界入口
 

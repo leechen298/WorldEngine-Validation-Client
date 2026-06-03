@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import (
+    ApiTrace,
     CommitPoint,
     DirectorIntent,
     Event,
@@ -35,6 +36,7 @@ def get_bundle(session_id: str, db: Session = Depends(get_db)):
         snapshots=count(Snapshot),
         commit_points=count(CommitPoint),
         director_intents=count(DirectorIntent),
+        api_traces=count(ApiTrace),
         llm_keys_included=False,
         private_worldengine_internals_included=False,
     )

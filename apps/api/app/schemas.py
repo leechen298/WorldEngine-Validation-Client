@@ -50,6 +50,11 @@ class SessionCreatePayload(BaseModel):
     session_name: str = Field(min_length=1, max_length=120)
 
 
+class WorldEngineSessionCreatePayload(BaseModel):
+    session_name: str = Field(min_length=1, max_length=120)
+    world_prompt: str = Field(min_length=1, max_length=5000)
+
+
 class SessionSummary(BaseModel):
     id: str
     session_name: str
@@ -115,6 +120,7 @@ class EvidenceBundleMetadata(BaseModel):
     snapshots: int
     commit_points: int
     director_intents: int
+    api_traces: int
     llm_keys_included: bool = False
     private_worldengine_internals_included: bool = False
 

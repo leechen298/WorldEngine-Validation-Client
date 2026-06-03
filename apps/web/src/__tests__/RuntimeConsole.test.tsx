@@ -19,6 +19,7 @@ describe("RuntimeConsole", () => {
       loadSessions: async () => {},
       loadHealth: async () => {},
       loadBranches: async () => [],
+      loadRuntimeView: async () => null,
       createNewSession: async () => {
         throw new Error("not used");
       },
@@ -58,6 +59,7 @@ describe("RuntimeConsole", () => {
         useSessionStore.setState({ error: "Request failed: 500" });
         return [];
       },
+      loadRuntimeView: async () => null,
       createNewSession: async () => {
         throw new Error("not used");
       },
@@ -119,6 +121,7 @@ describe("RuntimeConsole", () => {
       loadSessions: async () => {},
       loadHealth: async () => {},
       loadBranches: async () => [],
+      loadRuntimeView: async () => null,
       createNewSession: async () => {
         throw new Error("not used");
       },
@@ -139,5 +142,39 @@ describe("RuntimeConsole", () => {
     expect(await screen.findByText("world_created")).toBeInTheDocument();
     expect(screen.getByText('{"world_id":"world-123","status":"created"}')).toBeInTheDocument();
     expect(screen.queryByText("world_seeded")).not.toBeInTheDocument();
+  });
+
+  it("loads runtime view through the store and shows load failures", async () => {
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {},
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => {
+        useSessionStore.setState({
+          runtimeErrorBySession: { "session-id": "Runtime unavailable" },
+        });
+        return null;
+      },
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(await screen.findByText("运行视图加载失败：Runtime unavailable")).toBeInTheDocument();
   });
 });

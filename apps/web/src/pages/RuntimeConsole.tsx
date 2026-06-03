@@ -12,17 +12,22 @@ interface RuntimeConsoleProps {
 
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
-  const { error, loadBranches, lastBranches, sessions } = useSessionStore();
+  const { error, loadBranches, loadRuntimeView, lastBranches, runtimeErrorBySession, sessions } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
   const [events, setEvents] = useState<SessionEvent[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const branches = lastBranches[sessionId] || [];
   const session = sessions.find((item) => item.id === sessionId);
   const latestEvent = events[events.length - 1] || null;
+  const runtimeError = runtimeErrorBySession[sessionId];
 
   useEffect(() => {
     loadBranches(sessionId);
   }, [loadBranches, sessionId]);
+
+  useEffect(() => {
+    loadRuntimeView(sessionId);
+  }, [loadRuntimeView, sessionId]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -83,6 +88,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
         <section>
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}
           {eventsError ? <p className="error-text">事件加载失败：{eventsError}</p> : null}
+          {runtimeError ? <p className="error-text">运行视图加载失败：{runtimeError}</p> : null}
           <section className="page-card">
             <h3>公开状态摘要</h3>
             <p>WorldEngine world：{session?.worldengine_world_id || "未绑定"}</p>

@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：Task 2 已完成 / milestone 进行中
+状态：Task 3 已完成 / milestone 进行中
 
 日期：2026-06-03
 
@@ -10,9 +10,9 @@ v0.3 目标是基础 Runtime Visualization：后端提供 public runtime view，
 PixiJS 和面板展示公开 tick、地图、Agent 公开状态、事件气泡、world log 和 Agent
 life log。
 
-当前已完成 v0.3 里程碑文档和后端 public runtime view API。前端 typed client /
-store、PixiJS 地图、Agent 公开状态面板、事件气泡和总体验证仍未完成，不能声明
-v0.3 已实现或通过。
+当前已完成 v0.3 里程碑文档、后端 public runtime view API、前端 runtime view
+typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态面板、事件气泡和
+总体验证仍未完成，不能声明 v0.3 已实现或通过。
 
 ## Task Records
 
@@ -60,6 +60,28 @@ v0.3 已实现或通过。
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
+### Task 3: 前端 runtime view client 和状态
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test files，`8 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - 已定义 runtime view TypeScript 类型，新增 `getRuntimeView()` client 调用，并在
+    Zustand store 中按 session 缓存 runtime view / runtime error。
+  - `RuntimeConsole` 进入 session 时会触发 runtime view 加载，并展示可读运行视图
+    加载失败信息。
+- Notes:
+  - 本 task 不渲染 PixiJS 地图、不展示 Agent 公开状态面板、不实现事件气泡或 log
+    UI；这些仍留给 Task 4/5。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；仅
@@ -72,9 +94,10 @@ v0.3 已实现或通过。
 - 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：Task 2 是。
 - 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 2 是；
   runtime view 使用 allowlist 输出并覆盖私有字段反例。
+  Task 3 是；仅新增 typed client/store 和错误展示，未展示 Agent 状态内容。
 
 ## 遗留问题
 
-- Task 3-6 尚未开始。
+- Task 4-6 尚未开始。
 - 实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完整 evidence
   bundle 导出仍属于后续 milestone。

@@ -5,6 +5,7 @@ import type {
   CreateWorldSessionRequest,
   HealthResponse,
   HealthWorldEngineResponse,
+  RuntimeView,
   SessionEvent,
   SessionSummary,
 } from "./types";
@@ -63,6 +64,10 @@ export async function createWorldSession(payload: CreateWorldSessionRequest): Pr
 
 export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
   return request<SessionEvent[]>(`/sessions/${sessionId}/events`);
+}
+
+export async function getRuntimeView(sessionId: string): Promise<RuntimeView> {
+  return request<RuntimeView>(`/sessions/${sessionId}/runtime-view`);
 }
 
 export async function getBranches(sessionId: string): Promise<{ session_id: string; branches: BranchSummary[] }> {

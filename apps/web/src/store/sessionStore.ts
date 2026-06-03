@@ -5,10 +5,11 @@ import {
   createWorldSession,
   getBranches,
   getHealth,
+  getRuntimeView,
   getSessions,
   getWorldEngineHealth,
 } from "../api/client";
-import type { BranchSummary, HealthWorldEngineResponse, SessionSummary } from "../api/types";
+import type { BranchSummary, HealthWorldEngineResponse, RuntimeView, SessionSummary } from "../api/types";
 
 interface SessionState {
   sessions: SessionSummary[];
@@ -21,9 +22,12 @@ interface SessionState {
     healthText?: string;
   } | null;
   lastBranches: Record<string, BranchSummary[]>;
+  runtimeViewBySession: Record<string, RuntimeView>;
+  runtimeErrorBySession: Record<string, string>;
   loadSessions: () => Promise<void>;
   loadHealth: () => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
+  loadRuntimeView: (sessionId: string) => Promise<RuntimeView | null>;
   createNewSession: (name: string) => Promise<SessionSummary>;
   createWorldEngineSession: (name: string, worldPrompt: string) => Promise<SessionSummary>;
   createBranch: (sessionId: string, branchName: string, commitPointId: string) => Promise<BranchSummary>;
@@ -35,6 +39,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   error: null,
   connectionStatus: null,
   lastBranches: {},
+  runtimeViewBySession: {},
+  runtimeErrorBySession: {},
 
   loadSessions: async () => {
     set({ isLoading: true, error: null });
@@ -111,6 +117,37 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       return [];
+    }
+  },
+
+  loadRuntimeView: async (sessionId: string) => {
+    set((state) => ({
+      runtimeErrorBySession: {
+        ...state.runtimeErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const runtimeView = await getRuntimeView(sessionId);
+      set((state) => ({
+        runtimeViewBySession: {
+          ...state.runtimeViewBySession,
+          [sessionId]: runtimeView,
+        },
+        runtimeErrorBySession: {
+          ...state.runtimeErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return runtimeView;
+    } catch (error) {
+      set((state) => ({
+        runtimeErrorBySession: {
+          ...state.runtimeErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
     }
   },
 

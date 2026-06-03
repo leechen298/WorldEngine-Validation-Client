@@ -135,7 +135,7 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
 
 ### Task 6: 总体验证和 review 收口
 
-- Commit: `待提交`
+- Commit: `c045eb3`
 - Files:
   - `docs/milestones/v0.3-runtime-visualization/review.zh.md`
 - Commands:

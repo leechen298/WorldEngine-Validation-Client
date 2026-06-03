@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import { getSessionEvents } from "../api/client";
 import { useSessionStore } from "../store/sessionStore";
 import { RuntimeConsole } from "../pages/RuntimeConsole";
@@ -48,6 +48,10 @@ vi.mock("pixi.js", () => {
 });
 
 describe("RuntimeConsole", () => {
+  beforeEach(() => {
+    vi.mocked(getSessionEvents).mockClear();
+  });
+
   it("renders runtime controls", async () => {
     useSessionStore.setState({
       sessions: [],
@@ -82,7 +86,7 @@ describe("RuntimeConsole", () => {
     expect(screen.getByRole("button", { name: "Single Tick" })).toBeInTheDocument();
     expect(screen.getByText("公开像素地图")).toBeInTheDocument();
     expect(screen.getByText("分支列表")).toBeInTheDocument();
-    expect(await screen.findByText("暂无公开事件。")).toBeInTheDocument();
+    expect(screen.getByText("暂无事件气泡。")).toBeInTheDocument();
   });
 
   it("shows branch load failures in the runtime console", async () => {
@@ -116,26 +120,6 @@ describe("RuntimeConsole", () => {
   });
 
   it("shows public WorldEngine state summaries and latest event", async () => {
-    vi.mocked(getSessionEvents).mockResolvedValueOnce([
-      {
-        id: "event-0",
-        session_id: "session-id",
-        branch_id: "branch-1",
-        tick: 0,
-        event_kind: "world_seeded",
-        payload_json: '{"world_id":"world-123","status":"seeded"}',
-        created_at: "2026-01-01T00:00:00Z",
-      },
-      {
-        id: "event-1",
-        session_id: "session-id",
-        branch_id: "branch-1",
-        tick: 1,
-        event_kind: "world_created",
-        payload_json: '{"world_id":"world-123","status":"created"}',
-        created_at: "2026-01-01T00:00:01Z",
-      },
-    ]);
     useSessionStore.setState({
       sessions: [
         {
@@ -155,6 +139,28 @@ describe("RuntimeConsole", () => {
       ],
       isLoading: false,
       error: null,
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "created",
+          tick: 1,
+          visualization: {},
+          public_agents: [],
+          world_log: [],
+          agent_life_log: [],
+          latest_event: {
+            id: "event-1",
+            tick: 1,
+            event_kind: "world_created",
+            text: "World created",
+            agent_id: null,
+            payload: {},
+            created_at: "2026-01-01T00:00:01Z",
+          },
+        },
+      },
+      runtimeErrorBySession: {},
       connectionStatus: null,
       lastBranches: {},
       loadSessions: async () => {},
@@ -178,9 +184,84 @@ describe("RuntimeConsole", () => {
     expect(screen.getByText("公开状态：created")).toBeInTheDocument();
     expect(screen.getByText('初始状态摘要：{"agents":2}')).toBeInTheDocument();
     expect(screen.getByText('Visualization 摘要：{"tiles":12}')).toBeInTheDocument();
-    expect(await screen.findByText("world_created")).toBeInTheDocument();
-    expect(screen.getByText('{"world_id":"world-123","status":"created"}')).toBeInTheDocument();
+    expect(screen.getByText("World created")).toBeInTheDocument();
+    expect(screen.queryByText('{"world_id":"world-123","status":"created"}')).not.toBeInTheDocument();
     expect(screen.queryByText("world_seeded")).not.toBeInTheDocument();
+  });
+
+  it("does not render raw session event payloads outside runtime view", async () => {
+    vi.mocked(getSessionEvents).mockResolvedValueOnce([
+      {
+        id: "raw-event",
+        session_id: "session-id",
+        branch_id: "branch-private",
+        tick: 99,
+        event_kind: "raw_private",
+        payload_json: '{"private_prompt":"hidden","hidden_context":"debug","thoughts":"secret"}',
+        created_at: "2026-01-01T00:00:01Z",
+      },
+    ]);
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 7,
+          visualization: {},
+          public_agents: [],
+          world_log: [
+            {
+              id: "filtered-world-event",
+              tick: 7,
+              event_kind: "world_status",
+              text: "Filtered public event",
+              agent_id: null,
+              payload: {},
+              created_at: "2026-01-01T00:00:00Z",
+            },
+          ],
+          agent_life_log: [],
+          latest_event: {
+            id: "filtered-world-event",
+            tick: 7,
+            event_kind: "world_status",
+            text: "Filtered public event",
+            agent_id: null,
+            payload: {},
+            created_at: "2026-01-01T00:00:00Z",
+          },
+        },
+      },
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(screen.getAllByText("Filtered public event").length).toBeGreaterThan(0);
+    await waitFor(() => expect(vi.mocked(getSessionEvents)).not.toHaveBeenCalled());
+    expect(screen.queryByText("raw_private")).not.toBeInTheDocument();
+    expect(screen.queryByText(/private_prompt/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/hidden_context/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/thoughts/)).not.toBeInTheDocument();
   });
 
   it("loads runtime view through the store and shows load failures", async () => {

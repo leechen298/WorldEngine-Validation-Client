@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：实现完成 / 总体验证通过
+状态：实现完成 / review 修复验证通过
 
 日期：2026-06-03
 
@@ -12,7 +12,11 @@ life log。
 
 当前已完成 v0.3 里程碑文档、后端 public runtime view API、前端 runtime view
 typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent 公开状态面板、
-事件气泡、world / Agent life log 也已完成，并通过当前会话总体验证。
+事件气泡、world / Agent life log 也已完成。
+
+post-review 反馈指出运行控制台仍保留旧 `/events` 原始 payload 面板，会绕过
+runtime view 的 main branch / allowlist / redaction 路径。该旁路已移除，运行控
+制台统一展示 runtime view 的过滤结果，并补充前端反例测试。
 
 ## Task Records
 
@@ -157,6 +161,39 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
     提示，不影响当前通过结论。
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
+
+## Post-Review Fix Records
+
+### Review Fix 1: 移除旧事件 raw payload 面板并同步状态文档
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.3-runtime-visualization/README.zh.md`
+  - `docs/milestones/v0.3-runtime-visualization/plan.zh.md`
+  - `docs/milestones/v0.3-runtime-visualization/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 先红灯，新增反例复现
+    旧面板渲染 `raw_private`、`private_prompt`、`hidden_context`、`thoughts`；
+    移除旧路径后通过，`2 passed` test files，`13 passed`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`13 passed`
+  - `pnpm --dir apps/web build`: 通过
+  - `cd apps/api && uv run pytest -q`: sandbox 内因 `~/.cache/uv` 权限失败；提升权限
+    重跑通过，`30 passed, 1 warning`
+  - `pnpm run test`: sandbox 内 API 阶段因 `~/.cache/uv` 权限失败；提升权限重跑通
+    过，web `13 passed`，API `30 passed, 1 warning`
+  - `pnpm run build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - `RuntimeConsole` 不再调用 `getSessionEvents()`，也不再渲染
+    `latestEvent.payload_json`。
+  - 页面保留 runtime view 的最新事件气泡、World Log 和 Agent Life Log，统一使用
+    后端已过滤的 main branch runtime view。
+  - README / plan 状态已从“计划已创建 / 实现待开始”同步为 review 修复验证通过。
+- Notes:
+  - 本修复不改后端 `/events` 兼容接口；只移除运行控制台中的旧展示旁路。
+  - warning 来自既有 Starlette TestClient/httpx 兼容提示。
 
 ## 范围审核
 

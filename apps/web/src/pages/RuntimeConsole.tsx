@@ -1,6 +1,4 @@
 import { FormEvent, useEffect, useState } from "react";
-import { getSessionEvents } from "../api/client";
-import type { SessionEvent } from "../api/types";
 import { PixelWorldCanvas } from "../components/PixelWorldCanvas";
 import { TimelineBranchList } from "../components/TimelineBranchList";
 import { useSessionStore } from "../store/sessionStore";
@@ -22,12 +20,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     sessions,
   } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
-  const [events, setEvents] = useState<SessionEvent[]>([]);
-  const [eventsError, setEventsError] = useState<string | null>(null);
   const branches = lastBranches[sessionId] || [];
   const session = sessions.find((item) => item.id === sessionId);
   const runtimeView = runtimeViewBySession[sessionId];
-  const latestEvent = events[events.length - 1] || null;
   const runtimeError = runtimeErrorBySession[sessionId];
   const runtimeLatestEvent = runtimeView?.latest_event;
 
@@ -38,25 +33,6 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   useEffect(() => {
     loadRuntimeView(sessionId);
   }, [loadRuntimeView, sessionId]);
-
-  useEffect(() => {
-    let isCurrent = true;
-    getSessionEvents(sessionId)
-      .then((items) => {
-        if (isCurrent) {
-          setEvents(items);
-          setEventsError(null);
-        }
-      })
-      .catch((loadError) => {
-        if (isCurrent) {
-          setEventsError((loadError as Error).message);
-        }
-      });
-    return () => {
-      isCurrent = false;
-    };
-  }, [sessionId]);
 
   const submitDirectorCommand = (event: FormEvent) => {
     event.preventDefault();
@@ -97,7 +73,6 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
 
         <section>
           {error ? <p className="error-text">分支加载失败：{error}</p> : null}
-          {eventsError ? <p className="error-text">事件加载失败：{eventsError}</p> : null}
           {runtimeError ? <p className="error-text">运行视图加载失败：{runtimeError}</p> : null}
           <section className="page-card">
             <h3>公开状态摘要</h3>
@@ -165,17 +140,6 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
             )}
           </section>
           <TimelineBranchList branches={branches} />
-          <section className="page-card">
-            <h3>最新公开事件</h3>
-            {latestEvent ? (
-              <>
-                <p>{latestEvent.event_kind}</p>
-                <p>{latestEvent.payload_json}</p>
-              </>
-            ) : (
-              <p>暂无公开事件。</p>
-            )}
-          </section>
         </section>
       </div>
     </section>

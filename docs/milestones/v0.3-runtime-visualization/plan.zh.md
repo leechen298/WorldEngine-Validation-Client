@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization 实现计划
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / review 修复验证通过
 
 ## 实现目标
 

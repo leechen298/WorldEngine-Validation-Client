@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / review 修复验证通过
 
 ## 目标
 
@@ -58,5 +58,11 @@ docs/agent-guides/boundaries.md
 
 ## 当前结论
 
-v0.3 文档已建立，产品实现尚未开始。下一步应从 Task 2 开始实现本地 runtime
-view API，并保持 WorldEngine public API 边界。
+v0.3 已完成基础 Runtime Visualization：后端提供 public runtime view，前端运行控
+制台展示公开 tick、PixiJS 像素地图、Agent 公开状态、最新事件气泡、world log
+和 Agent life log。
+
+review 反馈中发现的旧 `/events` 原始 payload 面板已移除，运行控制台统一展示
+runtime view 的过滤结果，避免绕过 main branch / allowlist / redaction 路径。后
+续范围仍是实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完
+整 evidence bundle 导出。

@@ -20,6 +20,10 @@ class Session(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     session_name: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="created")
+    worldengine_world_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    public_world_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    initial_state_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    visualization_payload_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now, onupdate=_now)
 
@@ -29,6 +33,7 @@ class Session(Base):
     state_diffs: Mapped[list["StateDiff"]] = relationship("StateDiff", back_populates="session")
     snapshots: Mapped[list["Snapshot"]] = relationship("Snapshot", back_populates="session")
     director_intents: Mapped[list["DirectorIntent"]] = relationship("DirectorIntent", back_populates="session")
+    api_traces: Mapped[list["ApiTrace"]] = relationship("ApiTrace", back_populates="session")
 
 
 class CommitPoint(Base):
@@ -117,3 +122,21 @@ class DirectorIntent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
 
     session: Mapped["Session"] = relationship("Session", back_populates="director_intents")
+
+
+class ApiTrace(Base):
+    __tablename__ = "api_traces"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id: Mapped[str] = mapped_column(String, ForeignKey("sessions.id"), nullable=False)
+    method: Mapped[str] = mapped_column(String, nullable=False)
+    url_path: Mapped[str] = mapped_column(String, nullable=False)
+    status_code: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    request_summary_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    response_summary_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    llm_keys_included: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    private_worldengine_internals_included: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
+
+    session: Mapped["Session"] = relationship("Session", back_populates="api_traces")

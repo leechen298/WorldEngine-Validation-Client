@@ -54,6 +54,10 @@ class SessionSummary(BaseModel):
     id: str
     session_name: str
     status: str
+    worldengine_world_id: Optional[str]
+    public_world_status: Optional[str]
+    initial_state_summary: Optional[str]
+    visualization_payload_summary: Optional[str]
     branch_count: int
     main_branch_id: Optional[str]
     main_commit_point_id: Optional[str]

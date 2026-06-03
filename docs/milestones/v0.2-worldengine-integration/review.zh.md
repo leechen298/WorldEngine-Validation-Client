@@ -60,14 +60,21 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 - Commit: `pending`
 - Files:
   - `apps/api/app/models.py`
+  - `apps/api/app/routes/sessions.py`
   - `apps/api/app/schemas.py`
   - `apps/api/tests/test_sessions.py`
 - Commands:
-  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: `pending`
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: 通过，`4 passed, 1 warning`
+  - `git diff --check`: 通过
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|file_path|source_path|private prompt|oracle|internal|helper|provider" apps/api/app/models.py apps/api/app/schemas.py apps/api/app/routes/sessions.py apps/api/tests/test_sessions.py docs/milestones/v0.2-worldengine-integration/review.zh.md`: 通过；命中项为 redaction flag、测试断言和边界说明，未发现实际 secret/private payload 存储字段。
 - Scope review:
-  - `pending`
+  - session 模型新增 WorldEngine world id、公开状态、公开 initial state 摘要和
+    visualization payload 摘要字段；新增 `api_traces` 存储脱敏请求/响应摘要、
+    HTTP 元数据和 redaction flags。
 - Notes:
-  - `pending`
+  - `apps/api/app/routes/sessions.py` 为 schema 映射需要的窄改动，保持现有本地
+    session 创建语义不变。
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
 
 ### Task 4: WorldEngine world creation API
 

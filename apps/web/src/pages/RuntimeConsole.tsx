@@ -18,9 +18,14 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     directorIntentErrorBySession = {},
     directorIntentSubmittingBySession = {},
     directorIntentsBySession = {},
+    downloadEvidenceBundle = async () => null,
+    evidenceBundleBySession = {},
+    evidenceBundleErrorBySession = {},
+    evidenceBundleLoadingBySession = {},
     loadBranches,
     loadCommitPoints = async () => [],
     loadDirectorIntents = async () => [],
+    loadEvidenceBundle = async () => null,
     loadReplayView = async () => null,
     loadRuntimeView,
     lastBranches,
@@ -45,6 +50,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const directorIntentError = directorIntentErrorBySession[sessionId];
   const directorIntentSubmitting = directorIntentSubmittingBySession[sessionId] || false;
   const directorIntents = directorIntentsBySession[sessionId] || [];
+  const evidenceBundle = evidenceBundleBySession[sessionId];
+  const evidenceBundleError = evidenceBundleErrorBySession[sessionId];
+  const evidenceBundleLoading = evidenceBundleLoadingBySession[sessionId] || false;
   const runtimeLatestEvent = displayView?.latest_event;
   const commitPoints = commitPointsBySession[sessionId] || [];
   const selectedBranchId =
@@ -60,6 +68,13 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     commitPoints.find((item) => item.id === session?.main_commit_point_id) ||
     commitPoints[0] ||
     null;
+  const evidenceCounts = evidenceBundle?.manifest.counts;
+  const evidenceRedactionFlags = evidenceBundle?.manifest.redaction_flags;
+  const evidenceClean =
+    evidenceRedactionFlags &&
+    !evidenceRedactionFlags.llm_keys_included &&
+    !evidenceRedactionFlags.private_worldengine_internals_included;
+  const [lastEvidenceDownload, setLastEvidenceDownload] = useState("");
 
   useEffect(() => {
     loadBranches(sessionId);
@@ -76,6 +91,10 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   useEffect(() => {
     loadDirectorIntents(sessionId);
   }, [loadDirectorIntents, sessionId]);
+
+  useEffect(() => {
+    loadEvidenceBundle(sessionId);
+  }, [loadEvidenceBundle, sessionId]);
 
   const submitDirectorCommand = async (event: FormEvent) => {
     event.preventDefault();
@@ -128,6 +147,21 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     });
   };
 
+  const downloadLocalEvidenceBundle = async () => {
+    const download = await downloadEvidenceBundle(sessionId);
+    if (!download) {
+      return;
+    }
+    const blob = new Blob([JSON.stringify(download.bundle, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = download.filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setLastEvidenceDownload(download.filename);
+  };
+
   return (
     <section>
       <div className="status-row" style={{ marginBottom: 12 }}>
@@ -165,6 +199,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           {runtimeError ? <p className="error-text">运行视图加载失败：{runtimeError}</p> : null}
           {replayError ? <p className="error-text">回放视图加载失败：{replayError}</p> : null}
           {directorIntentError ? <p className="error-text">导演引导提交失败：{directorIntentError}</p> : null}
+          {evidenceBundleError ? <p className="error-text">Evidence bundle 失败：{evidenceBundleError}</p> : null}
           <section className="page-card">
             <h3>公开状态摘要</h3>
             <p>WorldEngine world：{session?.worldengine_world_id || "未绑定"}</p>
@@ -255,6 +290,34 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
             ) : (
               <p>暂无导演引导。</p>
             )}
+          </section>
+          <section className="page-card evidence-panel">
+            <h3>本地会话证据包</h3>
+            {evidenceBundle ? (
+              <>
+                <div className="evidence-counts">
+                  <span>branches：{evidenceCounts?.branches ?? 0}</span>
+                  <span>commit points：{evidenceCounts?.commit_points ?? 0}</span>
+                  <span>events：{evidenceCounts?.events ?? 0}</span>
+                  <span>snapshots：{evidenceCounts?.snapshots ?? 0}</span>
+                  <span>api traces：{evidenceCounts?.api_traces ?? 0}</span>
+                </div>
+                <p>脱敏状态：{evidenceClean ? "clean" : "flagged"}</p>
+                {evidenceBundle.manifest.warnings.length ? (
+                  <ul className="runtime-list">
+                    {evidenceBundle.manifest.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            ) : (
+              <p>{evidenceBundleLoading ? "加载中" : "暂无 evidence bundle metadata。"}</p>
+            )}
+            <button disabled={evidenceBundleLoading} onClick={downloadLocalEvidenceBundle} type="button">
+              下载 evidence bundle
+            </button>
+            {lastEvidenceDownload ? <p>已下载：{lastEvidenceDownload}</p> : null}
           </section>
           <section className="page-card event-bubble-card">
             <h3>最新事件气泡</h3>

@@ -66,6 +66,15 @@ const initialSessionStoreState = useSessionStore.getState();
 describe("RuntimeConsole", () => {
   beforeEach(() => {
     useSessionStore.setState(initialSessionStoreState, true);
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn().mockReturnValue("blob:evidence-bundle"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     vi.mocked(getCommitPoints).mockClear();
     vi.mocked(getCommitPoints).mockResolvedValue([]);
     vi.mocked(getEvidenceBundleManifest).mockClear();
@@ -1024,6 +1033,25 @@ describe("RuntimeConsole", () => {
     expect(useSessionStore.getState().runtimeViewBySession["session-id"]).toBe(runtimeView);
     expect(useSessionStore.getState().evidenceBundleErrorBySession["session-id"]).toBe("Download failed");
     expect(useSessionStore.getState().evidenceBundleLoadingBySession["session-id"]).toBe(false);
+  });
+
+  it("shows evidence bundle status and downloads the local evidence bundle", async () => {
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(await screen.findByText("本地会话证据包")).toBeInTheDocument();
+    expect(screen.getByText("branches：1")).toBeInTheDocument();
+    expect(screen.getByText("commit points：1")).toBeInTheDocument();
+    expect(screen.getByText("脱敏状态：clean")).toBeInTheDocument();
+    expect(screen.getByText("public evaluator outputs unavailable")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "下载 evidence bundle" }));
+
+    await waitFor(() => {
+      expect(downloadEvidenceBundle).toHaveBeenCalledWith("session-id");
+    });
+    expect(await screen.findByText("已下载：evidence-bundle-session-id-2026-06-04.json")).toBeInTheDocument();
+    expect(URL.createObjectURL).toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:evidence-bundle");
   });
 
   it("submits director guidance from the runtime console and shows intent status", async () => {

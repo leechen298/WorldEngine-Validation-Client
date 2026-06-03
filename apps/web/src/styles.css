@@ -190,6 +190,21 @@ body {
   color: var(--muted);
 }
 
+.evidence-counts {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+.evidence-counts span {
+  padding: 6px 8px;
+  border: 1px solid #3e4c7f;
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--panel-soft);
+}
+
 .input-row {
   display: flex;
   gap: 8px;

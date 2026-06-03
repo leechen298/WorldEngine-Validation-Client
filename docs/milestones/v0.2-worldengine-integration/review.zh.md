@@ -78,7 +78,7 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 
 ### Task 4: WorldEngine world creation API
 
-- Commit: `pending`
+- Commit: `561675e`
 - Files:
   - `apps/api/app/worldengine_client.py`
   - `apps/api/app/routes/sessions.py`

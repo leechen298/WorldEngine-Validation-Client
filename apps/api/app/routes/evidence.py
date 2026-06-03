@@ -34,7 +34,10 @@ SENSITIVE_KEY_PARTS = (
     "apikey",
     "authorization",
     "credential",
+    "goal",
+    "helper",
     "hidden_context",
+    "identity",
     "internal",
     "key",
     "memory",
@@ -45,6 +48,7 @@ SENSITIVE_KEY_PARTS = (
     "private_prompt",
     "provider",
     "raw_response",
+    "relationship",
     "secret",
     "self_state",
     "source_path",
@@ -59,6 +63,13 @@ SENSITIVE_VALUE_MARKERS = (
     "authorization",
     "credential",
     "hidden_context",
+    "helper",
+    "internal",
+    "/internal",
+    "/private",
+    "/helper",
+    "/helpers",
+    "private_path",
     "private_prompt",
     "provider_secret",
     "raw_response",
@@ -127,7 +138,7 @@ def _sanitize_payload(value: Any) -> tuple[Any, bool, bool]:
             key_is_sensitive = any(part in lowered_key for part in SENSITIVE_KEY_PARTS)
             if key_is_sensitive:
                 found_sensitive = True
-                found_llm_key = any(part in lowered_key for part in LLM_KEY_PARTS)
+                found_llm_key = found_llm_key or any(part in lowered_key for part in LLM_KEY_PARTS)
                 continue
             sanitized_item, item_sensitive, item_llm_key = _sanitize_payload(item)
             found_sensitive = found_sensitive or item_sensitive
@@ -299,18 +310,30 @@ def _bundle_records(session_id: str, db: Session) -> tuple[EvidenceBundleRecords
     ).scalars():
         request_summary, request_sensitive, request_llm_key = _sanitize_payload(_load_json(trace.request_summary_json))
         response_summary, response_sensitive, response_llm_key = _sanitize_payload(_load_json(trace.response_summary_json))
-        found_sensitive_payload = found_sensitive_payload or request_sensitive or response_sensitive
-        found_llm_key_payload = found_llm_key_payload or request_llm_key or response_llm_key
+        url_path, url_sensitive, url_llm_key = _sanitize_payload(trace.url_path)
+        error_message, error_sensitive, error_llm_key = _sanitize_payload(trace.error_message)
+        found_sensitive_payload = (
+            found_sensitive_payload or request_sensitive or response_sensitive or url_sensitive or error_sensitive
+        )
+        found_llm_key_payload = (
+            found_llm_key_payload or request_llm_key or response_llm_key or url_llm_key or error_llm_key
+        )
         api_trace_records.append(
             {
                 "method": trace.method,
-                "url_path": trace.url_path,
+                "url_path": url_path,
                 "status_code": trace.status_code,
                 "request_summary": request_summary,
                 "response_summary": response_summary,
-                "error_message": trace.error_message,
-                "llm_keys_included": trace.llm_keys_included,
-                "private_worldengine_internals_included": trace.private_worldengine_internals_included,
+                "error_message": error_message,
+                "llm_keys_included": trace.llm_keys_included or request_llm_key or response_llm_key or url_llm_key or error_llm_key,
+                "private_worldengine_internals_included": (
+                    trace.private_worldengine_internals_included
+                    or request_sensitive
+                    or response_sensitive
+                    or url_sensitive
+                    or error_sensitive
+                ),
             }
         )
 

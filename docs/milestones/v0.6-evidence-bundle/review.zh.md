@@ -12,7 +12,8 @@ v0.6 目标是完整 Evidence Bundle：在不越过 WorldEngine public API 和�
 当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest、后端
 bundle 内容组装和脱敏检查、后端可下载 JSON endpoint、前端 evidence bundle
 typed client / store、运行控制台 evidence panel / 下载入口，以及总体验证和 review
-收口。v0.6 当前可判定为实现完成 / 验证通过。
+收口。后续审核指出的 evidence bundle 脱敏缺口也已纳入 Task 8 修复范围。v0.6
+当前可判定为实现完成 / 验证通过。
 
 ## Task Records
 
@@ -199,7 +200,7 @@ typed client / store、运行控制台 evidence panel / 下载入口，以及总
 
 ### Task 7: 总体验证和 review 收口
 
-- Commit: `pending`
+- Commit: `cd1fdb2`
 - Files:
   - `docs/milestones/v0.6-evidence-bundle/README.zh.md`
   - `docs/milestones/v0.6-evidence-bundle/plan.zh.md`
@@ -229,22 +230,76 @@ typed client / store、运行控制台 evidence panel / 下载入口，以及总
 - Notes:
   - v0.6 不包含实时 tick streaming 或运行推进 API。
 
+### Task 8: 审核反馈脱敏修复和复验
+
+- Commit: `pending`
+- Files:
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/tests/test_evidence.py`
+  - `docs/milestones/v0.6-evidence-bundle/plan.zh.md`
+  - `docs/milestones/v0.6-evidence-bundle/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，1 failed，原因是
+    `llm_keys_included` 在同一 payload 内先发现 LLM key、后发现非 LLM 敏感键时被覆盖
+    成 `False`。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，1 failed，原因是
+    subagent 复审指出的纯文本 `WorldEngine internal helper failed` 仍会从
+    `ApiTrace.error_message` 原样导出。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，1 failed，原因是
+    `api_traces[]` 内单条记录的 redaction flags 仍按数据库原始值断言，未反映本次
+    request / response / url / error 二次扫描。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 通过，`9 passed`；
+    存在既有 Starlette TestClient/httpx 兼容 warning。
+  - `cd apps/api && uv run pytest -q`: 通过，`48 passed, 1 warning`；warning 为既有
+    Starlette TestClient/httpx 兼容提示。
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`24 passed`；存在既有
+    React async store `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过。
+  - `pnpm run test`: 通过；web `24 passed`，API `48 passed, 1 warning`。
+  - `pnpm run build`: 通过。
+  - `git diff --check`: 通过。
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|relationship|identity|hidden_context|raw_response" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.6-evidence-bundle`:
+    已审查；命中项为脱敏扫描常量、redaction flags、边界/计划/review 文档、既有
+    测试反例和负向断言、ORM `relationship` 关系字段，未发现新增 UI 展示或 bundle
+    records 输出私有 payload。
+- Scope review:
+  - Evidence bundle records 将 Agent `goal`、`identity`、`relationship` 作为私有
+    Agent 边界字段处理，不再从 payload records 导出。
+  - 敏感键扫描发现多个敏感字段时，`llm_keys_included` 按 OR 累积，不会被后续非
+    LLM 敏感键覆盖成 clean。
+  - API trace 的 `url_path` 和 `error_message` 已纳入敏感字符串扫描；发现
+    `/internal`、`/private`、`private_path`、`internal`、`helper` 或 provider
+    secret 等越界内容时导出 `[redacted]`，并设置 manifest warning / redaction
+    flags。
+  - `api_traces[]` 内单条记录的 `llm_keys_included` /
+    `private_worldengine_internals_included` 也会合并本次二次扫描结果，避免 records
+    内部标志和实际导出内容不一致。
+  - Task 8 未新增 WorldEngine 私有源码、私有 helper、LLM key 管理或 LLM provider
+    直连。
+  - Task 8 未新增前端 UI 展示，不展示 private payload、hidden context、raw private
+    response 或 Agent 内部状态。
+  - Subagent 复审：Locke 指出 2 个问题；文档 pending 项在本记录中收口，纯文本
+    `internal/helper` 错误泄漏风险已补回归测试并修复。
+  - 最终提交：pending。
+  - v0.6 不包含实时 tick streaming 或运行推进 API。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3 /
-  Task 4 / Task 5 / Task 6 未新增 WorldEngine 调用。
+  Task 4 / Task 5 / Task 6 / Task 8 未新增 WorldEngine 调用。
 - 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 / Task 4 / Task 5 /
-  Task 6 是。
+  Task 6 / Task 8 是。
 - 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 / Task 4 / Task 5 /
-  Task 6 是。
+  Task 6 / Task 8 是。
 - 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 / Task 4 /
-  Task 5 / Task 6 是。
+  Task 5 / Task 6 / Task 8 是。
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
-  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 是。
+  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 / Task 8 是。
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
-  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 是。
-- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：Task 7 是。
-- 是否 broad checks 已通过：Task 7 是。
+  Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 / Task 8 是。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：Task 7 是；
+  Task 8 pending final commit。
+- 是否 broad checks 已通过：Task 7 是；Task 8 是。
 
 ## 遗留问题
 

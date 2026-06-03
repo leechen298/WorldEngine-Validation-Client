@@ -223,6 +223,42 @@ rg -n "api_key|apikey|secret|token|password|credential|authorization|private_pat
 - 是否未保存或展示 LLM key、provider secrets、私有 WorldEngine internals、私有
   Agent 内部状态、hidden context 或 evaluator oracle internals。
 
+### 8. 审核反馈脱敏修复和复验
+
+更新：
+
+```text
+apps/api/app/routes/evidence.py
+apps/api/tests/test_evidence.py
+docs/milestones/v0.6-evidence-bundle/plan.zh.md
+docs/milestones/v0.6-evidence-bundle/review.zh.md
+```
+
+要求：
+
+- Evidence bundle records 必须把 Agent `goal`、`identity`、`relationship`
+  视为私有 Agent 边界字段，不得导出到 event payload、state diff、snapshot 或其他
+  records。
+- 敏感键扫描发现多个敏感字段时，`llm_keys_included` 必须按 OR 累积，不得被后续非
+  LLM 敏感键覆盖成 clean。
+- API trace 的 `url_path` 和 `error_message` 必须参与敏感字符串扫描；发现
+  `/internal`、`/private`、`private_path`、provider secret 等越界内容时必须导出
+  `[redacted]` 并设置 manifest warning / redaction flags。
+- 记录 Task 7 已提交 commit，并用当前会话验证结果收口本次审核反馈。
+
+验证：
+
+```bash
+cd apps/api && uv run pytest tests/test_evidence.py -q
+cd apps/api && uv run pytest -q
+pnpm --dir apps/web test
+pnpm --dir apps/web build
+pnpm run test
+pnpm run build
+git diff --check
+rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|relationship|identity|hidden_context|raw_response" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.6-evidence-bundle
+```
+
 ## Stop Rules
 
 - 如果 bundle 导出需要 WorldEngine 私有源码、私有 helper、私有 prompt、LLM key

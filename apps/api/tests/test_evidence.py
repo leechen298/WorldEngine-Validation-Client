@@ -213,8 +213,8 @@ def test_evidence_bundle_manifest_exports_records_and_redacts_sensitive_payloads
         "request_summary": {"instruction_text": "public"},
         "response_summary": {"status": "accepted"},
         "error_message": None,
-        "llm_keys_included": False,
-        "private_worldengine_internals_included": False,
+        "llm_keys_included": True,
+        "private_worldengine_internals_included": True,
     }
     assert records["evaluator_outputs"] == []
     assert records["replay_index"][0]["tick"] == 0
@@ -225,6 +225,65 @@ def test_evidence_bundle_manifest_exports_records_and_redacts_sensitive_payloads
     assert "api_key" not in str(payload)
     assert "memory" not in str(payload)
     assert "provider_secret" not in str(payload)
+
+
+def test_evidence_bundle_redacts_agent_boundaries_and_trace_strings(client):
+    session = client.post("/sessions", json={"session_name": "Boundary Evidence"}).json()
+    session_id = session["id"]
+    branch_id = session["main_branch_id"]
+
+    SessionLocal = app_db.get_sessionmaker()
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                Event(
+                    session_id=session_id,
+                    branch_id=branch_id,
+                    tick=1,
+                    event_kind="agent_public_state",
+                    payload_json=(
+                        '{"api_key": "secret", "private_prompt": "hidden", '
+                        '"agent": {"name": "Ada", "goal": "private", '
+                        '"identity": "private", "relationship": "private"}}'
+                    ),
+                ),
+                ApiTrace(
+                    session_id=session_id,
+                    method="POST",
+                    url_path="/internal/worlds/private_path",
+                    status_code=500,
+                    request_summary_json="{}",
+                    response_summary_json="{}",
+                    error_message="WorldEngine internal helper failed",
+                    llm_keys_included=False,
+                    private_worldengine_internals_included=False,
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get(f"/sessions/{session_id}/evidence/bundle/manifest")
+
+    assert response.status_code == 200
+    payload = response.json()
+    manifest = payload["manifest"]
+    records = payload["records"]
+    assert manifest["redaction_flags"] == {
+        "llm_keys_included": True,
+        "private_worldengine_internals_included": True,
+    }
+    assert "sensitive content redacted from evidence records" in manifest["warnings"]
+    assert records["events"][0]["payload"] == {"agent": {"name": "Ada"}}
+    assert records["api_traces"][0]["url_path"] == "[redacted]"
+    assert records["api_traces"][0]["error_message"] == "[redacted]"
+    assert "api_key" not in str(payload)
+    assert "private_prompt" not in str(payload)
+    assert "goal" not in str(payload)
+    assert "identity" not in str(payload)
+    assert "relationship" not in str(payload)
+    assert "internal helper" not in str(payload)
+    assert "/internal" not in str(payload)
+    assert "private_path" not in str(payload)
 
 
 def test_evidence_bundle_manifest_returns_404_for_missing_session(client):

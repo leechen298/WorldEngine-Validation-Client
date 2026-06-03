@@ -57,7 +57,7 @@ v0.2 当前尚未实现。本文档只记录里程碑计划创建和后续 task-
 
 ### Task 3: 本地 world creation 存储模型
 
-- Commit: `pending`
+- Commit: `775ecf6`
 - Files:
   - `apps/api/app/models.py`
   - `apps/api/app/routes/sessions.py`

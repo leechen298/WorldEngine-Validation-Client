@@ -36,7 +36,7 @@ v0.3 已实现或通过。
 
 ### Task 2: 本地 runtime view API
 
-- Commit: `待提交`
+- Commit: `c0d7133`
 - Files:
   - `apps/api/app/routes/sessions.py`
   - `apps/api/app/schemas.py`
@@ -57,6 +57,8 @@ v0.3 已实现或通过。
   - 本 task 不调用 WorldEngine 新接口，不实现 runtime tick ingest、实时 streaming、
     回放重建或前端展示。
   - warning 来自现有 Starlette TestClient/httpx 兼容提示。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ## 范围审核
 

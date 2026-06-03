@@ -164,7 +164,7 @@ public director guidance 提交适配、前端 director guidance typed client / 
 
 ### Task 6: 总体验证和 review 收口
 
-- Commit: `待提交`
+- Commit: `5aa774c`
 - Files:
   - `docs/milestones/v0.5-director-guidance/README.zh.md`
   - `docs/milestones/v0.5-director-guidance/plan.zh.md`
@@ -192,6 +192,7 @@ public director guidance 提交适配、前端 director guidance typed client / 
 - Notes:
   - 实时 tick streaming、运行推进 API 和完整 evidence bundle 导出仍属于后续
     milestone。
+  - Task 6 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

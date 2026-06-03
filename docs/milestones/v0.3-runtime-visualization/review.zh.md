@@ -86,7 +86,7 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
 
 ### Task 4: PixiJS 基础地图画面
 
-- Commit: `待提交`
+- Commit: `8711785`
 - Files:
   - `apps/web/src/components/PixelWorldCanvas.tsx`
   - `apps/web/src/pages/RuntimeConsole.tsx`
@@ -108,6 +108,8 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
     世界事实。
   - subagent reviewer 指出缺失坐标时默认渲染到 `(0,0)` 会推断位置；已改为只渲染
     finite `x` / `y` 的 tiles / entities，并增加 malformed payload 回归测试。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ## 范围审核
 

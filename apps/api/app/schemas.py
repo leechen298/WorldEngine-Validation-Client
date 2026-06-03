@@ -189,6 +189,52 @@ class EvidenceBundleMetadata(BaseModel):
     private_worldengine_internals_included: bool = False
 
 
+class EvidenceBundleCounts(BaseModel):
+    branches: int
+    events: int
+    state_diffs: int
+    snapshots: int
+    commit_points: int
+    director_intents: int
+    api_traces: int
+    evaluator_outputs: int = 0
+    replay_index: int = 0
+
+
+class EvidenceBundleRedactionFlags(BaseModel):
+    llm_keys_included: bool = False
+    private_worldengine_internals_included: bool = False
+
+
+class EvidenceBundleManifest(BaseModel):
+    bundle_schema_version: str
+    generated_at: datetime
+    session_id: str
+    session_name: str
+    worldengine_world_id: Optional[str]
+    world_status: str
+    counts: EvidenceBundleCounts
+    redaction_flags: EvidenceBundleRedactionFlags
+    warnings: List[str] = Field(default_factory=list)
+
+
+class EvidenceBundleRecords(BaseModel):
+    branches: List[Dict[str, Any]] = Field(default_factory=list)
+    commit_points: List[Dict[str, Any]] = Field(default_factory=list)
+    events: List[Dict[str, Any]] = Field(default_factory=list)
+    state_diffs: List[Dict[str, Any]] = Field(default_factory=list)
+    snapshots: List[Dict[str, Any]] = Field(default_factory=list)
+    director_intents: List[Dict[str, Any]] = Field(default_factory=list)
+    api_traces: List[Dict[str, Any]] = Field(default_factory=list)
+    evaluator_outputs: List[Dict[str, Any]] = Field(default_factory=list)
+    replay_index: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class EvidenceBundleResponse(BaseModel):
+    manifest: EvidenceBundleManifest
+    records: EvidenceBundleRecords
+
+
 class CommitPointResponse(BaseModel):
     id: str
     session_id: str

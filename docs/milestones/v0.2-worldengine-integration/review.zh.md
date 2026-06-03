@@ -1,6 +1,6 @@
 # v0.2 WorldEngine Integration Review
 
-状态：实现完成 / 总体验证通过 / review 已收口
+状态：实现完成 / 总体验证通过 / review 修复已收口
 
 日期：2026-06-03
 
@@ -12,13 +12,14 @@ v0.2 已完成 WorldEngine public API 集成闭环：能力发现、public world
 
 本轮按 `docs/agent-guides/workflow.md` 的 numbered task loop 执行；Task 1-6
 均已有 task-scoped implementation commit 和 review record。Task 7 为总体验证和
-review 收口记录。
+review 收口记录。当前记录使用 `v0.2` 分支经 current-time rewrite 后的提交 hash；
+`v0.2-local` 上同内容旧 hash 仅作为 patch 等价来源，不作为本分支证据引用。
 
 ## Task Records
 
 ### Task 1: v0.2 里程碑文档
 
-- Commit: `ce54663`（task-scoped docs commit；后续 hash 记录由 review 跟进提交补充）
+- Commit: `ab3f3fa`（task-scoped docs commit；后续 hash 记录由 review 跟进提交补充）
 - Files:
   - `docs/README.zh.md`
   - `docs/milestones/v0.2-worldengine-integration/README.zh.md`
@@ -30,13 +31,13 @@ review 收口记录。
   - 已创建 v0.2 milestone 文档，明确 public API 边界、禁止范围、task 顺序、
     验证命令和逐 task commit 要求。
 - Notes:
-  - v0.2 代码实现尚未开始。
+  - Task 1 提交时 v0.2 代码实现尚未开始；后续 task 已完成实现和验证。
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
 ### Task 2: WorldEngine 能力发现客户端
 
-- Commit: `5a098f4`
+- Commit: `3d95d98`
 - Files:
   - `apps/api/app/worldengine_client.py`
   - `apps/api/app/schemas.py`
@@ -57,11 +58,13 @@ review 收口记录。
     manifest version/capability names、OpenAPI title/version/world creation endpoint 摘要。
   - subagent re-review 指出 summary-only world creation 仍有误判风险；已移除 summary
     heuristic，并新增回归测试。
+  - review 修复：health 成功后立即保留 `reachable=True`；`/manifest` 或
+    `/openapi.json` 失败只记录 degraded capability/error，不把已确认可达误报为不可达。
   - warning 来自现有 Starlette TestClient/httpx 兼容提示。
 
 ### Task 3: 本地 world creation 存储模型
 
-- Commit: `775ecf6`
+- Commit: `7f1cd1a`
 - Files:
   - `apps/api/app/models.py`
   - `apps/api/app/routes/sessions.py`
@@ -82,7 +85,7 @@ review 收口记录。
 
 ### Task 4: WorldEngine world creation API
 
-- Commit: `561675e`
+- Commit: `c6a555e`
 - Files:
   - `apps/api/app/worldengine_client.py`
   - `apps/api/app/routes/sessions.py`
@@ -110,7 +113,7 @@ review 收口记录。
 
 ### Task 5: 前端创建世界入口
 
-- Commit: `e101932`
+- Commit: `5828ecd`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`
@@ -133,7 +136,7 @@ review 收口记录。
 
 ### Task 6: 运行控制台公开状态摘要
 
-- Commit: `8a02bbf`
+- Commit: `473894c`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`
@@ -152,17 +155,25 @@ review 收口记录。
 
 ### Task 7: 总体验证和 review 收口
 
-- Commit: `f09061e`
+- Commit: `2ea9ef8`
 - Files:
   - `docs/milestones/v0.2-worldengine-integration/review.zh.md`
 - Commands:
-  - `cd apps/api && uv run pytest -q`: 通过，`25 passed, 1 warning`
+  - `cd apps/api && uv run pytest -q`: 通过，`26 passed, 1 warning`
   - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`7 passed`
   - `pnpm --dir apps/web build`: 通过
   - `pnpm run test`: sandbox 内因 `~/.cache/uv` 权限失败；提升权限重跑通过，web
-    `7 passed`，API `25 passed, 1 warning`
+    `7 passed`，API `26 passed, 1 warning`
   - `pnpm run build`: 通过
   - `git diff --check`: 通过
+  - review 修复补跑 `cd apps/api && uv run pytest tests/test_health.py -q`: 通过，`9 passed, 1 warning`
+  - review 修复补跑 `cd apps/api && uv run pytest -q`: 通过，`26 passed, 1 warning`
+  - review 修复补跑 `pnpm --dir apps/web test`: 通过，`7 passed`
+  - review 修复补跑 `pnpm --dir apps/web build`: 通过
+  - review 修复补跑 `pnpm run test`: sandbox 内因 `~/.cache/uv` 权限失败；提升权限重跑通过，web
+    `7 passed`，API `26 passed, 1 warning`
+  - review 修复补跑 `pnpm run build`: 通过
+  - review 修复补跑 `git diff --check`: 通过
 - Scope review:
   - v0.2 仅通过 `WORLDENGINE_API_BASE` 下 public `/health`、`/manifest`、
     `/openapi.json` 和发现到的 public world creation endpoint 与 WorldEngine 通信。

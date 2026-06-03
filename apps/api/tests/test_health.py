@@ -149,6 +149,61 @@ async def test_worldengine_client_keeps_health_reachable_when_openapi_fails(monk
 
 
 @pytest.mark.asyncio
+async def test_worldengine_client_keeps_health_reachable_when_manifest_fails(monkeypatch):
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(str(request.url))
+        if request.url.path == "/health":
+            return httpx.Response(200, json={"status": "ok"})
+        if request.url.path == "/manifest":
+            return httpx.Response(500, json={"detail": "boom"})
+        if request.url.path == "/openapi.json":
+            return httpx.Response(200, json={"info": {"title": "WorldEngine"}, "paths": {}})
+        return httpx.Response(404)
+
+    original_async_client = httpx.AsyncClient
+
+    class MockAsyncClient:
+        def __init__(self, timeout):
+            self.client = original_async_client(transport=httpx.MockTransport(handler), timeout=timeout)
+
+        async def __aenter__(self):
+            return self.client
+
+        async def __aexit__(self, exc_type, exc, tb):
+            await self.client.aclose()
+
+    monkeypatch.setenv("WORLDENGINE_API_BASE", "http://worldengine.example")
+    monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
+
+    result = await check_worldengine_health()
+
+    assert result["reachable"] is True
+    assert result["health"] == {"status": "ok"}
+    assert result["manifest"] is None
+    assert result["openapi"] == {
+        "title": "WorldEngine",
+        "version": None,
+        "world_creation_endpoint": None,
+    }
+    assert result["capabilities"] == {
+        "manifest_available": False,
+        "openapi_available": True,
+        "world_creation": "unknown",
+    }
+    assert len(result["errors"]) == 1
+    assert result["errors"][0].startswith(
+        "manifest: Server error '500 Internal Server Error' for url 'http://worldengine.example/manifest'"
+    )
+    assert requests == [
+        "http://worldengine.example/health",
+        "http://worldengine.example/manifest",
+        "http://worldengine.example/openapi.json",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_worldengine_client_returns_safe_discovery_summaries(monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/health":

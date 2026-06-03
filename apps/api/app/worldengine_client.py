@@ -157,6 +157,7 @@ async def check_worldengine_health() -> Dict[str, Any]:
             health_resp = await client.get(f"{base_url}/health")
             health_resp.raise_for_status()
             result["health"] = _summarize_health(health_resp.json())
+            result["reachable"] = True
         except Exception as exc:  # noqa: BLE001
             result["errors"].append(f"health: {str(exc)}")
             return result
@@ -168,7 +169,6 @@ async def check_worldengine_health() -> Dict[str, Any]:
             result["capabilities"]["manifest_available"] = True
         except Exception as exc:  # noqa: BLE001
             result["errors"].append(f"manifest: {str(exc)}")
-            return result
 
         try:
             openapi_resp = await client.get(f"{base_url}/openapi.json")
@@ -181,5 +181,4 @@ async def check_worldengine_health() -> Dict[str, Any]:
     if result["openapi"] and result["openapi"]["world_creation_endpoint"]:
         result["capabilities"]["world_creation"] = "available"
 
-    result["reachable"] = True
     return result

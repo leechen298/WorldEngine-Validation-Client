@@ -1,6 +1,6 @@
 # v0.2 WorldEngine Integration
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / 总体验证通过 / review 修复已收口
 
 ## 目标
 
@@ -52,5 +52,9 @@ docs/agent-guides/boundaries.md
 
 ## 当前结论
 
-v0.2 目前只完成里程碑计划创建。实现尚未开始，`review.zh.md` 不得声明任何
-代码任务通过。
+v0.2 已完成 WorldEngine public API 集成闭环。能力发现、public world creation
+代理、本地公开状态/visualization 摘要落库、脱敏 API trace、前端创建世界入口
+和运行控制台公开状态摘要均已实现并通过当前会话验证。
+
+后续仍不属于 v0.2 的范围：实时 tick streaming、完整 PixiJS 像素渲染、完整回放
+和分支操作深化、完整 evidence bundle 导出、玩家角色控制。

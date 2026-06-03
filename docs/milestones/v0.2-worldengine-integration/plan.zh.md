@@ -1,6 +1,6 @@
 # v0.2 WorldEngine Integration 实现计划
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / 总体验证通过 / review 修复已收口
 
 ## 实现目标
 

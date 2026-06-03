@@ -133,6 +133,37 @@ body {
   margin-bottom: 0;
 }
 
+.tick-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #3e4c7f;
+  border-radius: 8px;
+  color: var(--accent);
+}
+
+.runtime-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.runtime-list li,
+.event-bubble {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid #3e4c7f;
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.runtime-list span,
+.event-bubble span {
+  color: var(--muted);
+}
+
 .input-row {
   display: flex;
   gap: 8px;

@@ -336,4 +336,95 @@ describe("RuntimeConsole", () => {
     expect(screen.getByText("暂无公开可视化数据。")).toBeInTheDocument();
     expect(screen.queryByLabelText("公开可视化画布")).not.toBeInTheDocument();
   });
+
+  it("shows tick, public agents, event bubble, and runtime logs without private state", async () => {
+    useSessionStore.setState({
+      sessions: [],
+      isLoading: false,
+      error: null,
+      runtimeViewBySession: {
+        "session-id": {
+          session_id: "session-id",
+          worldengine_world_id: "world-123",
+          world_status: "running",
+          tick: 12,
+          visualization: {},
+          public_agents: [
+            {
+              agent_id: "agent-1",
+              display_name: "Ada",
+              location: "market",
+              public_status: "walking",
+              visible_action: "opening a stall",
+              payload: { mood: "calm", memory: "hidden", goal: "hidden" },
+            },
+          ],
+          world_log: [
+            {
+              id: "world-event",
+              tick: 11,
+              event_kind: "world_weather",
+              text: "Light rain starts",
+              agent_id: null,
+              payload: { hidden_context: "debug" },
+              created_at: "2026-01-01T00:00:00Z",
+            },
+          ],
+          agent_life_log: [
+            {
+              id: "agent-event",
+              tick: 12,
+              event_kind: "agent_life",
+              text: "Ada greets a visitor",
+              agent_id: "agent-1",
+              payload: { thought: "hidden" },
+              created_at: "2026-01-01T00:00:01Z",
+            },
+          ],
+          latest_event: {
+            id: "latest-event",
+            tick: 12,
+            event_kind: "agent_life",
+            text: "Ada greets a visitor",
+            agent_id: "agent-1",
+            payload: {},
+            created_at: "2026-01-01T00:00:01Z",
+          },
+        },
+      },
+      runtimeErrorBySession: {},
+      connectionStatus: null,
+      lastBranches: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches: async () => [],
+      loadRuntimeView: async () => null,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch: async () => {
+        throw new Error("not used");
+      },
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(screen.getAllByText("Tick 12").length).toBeGreaterThan(0);
+    expect(screen.getByText("Agent 公开状态")).toBeInTheDocument();
+    expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("market / walking")).toBeInTheDocument();
+    expect(screen.getByText("opening a stall")).toBeInTheDocument();
+    expect(screen.getByText("最新事件气泡")).toBeInTheDocument();
+    expect(screen.getAllByText("Ada greets a visitor").length).toBeGreaterThan(0);
+    expect(screen.getByText("World Log")).toBeInTheDocument();
+    expect(screen.getByText("Light rain starts")).toBeInTheDocument();
+    expect(screen.getByText("Agent Life Log")).toBeInTheDocument();
+    expect(screen.queryByText("hidden")).not.toBeInTheDocument();
+    expect(screen.queryByText("memory")).not.toBeInTheDocument();
+    expect(screen.queryByText("goal")).not.toBeInTheDocument();
+    expect(screen.queryByText("thought")).not.toBeInTheDocument();
+  });
 });

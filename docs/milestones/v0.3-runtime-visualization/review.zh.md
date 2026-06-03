@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：Task 4 已完成 / milestone 进行中
+状态：Task 5 已完成 / milestone 进行中
 
 日期：2026-06-03
 
@@ -12,7 +12,8 @@ life log。
 
 当前已完成 v0.3 里程碑文档、后端 public runtime view API、前端 runtime view
 typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent 公开状态面板、
-事件气泡和总体验证仍未完成，不能声明 v0.3 已实现或通过。
+事件气泡、world / Agent life log 也已完成。总体验证仍未完成，不能声明 v0.3
+已实现或通过。
 
 ## Task Records
 
@@ -111,6 +112,26 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
+### Task 5: Agent 公开状态和事件日志面板
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `apps/web/src/styles.css`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test files，`12 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - 运行控制台展示基础 tick、Agent 公开状态、最新事件气泡、World Log 和 Agent
+    Life Log。
+  - UI 只读取 runtime view 的 public 字段，不展示 runtime payload 中的
+    `memory`、`goal`、`thought`、hidden/debug 字段。
+- Notes:
+  - 本 task 不实现实时 tick streaming、director guidance 提交闭环、回放重建或
+    branch 深化。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；仅
@@ -125,9 +146,10 @@ typed client / store、加载错误展示和 PixiJS 基础地图画面。Agent �
   runtime view 使用 allowlist 输出并覆盖私有字段反例。
   Task 3 是；仅新增 typed client/store 和错误展示，未展示 Agent 状态内容。
   Task 4 是；仅渲染公开 visualization 的 tiles / entities。
+  Task 5 是；只展示 Agent public state 和 public log text。
 
 ## 遗留问题
 
-- Task 5-6 尚未开始。
+- Task 6 尚未开始。
 - 实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完整 evidence
   bundle 导出仍属于后续 milestone。

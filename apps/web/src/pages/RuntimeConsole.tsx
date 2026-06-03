@@ -29,6 +29,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const runtimeView = runtimeViewBySession[sessionId];
   const latestEvent = events[events.length - 1] || null;
   const runtimeError = runtimeErrorBySession[sessionId];
+  const runtimeLatestEvent = runtimeView?.latest_event;
 
   useEffect(() => {
     loadBranches(sessionId);
@@ -104,6 +105,64 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
             <p>公开状态：{session?.public_world_status || session?.status || "unknown"}</p>
             <p>初始状态摘要：{session?.initial_state_summary || "无"}</p>
             <p>Visualization 摘要：{session?.visualization_payload_summary || "无"}</p>
+            {runtimeView ? <p className="tick-chip">Tick {runtimeView.tick}</p> : null}
+          </section>
+          <section className="page-card">
+            <h3>Agent 公开状态</h3>
+            {runtimeView?.public_agents.length ? (
+              <ul className="runtime-list">
+                {runtimeView.public_agents.map((agent) => (
+                  <li key={agent.agent_id}>
+                    <strong>{agent.display_name || agent.agent_id}</strong>
+                    <span>{[agent.location, agent.public_status].filter(Boolean).join(" / ") || "unknown"}</span>
+                    {agent.visible_action ? <span>{agent.visible_action}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>暂无 Agent 公开状态。</p>
+            )}
+          </section>
+          <section className="page-card event-bubble-card">
+            <h3>最新事件气泡</h3>
+            {runtimeLatestEvent ? (
+              <div className="event-bubble">
+                <span>Tick {runtimeLatestEvent.tick}</span>
+                <strong>{runtimeLatestEvent.text}</strong>
+              </div>
+            ) : (
+              <p>暂无事件气泡。</p>
+            )}
+          </section>
+          <section className="page-card">
+            <h3>World Log</h3>
+            {runtimeView?.world_log.length ? (
+              <ul className="runtime-list">
+                {runtimeView.world_log.map((item) => (
+                  <li key={item.id}>
+                    <span>Tick {item.tick}</span>
+                    <strong>{item.text}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>暂无 world log。</p>
+            )}
+          </section>
+          <section className="page-card">
+            <h3>Agent Life Log</h3>
+            {runtimeView?.agent_life_log.length ? (
+              <ul className="runtime-list">
+                {runtimeView.agent_life_log.map((item) => (
+                  <li key={item.id}>
+                    <span>Tick {item.tick}</span>
+                    <strong>{item.text}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>暂无 Agent life log。</p>
+            )}
           </section>
           <TimelineBranchList branches={branches} />
           <section className="page-card">

@@ -135,7 +135,7 @@ public director guidance 提交适配、前端 director guidance typed client / 
 
 ### Task 5: 运行控制台导演引导 UI 和状态列表
 
-- Commit: `待提交`
+- Commit: `4c1fda1`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
@@ -160,6 +160,7 @@ public director guidance 提交适配、前端 director guidance typed client / 
   - 状态列表只读取后端返回的 public fields，不展示 raw/private payload。
 - Notes:
   - 本 task 不新增运行推进 API，不实现完整 evidence bundle 导出。
+  - Task 5 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

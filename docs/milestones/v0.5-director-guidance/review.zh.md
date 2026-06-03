@@ -9,9 +9,9 @@
 v0.5 目标是基础 Director Guidance：运行控制台提交高层自然语言方向，后端记录
 director intent，并在可用时通过 WorldEngine public API 提交和记录公开状态。
 
-当前已完成 milestone 文档创建、后端 director intent 本地 API，以及 WorldEngine
-public director guidance 提交适配。前端 typed client / store 和运行控制台真实
-提交 UI 尚未实现，不能声明 v0.5 已完成。
+当前已完成 milestone 文档创建、后端 director intent 本地 API、WorldEngine
+public director guidance 提交适配，以及前端 director guidance typed client / store。
+运行控制台真实提交 UI 尚未实现，不能声明 v0.5 已完成。
 
 ## Task Records
 
@@ -101,6 +101,36 @@ public director guidance 提交适配。前端 typed client / store 和运行控
   - 本 task 不实现前端 typed client / store 或运行控制台真实提交 UI。
   - Task 3 commit hash 已在后续 docs-only 记录提交中补充。
 
+### Task 4: 前端 director guidance typed client 和状态
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.5-director-guidance/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 红灯，2 failed，原因是
+    Zustand store 尚无 `loadDirectorIntents` / `createDirectorIntent`。
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test
+    files，`19 passed`；存在既有 React async store `act(...)` warning。
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增 `DirectorIntent`、`DirectorIntentStatus` 和 `CreateDirectorIntentRequest`
+    TypeScript 类型。
+  - 新增 `getDirectorIntents()` 和 `createDirectorIntent()` typed client 方法，路径为
+    `/sessions/{session_id}/director-intents`。
+  - Zustand store 新增每 session 的 director intents、提交中状态和可读错误状态。
+  - `loadDirectorIntents()` 会缓存列表并清空该 session 的 director intent 错误；
+    `createDirectorIntent()` 成功后把新 intent 放到当前列表前部。
+  - 提交失败时 store 返回 `null`，保留现有 intents，并记录可读错误和提交结束状态；
+    后续 UI 可据此保留输入内容。
+  - 前端类型和 store 未新增 LLM key、provider secret、private prompt 或 Agent
+    internal state 字段。
+- Notes:
+  - 本 task 不改运行控制台 UI 的表单行为；真实提交和列表展示留给 Task 5。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 3 是；仅从
@@ -112,11 +142,10 @@ public director guidance 提交适配。前端 typed client / store 和运行控
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
   Task 2 / Task 3 是；extra field 和 public payload filtering 覆盖相关反例。
 - 是否未展示私有 Agent 内部状态、隐藏推理或私有 prompt：Task 2 / Task 3 是；
-  未新增前端展示，后端 trace 摘要过滤私有字段。
+  Task 4 未新增相关前端字段，后端 trace 摘要过滤私有字段。
 - 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 / Task 3 是。
 
 ## 遗留问题
 
-- 前端 typed client / store 尚未实现。
 - 运行控制台导演引导 UI 尚未接入真实 API。
 - 完整 evidence bundle 导出仍属于后续 milestone。

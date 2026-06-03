@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { getCommitPoints, getReplayView, getSessionEvents } from "../api/client";
+import {
+  createDirectorIntent,
+  getCommitPoints,
+  getDirectorIntents,
+  getReplayView,
+  getSessionEvents,
+} from "../api/client";
 import { useSessionStore } from "../store/sessionStore";
 import { RuntimeConsole } from "../pages/RuntimeConsole";
 
 vi.mock("../api/client", () => ({
+  createDirectorIntent: vi.fn(),
   getCommitPoints: vi.fn().mockResolvedValue([]),
+  getDirectorIntents: vi.fn().mockResolvedValue({ session_id: "session-id", director_intents: [] }),
   getReplayView: vi.fn().mockResolvedValue(null),
   getSessionEvents: vi.fn().mockResolvedValue([]),
 }));
@@ -56,9 +64,12 @@ describe("RuntimeConsole", () => {
     useSessionStore.setState(initialSessionStoreState, true);
     vi.mocked(getCommitPoints).mockClear();
     vi.mocked(getCommitPoints).mockResolvedValue([]);
+    vi.mocked(getDirectorIntents).mockClear();
+    vi.mocked(getDirectorIntents).mockResolvedValue({ session_id: "session-id", director_intents: [] });
     vi.mocked(getReplayView).mockClear();
     vi.mocked(getReplayView).mockResolvedValue(null as any);
     vi.mocked(getSessionEvents).mockClear();
+    vi.mocked(createDirectorIntent).mockClear();
   });
 
   it("renders runtime controls", async () => {
@@ -808,5 +819,84 @@ describe("RuntimeConsole", () => {
     );
     expect(useSessionStore.getState().selectedBranchBySession["session-id"]).toBe("branch-1");
     expect(useSessionStore.getState().replayTickBySession["session-id"]).toBe(4);
+  });
+
+  it("loads and creates director intents through the store", async () => {
+    vi.mocked(getDirectorIntents).mockResolvedValueOnce({
+      session_id: "session-id",
+      director_intents: [
+        {
+          id: "intent-1",
+          session_id: "session-id",
+          branch_id: "branch-1",
+          tick: 2,
+          instruction_text: "让市场附近的天气逐渐转晴",
+          status: "pending",
+          public_explanation: null,
+          applied_event_id: null,
+          error_message: null,
+          created_at: "2026-06-03T00:00:00Z",
+        },
+      ],
+    });
+    vi.mocked(createDirectorIntent).mockResolvedValueOnce({
+      id: "intent-2",
+      session_id: "session-id",
+      branch_id: "branch-1",
+      tick: 3,
+      instruction_text: "让广场附近出现更多公共活动",
+      status: "accepted",
+      public_explanation: "WorldEngine accepted the public trend",
+      applied_event_id: "event-2",
+      error_message: null,
+      created_at: "2026-06-03T00:01:00Z",
+    });
+    useSessionStore.setState({
+      directorIntentsBySession: {},
+      directorIntentErrorBySession: {},
+      directorIntentSubmittingBySession: {},
+    } as any);
+
+    const loaded = await useSessionStore.getState().loadDirectorIntents("session-id");
+    const created = await useSessionStore.getState().createDirectorIntent("session-id", {
+      instruction_text: "让广场附近出现更多公共活动",
+      branch_id: "branch-1",
+      tick: 3,
+    });
+
+    expect(getDirectorIntents).toHaveBeenCalledWith("session-id");
+    expect(createDirectorIntent).toHaveBeenCalledWith("session-id", {
+      instruction_text: "让广场附近出现更多公共活动",
+      branch_id: "branch-1",
+      tick: 3,
+    });
+    expect(loaded[0].id).toBe("intent-1");
+    expect(created?.status).toBe("accepted");
+    expect(useSessionStore.getState().directorIntentsBySession["session-id"].map((item) => item.id)).toEqual([
+      "intent-2",
+      "intent-1",
+    ]);
+    expect(useSessionStore.getState().directorIntentErrorBySession["session-id"]).toBe("");
+    expect(useSessionStore.getState().directorIntentSubmittingBySession["session-id"]).toBe(false);
+  });
+
+  it("records readable director intent submit failures in the store", async () => {
+    vi.mocked(createDirectorIntent).mockRejectedValueOnce(new Error("WorldEngine public endpoint unavailable"));
+    useSessionStore.setState({
+      directorIntentsBySession: {},
+      directorIntentErrorBySession: {},
+      directorIntentSubmittingBySession: {},
+    } as any);
+
+    const created = await useSessionStore.getState().createDirectorIntent("session-id", {
+      instruction_text: "让市场附近的天气逐渐转晴",
+      tick: 2,
+    });
+
+    expect(created).toBeNull();
+    expect(useSessionStore.getState().directorIntentErrorBySession["session-id"]).toBe(
+      "WorldEngine public endpoint unavailable",
+    );
+    expect(useSessionStore.getState().directorIntentSubmittingBySession["session-id"]).toBe(false);
   });
 });

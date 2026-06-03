@@ -69,6 +69,27 @@ export interface SessionEvent {
   created_at: string;
 }
 
+export type DirectorIntentStatus = "pending" | "accepted" | "applied" | "rejected" | "failed" | string;
+
+export interface DirectorIntent {
+  id: string;
+  session_id: string;
+  branch_id: string | null;
+  tick: number;
+  instruction_text: string;
+  status: DirectorIntentStatus;
+  public_explanation: string | null;
+  applied_event_id: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface CreateDirectorIntentRequest {
+  instruction_text: string;
+  branch_id?: string | null;
+  tick?: number;
+}
+
 export interface PublicAgentState {
   agent_id: string;
   display_name: string | null;

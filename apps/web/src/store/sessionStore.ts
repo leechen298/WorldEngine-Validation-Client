@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import {
   createBranch as apiCreateBranch,
+  createDirectorIntent as apiCreateDirectorIntent,
   createSession,
   createWorldSession,
   getBranches,
   getCommitPoints,
+  getDirectorIntents,
   getHealth,
   getReplayView,
   getRuntimeView,
@@ -14,6 +16,8 @@ import {
 import type {
   BranchSummary,
   CommitPointSummary,
+  CreateDirectorIntentRequest,
+  DirectorIntent,
   HealthWorldEngineResponse,
   ReplayView,
   RuntimeView,
@@ -38,6 +42,9 @@ interface SessionState {
   replayErrorBySession: Record<string, string>;
   selectedBranchBySession: Record<string, string>;
   replayTickBySession: Record<string, number>;
+  directorIntentsBySession: Record<string, DirectorIntent[]>;
+  directorIntentErrorBySession: Record<string, string>;
+  directorIntentSubmittingBySession: Record<string, boolean>;
   loadSessions: () => Promise<void>;
   loadHealth: () => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
@@ -50,6 +57,11 @@ interface SessionState {
   createNewSession: (name: string) => Promise<SessionSummary>;
   createWorldEngineSession: (name: string, worldPrompt: string) => Promise<SessionSummary>;
   createBranch: (sessionId: string, branchName: string, commitPointId: string) => Promise<BranchSummary>;
+  loadDirectorIntents: (sessionId: string) => Promise<DirectorIntent[]>;
+  createDirectorIntent: (
+    sessionId: string,
+    payload: CreateDirectorIntentRequest,
+  ) => Promise<DirectorIntent | null>;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -65,6 +77,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   replayErrorBySession: {},
   selectedBranchBySession: {},
   replayTickBySession: {},
+  directorIntentsBySession: {},
+  directorIntentErrorBySession: {},
+  directorIntentSubmittingBySession: {},
 
   loadSessions: async () => {
     set({ isLoading: true, error: null });
@@ -290,6 +305,77 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;
+    }
+  },
+
+  loadDirectorIntents: async (sessionId: string) => {
+    try {
+      const payload = await getDirectorIntents(sessionId);
+      set((state) => ({
+        directorIntentsBySession: {
+          ...state.directorIntentsBySession,
+          [sessionId]: payload.director_intents,
+        },
+        directorIntentErrorBySession: {
+          ...state.directorIntentErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return payload.director_intents;
+    } catch (error) {
+      set((state) => ({
+        directorIntentErrorBySession: {
+          ...state.directorIntentErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return [];
+    }
+  },
+
+  createDirectorIntent: async (sessionId: string, payload: CreateDirectorIntentRequest) => {
+    set((state) => ({
+      directorIntentSubmittingBySession: {
+        ...state.directorIntentSubmittingBySession,
+        [sessionId]: true,
+      },
+      directorIntentErrorBySession: {
+        ...state.directorIntentErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const intent = await apiCreateDirectorIntent(sessionId, payload);
+      set((state) => ({
+        directorIntentsBySession: {
+          ...state.directorIntentsBySession,
+          [sessionId]: [
+            intent,
+            ...(state.directorIntentsBySession[sessionId] || []).filter((item) => item.id !== intent.id),
+          ],
+        },
+        directorIntentSubmittingBySession: {
+          ...state.directorIntentSubmittingBySession,
+          [sessionId]: false,
+        },
+        directorIntentErrorBySession: {
+          ...state.directorIntentErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return intent;
+    } catch (error) {
+      set((state) => ({
+        directorIntentSubmittingBySession: {
+          ...state.directorIntentSubmittingBySession,
+          [sessionId]: false,
+        },
+        directorIntentErrorBySession: {
+          ...state.directorIntentErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
     }
   },
 }));

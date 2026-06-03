@@ -2,8 +2,10 @@ import type {
   BranchSummary,
   CommitPointSummary,
   CreateBranchRequest,
+  CreateDirectorIntentRequest,
   CreateSessionRequest,
   CreateWorldSessionRequest,
+  DirectorIntent,
   HealthResponse,
   HealthWorldEngineResponse,
   ReplayView,
@@ -97,6 +99,24 @@ export async function getCommitPoints(sessionId: string): Promise<CommitPointSum
 
 export async function createBranch(sessionId: string, payload: CreateBranchRequest): Promise<BranchSummary> {
   return request<BranchSummary>(`/sessions/${sessionId}/branches`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getDirectorIntents(
+  sessionId: string,
+): Promise<{ session_id: string; director_intents: DirectorIntent[] }> {
+  return request<{ session_id: string; director_intents: DirectorIntent[] }>(
+    `/sessions/${sessionId}/director-intents`,
+  );
+}
+
+export async function createDirectorIntent(
+  sessionId: string,
+  payload: CreateDirectorIntentRequest,
+): Promise<DirectorIntent> {
+  return request<DirectorIntent>(`/sessions/${sessionId}/director-intents`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

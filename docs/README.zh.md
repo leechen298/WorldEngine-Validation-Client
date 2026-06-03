@@ -17,6 +17,10 @@ docs/
       README.zh.md
       plan.zh.md
       review.zh.md
+    v0.2-worldengine-integration/
+      README.zh.md
+      plan.zh.md
+      review.zh.md
   adr/
     0001-tech-stack.zh.md
 ```
@@ -40,6 +44,7 @@ docs/
 实现 v0.1
 继续 v0.1
 审核 v0.1
+开发 v0.2
 ```
 
 Agent 应先读取对应 milestone：
@@ -49,6 +54,9 @@ docs/milestones/v0.1-foundation/README.zh.md
 docs/milestones/v0.1-foundation/plan.zh.md
 docs/milestones/v0.1-foundation/review.zh.md
 ```
+
+如果目标 milestone 目录或计划尚不存在，应先创建或补齐 milestone 文档，再按
+`docs/agent-guides/workflow.md` 的逐 task 流程进入实现。
 
 然后按计划实现、验证并更新 `review.zh.md`。
 

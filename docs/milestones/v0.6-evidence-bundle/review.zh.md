@@ -9,9 +9,10 @@
 v0.6 目标是完整 Evidence Bundle：在不越过 WorldEngine public API 和本地客户端
 证据边界的前提下，导出可下载、可审计、可脱敏检查的本地 session 证据包。
 
-当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest，以及后端
-bundle 内容组装和脱敏检查。后续必须从 `plan.zh.md` Task 4 开始，按 numbered
-task 顺序实现、验证、记录并逐 task 提交。
+当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest、后端
+bundle 内容组装和脱敏检查，以及后端可下载 JSON endpoint。后续必须从
+`plan.zh.md` Task 5 开始，按 numbered task 顺序实现、验证、记录并逐 task
+提交。
 
 ## Task Records
 
@@ -77,7 +78,7 @@ task 顺序实现、验证、记录并逐 task 提交。
 
 ### Task 3: 后端 bundle 内容组装和脱敏检查
 
-- Commit: `pending`
+- Commit: `ae553c0`
 - Files:
   - `apps/api/app/routes/evidence.py`
   - `apps/api/app/schemas.py`
@@ -112,23 +113,47 @@ task 顺序实现、验证、记录并逐 task 提交。
 - Notes:
   - 本 task 不实现下载 endpoint；下载行为留给 Task 4。
 
+### Task 4: 后端可下载 JSON endpoint
+
+- Commit: `pending`
+- Files:
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/tests/test_evidence.py`
+  - `docs/milestones/v0.6-evidence-bundle/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 红灯，2 failed，原因是
+    `/sessions/{session_id}/evidence/bundle/download` endpoint 尚不存在。
+  - `cd apps/api && uv run pytest tests/test_evidence.py -q`: 通过，`8 passed`；
+    存在既有 Starlette TestClient/httpx 兼容 warning。
+  - `git diff --check`: 通过
+- Scope review:
+  - 新增 `/sessions/{session_id}/evidence/bundle/download` endpoint，返回完整 JSON
+    evidence bundle。
+  - 下载响应使用 `application/json` media type，并设置 attachment
+    `Content-Disposition`。
+  - 下载文件名包含 session id 和生成日期。
+  - 下载 endpoint 与既有 metadata endpoint `/bundle` 和 manifest endpoint
+    `/bundle/manifest` 分离，未改变旧调用方行为。
+  - 缺失 session 返回 `404 Session not found`。
+- Notes:
+  - 本 task 不实现前端 typed client / store；前端下载行为留给 Task 5 / Task 6。
+
 ## 范围审核
 
-- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3
-  未新增 WorldEngine 调用。
-- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 是。
-- 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 是。
-- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 是。
+- 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3 /
+  Task 4 未新增 WorldEngine 调用。
+- 是否未引入客户端 LLM key 管理：Task 1 / Task 2 / Task 3 / Task 4 是。
+- 是否未直接调用 LLM provider：Task 1 / Task 2 / Task 3 / Task 4 是。
+- 是否未生成权威世界事实或 evaluator 结论：Task 1 / Task 2 / Task 3 / Task 4 是。
 - 是否未直接修改 Agent 内部状态、记忆、目标、身份、关系、自我状态或行为决定：
-  Task 1 / Task 2 / Task 3 是。
+  Task 1 / Task 2 / Task 3 / Task 4 是。
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
-  Task 1 / Task 2 / Task 3 是。
-- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 3
+  Task 1 / Task 2 / Task 3 / Task 4 是。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 4
   进行中。
 - 是否 broad checks 已通过：否，尚未进入总体验证。
 
 ## 遗留问题
 
-- 后端可下载 JSON endpoint 尚未实现。
 - 前端 typed client / store / evidence panel / 下载入口尚未实现。
 - v0.6 尚未完成总体验证和 review 收口。

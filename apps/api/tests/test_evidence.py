@@ -232,3 +232,28 @@ def test_evidence_bundle_manifest_returns_404_for_missing_session(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Session not found"
+
+
+def test_evidence_bundle_download_returns_json_attachment(client):
+    session = client.post("/sessions", json={"session_name": "Download Evidence"}).json()
+    session_id = session["id"]
+
+    response = client.get(f"/sessions/{session_id}/evidence/bundle/download")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    content_disposition = response.headers["content-disposition"]
+    assert "attachment" in content_disposition
+    assert session_id in content_disposition
+    assert content_disposition.endswith(".json\"")
+    payload = response.json()
+    assert set(payload.keys()) == {"manifest", "records"}
+    assert payload["manifest"]["session_id"] == session_id
+    assert payload["records"]["branches"][0]["branch_name"] == "main"
+
+
+def test_evidence_bundle_download_returns_404_for_missing_session(client):
+    response = client.get("/sessions/missing-session/evidence/bundle/download")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Session not found"

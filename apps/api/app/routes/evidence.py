@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -360,6 +361,10 @@ def get_bundle(session_id: str, db: Session = Depends(get_db)):
 
 @router.get("/bundle/manifest", response_model=EvidenceBundleResponse)
 def get_bundle_manifest(session_id: str, db: Session = Depends(get_db)):
+    return _build_bundle_response(session_id, db)
+
+
+def _build_bundle_response(session_id: str, db: Session) -> EvidenceBundleResponse:
     session = db.get(DbSession, session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
@@ -388,3 +393,15 @@ def get_bundle_manifest(session_id: str, db: Session = Depends(get_db)):
     )
 
     return EvidenceBundleResponse(manifest=manifest, records=records)
+
+
+@router.get("/bundle/download")
+def download_bundle(session_id: str, db: Session = Depends(get_db)):
+    bundle = _build_bundle_response(session_id, db)
+    generated_date = bundle.manifest.generated_at.date().isoformat()
+    filename = f"evidence-bundle-{session_id}-{generated_date}.json"
+    return JSONResponse(
+        content=bundle.model_dump(mode="json"),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

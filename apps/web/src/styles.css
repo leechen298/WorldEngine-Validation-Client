@@ -90,11 +90,26 @@ body {
 }
 
 .branch-item {
+  display: grid;
+  gap: 4px;
   border: 1px solid #3e4c7f;
   border-radius: 8px;
   margin-bottom: 8px;
   padding: 8px 12px;
   background: var(--panel-soft);
+}
+
+.branch-button {
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.branch-button.active {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .runtime-grid {

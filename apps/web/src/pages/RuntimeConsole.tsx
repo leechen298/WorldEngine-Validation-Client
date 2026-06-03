@@ -13,6 +13,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const {
     error,
     commitPointsBySession = {},
+    createBranch,
     loadBranches,
     loadCommitPoints = async () => [],
     loadReplayView = async () => null,
@@ -27,6 +28,8 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     sessions,
   } = useSessionStore();
   const [runtimeState, setRuntimeState] = useState<"running" | "paused">("paused");
+  const [branchName, setBranchName] = useState("");
+  const [selectedCommitPointId, setSelectedCommitPointId] = useState<string | null>(null);
   const branches = lastBranches[sessionId] || [];
   const session = sessions.find((item) => item.id === sessionId);
   const runtimeView = runtimeViewBySession[sessionId];
@@ -44,6 +47,11 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     "";
   const maxTick = Math.max(displayView?.tick || 0, ...commitPoints.map((item) => item.tick), 0);
   const targetTick = replayTickBySession[sessionId] ?? displayView?.tick ?? 0;
+  const selectedCommitPoint =
+    commitPoints.find((item) => item.id === selectedCommitPointId) ||
+    commitPoints.find((item) => item.id === session?.main_commit_point_id) ||
+    commitPoints[0] ||
+    null;
 
   useEffect(() => {
     loadBranches(sessionId);
@@ -66,6 +74,33 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     loadReplayView(sessionId, {
       branchId: selectedBranchId || undefined,
       tick,
+    });
+  };
+
+  const selectCommitPoint = (commitPoint: (typeof commitPoints)[number]) => {
+    setSelectedCommitPointId(commitPoint.id);
+    loadReplayAtTick(commitPoint.tick);
+  };
+
+  const selectBranch = (branch: (typeof branches)[number]) => {
+    loadReplayView(sessionId, {
+      branchId: branch.id,
+      tick: branch.current_tick,
+    });
+  };
+
+  const submitBranchCreate = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!branchName.trim() || !selectedCommitPoint) {
+      return;
+    }
+    const branch = await createBranch(sessionId, branchName.trim(), selectedCommitPoint.id);
+    setBranchName("");
+    await loadBranches(sessionId);
+    await loadCommitPoints(sessionId);
+    await loadReplayView(sessionId, {
+      branchId: branch.id,
+      tick: branch.current_tick,
     });
   };
 
@@ -139,7 +174,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
                       {commitPoint.branch_names.length ? (
                         <span>{commitPoint.branch_names.map((name) => `branch ${name}`).join(" / ")}</span>
                       ) : null}
-                      <button type="button" onClick={() => loadReplayAtTick(commitPoint.tick)}>
+                      <button type="button" onClick={() => selectCommitPoint(commitPoint)}>
                         跳转到 tick {commitPoint.tick} {summary}
                       </button>
                     </li>
@@ -149,6 +184,15 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
             ) : (
               <p>暂无 commit point。</p>
             )}
+            <form className="input-stack" onSubmit={submitBranchCreate}>
+              <label htmlFor="new-branch-name">新 branch 名称</label>
+              <input
+                id="new-branch-name"
+                onChange={(event) => setBranchName(event.target.value)}
+                value={branchName}
+              />
+              <button type="submit">从当前 commit point 创建 branch</button>
+            </form>
           </section>
           <section className="page-card">
             <h3>Agent 公开状态</h3>
@@ -207,7 +251,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
               <p>暂无 Agent life log。</p>
             )}
           </section>
-          <TimelineBranchList branches={branches} />
+          <TimelineBranchList branches={branches} onSelect={selectBranch} selectedBranchId={selectedBranchId} />
         </section>
       </div>
     </section>

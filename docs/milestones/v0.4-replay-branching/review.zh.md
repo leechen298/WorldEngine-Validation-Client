@@ -114,7 +114,7 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 
 ### Task 5: 运行控制台时间线 scrubber 和 commit point 浏览
 
-- Commit: `待提交`
+- Commit: `087a48d`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
@@ -137,6 +137,33 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   - 新增测试先红灯复现缺少“时间线回放”UI，再实现后转绿。
   - 本 task 不实现 branch 切换和从 commit point 创建 branch；这些仍留给 Task 6。
 
+### Task 6: 运行控制台 branch 切换和创建
+
+- Commit: `待提交`
+- Files:
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/components/TimelineBranchList.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `apps/web/src/styles.css`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `pnpm --dir apps/web test -- RuntimeConsole.test.tsx`: 通过，`2 passed` test
+    files，`17 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web test -- SessionLibrary.test.tsx`: 通过，`2 passed` test
+    files，`17 passed`；存在既有 React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `git diff --check`: 通过
+- Scope review:
+  - `TimelineBranchList` 支持选择 branch，并标识当前 branch / main branch / current
+    tick。
+  - 运行控制台支持切换 branch 后按该 branch current tick 加载 replay view。
+  - 运行控制台支持从当前选中 commit point 创建新 branch；创建成功后刷新 branch、
+    commit point 和 replay view 状态。
+  - UI 文案使用 branch / 世界线语义，没有引入 parent / child timeline 层级语义。
+- Notes:
+  - 新增测试先红灯复现缺少 branch 切换按钮，再实现后转绿。
+  - 本 task 不新增 WorldEngine 运行推进 API，不实现实时 tick streaming。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；
@@ -150,9 +177,11 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   前端新增类型和 store 状态不引入 raw payload 展示。
 - 是否不从摘要文本推断权威世界事实：Task 5 是；commit point browser 只显示后端
   提供的公开摘要和 tick。
+- 是否未引入 parent / child timeline 层级语义：Task 6 是；UI 使用 branch / 世界线
+  平铺语义。
 - 是否未引入玩家角色控制：待实现后验证。
 - 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后验证。
 
 ## 遗留问题
 
-- branch 切换和创建 UI 尚未实现。
+- 总体验证和 review 收口尚未完成。

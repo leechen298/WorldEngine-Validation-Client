@@ -678,6 +678,117 @@ describe("RuntimeConsole", () => {
     expect(loadReplayView).toHaveBeenCalledWith("session-id", { branchId: "branch-1", tick: 1 });
   });
 
+  it("switches branches and creates a branch from the selected commit point", async () => {
+    const loadBranches = vi.fn().mockResolvedValue([]);
+    const loadCommitPoints = vi.fn().mockResolvedValue([]);
+    const loadReplayView = vi.fn().mockResolvedValue(null);
+    const createBranch = vi.fn().mockResolvedValue({
+      id: "branch-new",
+      branch_name: "market-fork",
+      commit_point_id: "cp-2",
+      tick: 2,
+      current_tick: 2,
+      snapshot_reference: "snapshot-2",
+      is_main: false,
+      created_at: "2026-01-01T00:00:03Z",
+    });
+    useSessionStore.setState({
+      sessions: [
+        {
+          id: "session-id",
+          session_name: "World Session",
+          status: "running",
+          worldengine_world_id: "world-123",
+          public_world_status: "running",
+          initial_state_summary: null,
+          visualization_payload_summary: null,
+          branch_count: 2,
+          main_branch_id: "branch-1",
+          main_commit_point_id: "cp-1",
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+      lastBranches: {
+        "session-id": [
+          {
+            id: "branch-1",
+            branch_name: "main",
+            commit_point_id: "cp-1",
+            tick: 1,
+            current_tick: 1,
+            snapshot_reference: "snapshot-1",
+            is_main: true,
+            created_at: "2026-01-01T00:00:01Z",
+          },
+          {
+            id: "branch-2",
+            branch_name: "storm-line",
+            commit_point_id: "cp-2",
+            tick: 2,
+            current_tick: 2,
+            snapshot_reference: "snapshot-2",
+            is_main: false,
+            created_at: "2026-01-01T00:00:02Z",
+          },
+        ],
+      },
+      commitPointsBySession: {
+        "session-id": [
+          {
+            id: "cp-2",
+            session_id: "session-id",
+            tick: 2,
+            event_id: "event-2",
+            snapshot_id: "snapshot-2",
+            payload_summary: "Storm begins",
+            branch_ids: ["branch-1", "branch-2"],
+            branch_names: ["main", "storm-line"],
+            created_at: "2026-01-01T00:00:02Z",
+          },
+        ],
+      },
+      replayViewBySession: {},
+      replayErrorBySession: {},
+      selectedBranchBySession: { "session-id": "branch-1" },
+      replayTickBySession: { "session-id": 1 },
+      runtimeViewBySession: {},
+      runtimeErrorBySession: {},
+      loadSessions: async () => {},
+      loadHealth: async () => {},
+      loadBranches,
+      loadRuntimeView: async () => null,
+      loadCommitPoints,
+      loadReplayView,
+      createNewSession: async () => {
+        throw new Error("not used");
+      },
+      createWorldEngineSession: async () => {
+        throw new Error("not used");
+      },
+      createBranch,
+    } as any);
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "切换到 branch storm-line" }));
+
+    expect(loadReplayView).toHaveBeenCalledWith("session-id", { branchId: "branch-2", tick: 2 });
+
+    fireEvent.click(screen.getByRole("button", { name: "跳转到 tick 2 Storm begins" }));
+    fireEvent.change(screen.getByLabelText("新 branch 名称"), { target: { value: "market-fork" } });
+    fireEvent.click(screen.getByRole("button", { name: "从当前 commit point 创建 branch" }));
+
+    await waitFor(() =>
+      expect(createBranch).toHaveBeenCalledWith("session-id", "market-fork", "cp-2"),
+    );
+    expect(loadBranches).toHaveBeenCalledWith("session-id");
+    expect(loadCommitPoints).toHaveBeenCalledWith("session-id");
+    expect(loadReplayView).toHaveBeenCalledWith("session-id", { branchId: "branch-new", tick: 2 });
+    expect(screen.queryByText(/parent/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/child/i)).not.toBeInTheDocument();
+  });
+
   it("records readable replay load failures in the store", async () => {
     vi.mocked(getReplayView).mockRejectedValueOnce(new Error("No replay snapshot is available"));
     useSessionStore.setState({

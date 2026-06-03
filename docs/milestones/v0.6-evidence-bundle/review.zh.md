@@ -232,7 +232,7 @@ typed client / store、运行控制台 evidence panel / 下载入口，以及总
 
 ### Task 8: 审核反馈脱敏修复和复验
 
-- Commit: `pending`
+- Commit: `ad92336`
 - Files:
   - `apps/api/app/routes/evidence.py`
   - `apps/api/tests/test_evidence.py`
@@ -280,7 +280,7 @@ typed client / store、运行控制台 evidence panel / 下载入口，以及总
     response 或 Agent 内部状态。
   - Subagent 复审：Locke 指出 2 个问题；文档 pending 项在本记录中收口，纯文本
     `internal/helper` 错误泄漏风险已补回归测试并修复。
-  - 最终提交：pending。
+  - 最终提交：`ad92336`。
   - v0.6 不包含实时 tick streaming 或运行推进 API。
 
 ## 范围审核
@@ -298,7 +298,7 @@ typed client / store、运行控制台 evidence panel / 下载入口，以及总
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
   Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 / Task 8 是。
 - 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：Task 7 是；
-  Task 8 pending final commit。
+  Task 8 是。
 - 是否 broad checks 已通过：Task 7 是；Task 8 是。
 
 ## 遗留问题

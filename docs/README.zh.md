@@ -25,6 +25,10 @@ docs/
       README.zh.md
       plan.zh.md
       review.zh.md
+    v0.4-replay-branching/
+      README.zh.md
+      plan.zh.md
+      review.zh.md
   adr/
     0001-tech-stack.zh.md
 ```
@@ -50,6 +54,7 @@ docs/
 审核 v0.1
 开发 v0.2
 开发 v0.3
+开发 v0.4
 ```
 
 Agent 应先读取对应 milestone：

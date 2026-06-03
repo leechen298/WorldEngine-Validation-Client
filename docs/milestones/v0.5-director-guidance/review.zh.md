@@ -15,7 +15,7 @@ director intent，并在可用时通过 WorldEngine public API 提交和记录�
 
 ### Task 1: v0.5 里程碑文档
 
-- Commit: `待提交`
+- Commit: `7fcf84b`
 - Files:
   - `docs/README.zh.md`
   - `docs/milestones/v0.5-director-guidance/README.zh.md`
@@ -32,8 +32,7 @@ director intent，并在可用时通过 WorldEngine public API 提交和记录�
     不依赖私有源码、私有 helper、私有 prompt、LLM key 或 provider secret。
 - Notes:
   - Task 1 仅创建 v0.5 milestone 文档，不包含产品代码实现。
-  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录将在后续
-    docs-only review 更新中补充可见 hash。
+  - Task 1 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

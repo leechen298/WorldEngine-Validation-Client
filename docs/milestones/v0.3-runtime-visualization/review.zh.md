@@ -62,7 +62,7 @@ typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态�
 
 ### Task 3: 前端 runtime view client 和状态
 
-- Commit: `待提交`
+- Commit: `3a38910`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`
@@ -81,6 +81,8 @@ typed client / store 和加载错误展示。PixiJS 地图、Agent 公开状态�
 - Notes:
   - 本 task 不渲染 PixiJS 地图、不展示 Agent 公开状态面板、不实现事件气泡或 log
     UI；这些仍留给 Task 4/5。
+  - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
+    docs-only review 提交补充可见 hash。
 
 ## 范围审核
 

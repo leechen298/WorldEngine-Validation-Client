@@ -166,7 +166,7 @@ runtime view 的 main branch / allowlist / redaction 路径。该旁路已移除
 
 ### Review Fix 1: 移除旧事件 raw payload 面板并同步状态文档
 
-- Commit: `待提交`
+- Commit: `07eb9e2`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`

@@ -35,7 +35,7 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 
 ### Task 2: 后端 replay read model API
 
-- Commit: `待提交`
+- Commit: `eb1b021`
 - Files:
   - `apps/api/app/routes/sessions.py`
   - `apps/api/app/schemas.py`
@@ -62,6 +62,31 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   - 本 task 不新增 state diff 写入 API，不深化 commit point / branch 列表，不实现
     前端 UI。
 
+### Task 3: 后端 commit point / branch 上下文深化
+
+- Commit: `待提交`
+- Files:
+  - `apps/api/app/routes/sessions.py`
+  - `apps/api/app/routes/timelines.py`
+  - `apps/api/app/schemas.py`
+  - `apps/api/tests/test_timelines.py`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_timelines.py -q`: 通过，`5 passed, 1 warning`
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: 通过，`17 passed, 1 warning`
+  - `git diff --check`: 通过
+- Scope review:
+  - branch response 增加 `is_main` 和 `current_tick`，branch 列表和创建 branch 响应均
+    返回可直接用于 replay 的 branch context。
+  - commit point 列表增加关联 branch ids / names 和公开 `payload_summary`。
+  - commit point 列表不再返回 raw `payload_json`，避免绕过 runtime / replay view
+    的 public filtering 路径。
+  - 保持 branch 是“世界线”的平铺模型，没有引入 parent / child timeline 层级语义。
+- Notes:
+  - 新增测试先红灯复现 response 字段缺失和 raw `payload_json` 泄漏，再实现后转绿。
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
+  - 本 task 不新增前端 UI，不实现 timeline scrubber。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；
@@ -70,12 +95,12 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 - 是否未直接调用 LLM provider：Task 2 是。
 - 是否未生成权威世界事实：Task 2 是；缺少可重建 snapshot 时返回错误，不编造
   replay 状态。
+- 是否未引入 parent / child timeline 层级语义：Task 3 是。
 - 是否未引入玩家角色控制：待实现后验证。
 - 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后验证。
 - 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：待实现后验证。
 
 ## 遗留问题
 
-- commit point / branch 上下文深化尚未实现。
 - 前端 replay / branch typed client 和状态尚未实现。
 - 时间线 scrubber、commit point 浏览、branch 切换和创建 UI 尚未实现。

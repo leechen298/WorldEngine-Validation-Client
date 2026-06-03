@@ -92,7 +92,9 @@ class BranchResponse(BaseModel):
     branch_name: str
     commit_point_id: str
     tick: int
+    current_tick: int
     snapshot_reference: Optional[str]
+    is_main: bool
     created_at: datetime
 
 
@@ -167,5 +169,7 @@ class CommitPointResponse(BaseModel):
     tick: int
     event_id: Optional[str]
     snapshot_id: Optional[str]
-    payload_json: Optional[str]
+    payload_summary: Optional[str]
+    branch_ids: List[str] = []
+    branch_names: List[str] = []
     created_at: datetime

@@ -347,7 +347,9 @@ def create_branch(session_id: str, payload: BranchCreatePayload, db: Session = D
         branch_name=branch.branch_name,
         commit_point_id=branch.commit_point_id,
         tick=branch.tick,
+        current_tick=branch.tick,
         snapshot_reference=branch.snapshot_reference,
+        is_main=branch.is_main,
         created_at=branch.created_at,
     )
 

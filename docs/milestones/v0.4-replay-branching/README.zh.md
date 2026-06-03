@@ -1,6 +1,6 @@
 # v0.4 Replay And Branching
 
-状态：计划已创建 / 实现待开始
+状态：实现完成 / 验证通过
 
 ## 目标
 
@@ -59,6 +59,10 @@ docs/agent-guides/boundaries.md
 
 ## 当前结论
 
-v0.4 计划已创建。当前代码已有基础 `CommitPoint`、`TimelineBranch`、`Snapshot`
-和 `StateDiff` 模型，以及 branch 创建和 commit point 列表 API。后续实现需要把这些
-基础模型连接成可验证的 replay read model 和运行控制台分支体验。
+v0.4 已完成基础 Replay And Branching：后端提供 `replay-view` read model，
+从公开 snapshot + state diff 重建指定 branch / tick 的公开运行视图；timeline API
+返回 branch context 和 commit point 公开摘要；前端运行控制台支持时间线 scrubber、
+commit point 浏览、branch 切换，以及从当前 commit point 创建新 branch。
+
+后续范围仍是实时 tick streaming、运行推进 API、导演引导提交闭环和完整 evidence
+bundle 导出。

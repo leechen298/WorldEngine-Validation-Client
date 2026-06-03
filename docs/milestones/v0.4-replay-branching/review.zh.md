@@ -1,6 +1,6 @@
 # v0.4 Replay And Branching Review
 
-状态：实现中
+状态：实现完成 / 验证通过
 
 日期：2026-06-03
 
@@ -10,8 +10,9 @@ v0.4 目标是基础 Replay And Branching：后端从公开 snapshot + state dif
 replay view，前端运行控制台展示时间线 scrubber、commit point 浏览、branch 切换
 和从 commit point 创建 branch 的基础体验。
 
-当前已完成 milestone 文档创建和后端 replay read model API。后续仍需深化
-commit point / branch 上下文，并完成前端 replay / branch 体验。
+当前已完成 milestone 文档创建、后端 replay read model API、timeline branch /
+commit point 上下文深化，以及前端 replay / branch typed client、时间线 scrubber、
+commit point 浏览、branch 切换和从 commit point 创建 branch 的基础 UI。
 
 ## Task Records
 
@@ -139,7 +140,7 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
 
 ### Task 6: 运行控制台 branch 切换和创建
 
-- Commit: `待提交`
+- Commit: `f9f5005`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/components/TimelineBranchList.tsx`
@@ -164,6 +165,35 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   - 新增测试先红灯复现缺少 branch 切换按钮，再实现后转绿。
   - 本 task 不新增 WorldEngine 运行推进 API，不实现实时 tick streaming。
 
+### Task 7: 总体验证和 review 收口
+
+- Commit: `待提交`
+- Files:
+  - `docs/milestones/v0.4-replay-branching/README.zh.md`
+  - `docs/milestones/v0.4-replay-branching/plan.zh.md`
+  - `docs/milestones/v0.4-replay-branching/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest -q`: 通过，`33 passed, 1 warning`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`17 passed`；存在既有
+    React async store `act(...)` warning
+  - `pnpm --dir apps/web build`: 通过
+  - `pnpm run test`: 通过；web `17 passed`，API `33 passed, 1 warning`
+  - `pnpm run build`: 通过
+  - `git diff --check`: 通过
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|reasoning|hidden_context|raw_response|payload_json" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.4-replay-branching`: 通过；命中项为过滤常量、边界文档、既有兼容 raw event 类型/模型、测试反例和 review 记录，未发现新增 replay / branch UI 展示 raw private payload。
+- Scope review:
+  - v0.4 仅基于本地公开 evidence 数据实现 replay / branch 观察能力，不新增
+    WorldEngine 私有接口调用。
+  - 后端 replay view 使用 branch 隔离、snapshot + state diff 重建和 public filtering。
+  - 前端运行控制台只展示 replay/runtime view、commit point 公开摘要和 branch
+    context，不展示 raw event / snapshot / diff payload。
+  - 所有 planned numbered tasks 均已记录并有 task-scoped commit。
+- Notes:
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示和 React async store 测试
+    提示，不影响当前通过结论。
+  - 实时 tick streaming、运行推进 API、导演引导提交闭环和完整 evidence bundle
+    导出仍属于后续 milestone。
+
 ## 范围审核
 
 - 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；
@@ -179,9 +209,15 @@ commit point / branch 上下文，并完成前端 replay / branch 体验。
   提供的公开摘要和 tick。
 - 是否未引入 parent / child timeline 层级语义：Task 6 是；UI 使用 branch / 世界线
   平铺语义。
-- 是否未引入玩家角色控制：待实现后验证。
-- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后验证。
+- 是否未引入玩家角色控制：是。
+- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：是。
+- 是否未保存或展示 LLM key、provider secrets、私有 WorldEngine internals、私有
+  Agent 内部状态：是；敏感字段扫描命中项均为过滤常量、边界文档、既有兼容
+  raw event 类型/模型、测试反例或 review 记录。
 
 ## 遗留问题
 
-- 总体验证和 review 收口尚未完成。
+- 实时 tick streaming 尚未实现。
+- WorldEngine 运行推进 API 尚未实现。
+- 导演引导提交闭环尚未实现。
+- 完整 evidence bundle 导出尚未实现。

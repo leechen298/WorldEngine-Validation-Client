@@ -103,7 +103,7 @@ public director guidance 提交适配，以及前端 director guidance typed cli
 
 ### Task 4: 前端 director guidance typed client 和状态
 
-- Commit: `待提交`
+- Commit: `09436bb`
 - Files:
   - `apps/web/src/api/client.ts`
   - `apps/web/src/api/types.ts`
@@ -130,6 +130,7 @@ public director guidance 提交适配，以及前端 director guidance typed cli
     internal state 字段。
 - Notes:
   - 本 task 不改运行控制台 UI 的表单行为；真实提交和列表展示留给 Task 5。
+  - Task 4 commit hash 已在后续 docs-only 记录提交中补充。
 
 ## 范围审核
 

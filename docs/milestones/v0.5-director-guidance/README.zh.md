@@ -1,6 +1,6 @@
 # v0.5 Director Guidance
 
-状态：计划已创建 / 待实现
+状态：实现完成 / 验证通过
 
 ## 目标
 
@@ -59,6 +59,9 @@ docs/agent-guides/boundaries.md
 
 ## 当前结论
 
-v0.5 计划已建立，后续实现应先完成后端 director intent schema/API，再接入
-WorldEngine 公开提交能力，最后补齐前端提交和状态展示。实现完成前不得声明
-v0.5 已完成。
+v0.5 已完成基础 Director Guidance：后端提供 director intent 本地 API，并在
+session 绑定 `worldengine_world_id` 且 WorldEngine public OpenAPI 暴露 director
+guidance endpoint 时提交高层导演引导；前端运行控制台支持高层方向 / 外部世界
+趋势提交、状态列表、公开解释、applied event id 和失败错误展示。
+
+后续范围仍是实时 tick streaming、运行推进 API 和完整 evidence bundle 导出。

@@ -1,6 +1,6 @@
 # v0.5 Director Guidance Review
 
-状态：计划已创建 / 待实现
+状态：实现完成 / 验证通过
 
 日期：2026-06-03
 
@@ -11,8 +11,8 @@ director intent，并在可用时通过 WorldEngine public API 提交和记录�
 
 当前已完成 milestone 文档创建、后端 director intent 本地 API、WorldEngine
 public director guidance 提交适配、前端 director guidance typed client / store，以及
-运行控制台导演引导真实提交 UI 和状态列表。总体验证和 review 收口尚未完成，不能
-声明 v0.5 已完成。
+运行控制台导演引导真实提交 UI 和状态列表。总体验证已通过，v0.5 当前可判定为
+实现完成 / 验证通过。
 
 ## Task Records
 
@@ -162,6 +162,37 @@ public director guidance 提交适配、前端 director guidance typed client / 
   - 本 task 不新增运行推进 API，不实现完整 evidence bundle 导出。
   - Task 5 commit hash 已在后续 docs-only 记录提交中补充。
 
+### Task 6: 总体验证和 review 收口
+
+- Commit: `待提交`
+- Files:
+  - `docs/milestones/v0.5-director-guidance/README.zh.md`
+  - `docs/milestones/v0.5-director-guidance/plan.zh.md`
+  - `docs/milestones/v0.5-director-guidance/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest -q`: 通过，`41 passed, 1 warning`
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`21 passed`；存在既有
+    React async store `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过。
+  - `pnpm run test`: 通过；web `21 passed`，API `41 passed, 1 warning`。
+  - `pnpm run build`: 通过。
+  - `git diff --check`: 通过。
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|relationship|identity|hidden_context|raw_response" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.5-director-guidance`:
+    通过；命中项为过滤常量、边界/计划/review 文档、既有模型标志、脱敏布尔字段、
+    测试反例和负向断言，未发现新增 UI 展示或 trace 保存私有 payload。
+- Scope review:
+  - 所有 planned numbered tasks 均已记录并有 task-scoped commit。
+  - 后端 director intent 创建、列表、WorldEngine public endpoint 发现、公开提交、
+    脱敏 trace 和失败降级均有测试覆盖。
+  - 前端 typed client / store / 运行控制台表单和状态列表均有测试覆盖。
+  - WorldEngine 连接仍只通过 public OpenAPI / public HTTP endpoint；未引入私有源码、
+    私有 helper、LLM key 管理或 LLM provider 直连。
+  - 导演引导仍是高层外部世界趋势，不直接修改 Agent 内部状态、记忆、目标、身份、
+    关系、自我状态或行动。
+- Notes:
+  - 实时 tick streaming、运行推进 API 和完整 evidence bundle 导出仍属于后续
+    milestone。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 3 是；仅从
@@ -175,8 +206,11 @@ public director guidance 提交适配、前端 director guidance typed client / 
 - 是否未展示私有 Agent 内部状态、隐藏推理或私有 prompt：Task 2 / Task 3 是；
   Task 4 / Task 5 未新增相关前端字段，后端 trace 摘要过滤私有字段。
 - 是否未引入玩家角色控制、物品放置或手动事件注入：Task 2 / Task 3 / Task 5 是。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：Task 6 是。
+- 是否 broad checks 已通过：Task 6 是。
 
 ## 遗留问题
 
-- 总体验证和 review 收口尚未完成。
+- 实时 tick streaming 尚未实现。
+- 运行推进 API 尚未实现。
 - 完整 evidence bundle 导出仍属于后续 milestone。

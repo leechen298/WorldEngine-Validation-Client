@@ -1,6 +1,6 @@
 # v0.6 Evidence Bundle
 
-状态：文档创建完成 / 实现待开始
+状态：实现完成 / 验证通过
 
 ## 目标
 
@@ -60,7 +60,9 @@ docs/agent-guides/boundaries.md
 
 ## 当前结论
 
-v0.6 尚未进入产品代码实现。Task 1 已建立 milestone 文档和计划边界。后续实现
-应从后端 bundle schema / manifest 开始，逐步扩展到可下载 JSON bundle、前端
-typed client / store、运行控制台 evidence panel，并在最后进行完整验证和 review
-收口。
+v0.6 已完成基础 Evidence Bundle：后端提供 manifest、records 组装、脱敏检查和
+JSON 下载 endpoint；前端提供 typed client / store，并在运行控制台展示本地会话
+证据包计数、脱敏状态、warning 和下载入口。
+
+该 bundle 仍是本地会话证据包，不是权威 evaluator 报告。没有公开 evaluator 输出
+时，客户端保留空 `evaluator_outputs` 并记录 warning，不伪造通过结论。

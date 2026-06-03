@@ -1,6 +1,6 @@
 # v0.6 Evidence Bundle Review
 
-状态：实现进行中
+状态：实现完成 / 验证通过
 
 日期：2026-06-04
 
@@ -11,9 +11,8 @@ v0.6 目标是完整 Evidence Bundle：在不越过 WorldEngine public API 和�
 
 当前已完成 milestone 文档创建、后端 evidence bundle schema / manifest、后端
 bundle 内容组装和脱敏检查、后端可下载 JSON endpoint、前端 evidence bundle
-typed client / store，以及运行控制台 evidence panel / 下载入口。后续必须从
-`plan.zh.md` Task 7 开始，按 numbered task 顺序实现、验证、记录并逐 task
-提交。
+typed client / store、运行控制台 evidence panel / 下载入口，以及总体验证和 review
+收口。v0.6 当前可判定为实现完成 / 验证通过。
 
 ## Task Records
 
@@ -171,7 +170,7 @@ typed client / store，以及运行控制台 evidence panel / 下载入口。后
 
 ### Task 6: 运行控制台 evidence panel 和下载入口
 
-- Commit: `pending`
+- Commit: `de17509`
 - Files:
   - `apps/web/src/pages/RuntimeConsole.tsx`
   - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
@@ -198,6 +197,38 @@ typed client / store，以及运行控制台 evidence panel / 下载入口。后
 - Notes:
   - 本 task 不新增后端逻辑。
 
+### Task 7: 总体验证和 review 收口
+
+- Commit: `pending`
+- Files:
+  - `docs/milestones/v0.6-evidence-bundle/README.zh.md`
+  - `docs/milestones/v0.6-evidence-bundle/plan.zh.md`
+  - `docs/milestones/v0.6-evidence-bundle/review.zh.md`
+- Commands:
+  - `cd apps/api && uv run pytest -q`: 通过，`47 passed, 1 warning`；warning 为既有
+    Starlette TestClient/httpx 兼容提示。
+  - `pnpm --dir apps/web test`: 通过，`2 passed` test files，`24 passed`；存在既有
+    React async store `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过。
+  - `pnpm run test`: 通过；web `24 passed`，API `47 passed, 1 warning`。
+  - `pnpm run build`: 通过。
+  - `git diff --check`: 通过。
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|relationship|identity|hidden_context|raw_response" apps/api/app apps/api/tests apps/web/src docs/milestones/v0.6-evidence-bundle`:
+    已审查；命中项为脱敏扫描常量、redaction flags、边界/计划/review 文档、既有
+    测试反例和负向断言，未发现新增 UI 展示或 bundle records 输出私有 payload。
+- Scope review:
+  - 所有 planned numbered tasks 均已记录并有 task-scoped commit。
+  - 后端 manifest、records、脱敏扫描、下载 endpoint 均有测试覆盖。
+  - 前端 typed client / store / 运行控制台 evidence panel 和下载入口均有测试覆盖。
+  - WorldEngine 边界保持：v0.6 未新增 WorldEngine 私有源码、私有路径、internal helper、
+    LLM key 管理或 LLM provider 直连。
+  - Evidence bundle 不生成权威 world facts 或 evaluator 结论；公开 evaluator 输出不可用
+    时仅导出空列表和 warning。
+  - UI 只展示 counts、redaction status 和 warnings，不展示 private payload、hidden
+    context、raw private response 或 Agent 内部状态。
+- Notes:
+  - v0.6 不包含实时 tick streaming 或运行推进 API。
+
 ## 范围审核
 
 - 是否只通过 public API / manifest / OpenAPI 连接 WorldEngine：Task 2 / Task 3 /
@@ -212,10 +243,11 @@ typed client / store，以及运行控制台 evidence panel / 下载入口。后
   Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 是。
 - 是否未展示私有 Agent 内部状态、hidden context、私有 prompt 或 evaluator oracle：
   Task 1 / Task 2 / Task 3 / Task 4 / Task 5 / Task 6 是。
-- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：否，Task 6
-  进行中。
-- 是否 broad checks 已通过：否，尚未进入总体验证。
+- 是否所有 planned numbered tasks 均已记录并有 task-scoped commit：Task 7 是。
+- 是否 broad checks 已通过：Task 7 是。
 
 ## 遗留问题
 
-- v0.6 尚未完成总体验证和 review 收口。
+- 实时 tick streaming 尚未实现。
+- 运行推进 API 尚未实现。
+- 正式 evaluator 报告生成不属于 v0.6。

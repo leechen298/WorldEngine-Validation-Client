@@ -1,6 +1,6 @@
 # v0.3 Runtime Visualization Review
 
-状态：计划已创建 / 实现待开始
+状态：Task 2 已完成 / milestone 进行中
 
 日期：2026-06-03
 
@@ -10,7 +10,9 @@ v0.3 目标是基础 Runtime Visualization：后端提供 public runtime view，
 PixiJS 和面板展示公开 tick、地图、Agent 公开状态、事件气泡、world log 和 Agent
 life log。
 
-当前仅完成里程碑文档创建。产品实现尚未开始，不能声明 v0.3 已实现或通过。
+当前已完成 v0.3 里程碑文档和后端 public runtime view API。前端 typed client /
+store、PixiJS 地图、Agent 公开状态面板、事件气泡和总体验证仍未完成，不能声明
+v0.3 已实现或通过。
 
 ## Task Records
 
@@ -32,18 +34,45 @@ life log。
   - Git commit hash 无法在同一个提交内自引用后保持不变，因此本记录用后续
     docs-only review 提交补充可见 hash。
 
+### Task 2: 本地 runtime view API
+
+- Commit: `待提交`
+- Files:
+  - `apps/api/app/routes/sessions.py`
+  - `apps/api/app/schemas.py`
+  - `apps/api/tests/test_sessions.py`
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_sessions.py -q`: 通过，`15 passed, 1 warning`
+  - `git diff --check`: 通过
+  - `rg -n "api_key|apikey|secret|token|password|credential|authorization|private_path|source_path|private_prompt|oracle|internal|helper|provider|memory|thought|goal|self_state|reasoning|hidden_context|raw_response" apps/api/app/routes/sessions.py apps/api/app/schemas.py apps/api/tests/test_sessions.py docs/milestones/v0.3-runtime-visualization`: 通过；命中项为过滤常量、边界文档、既有 redaction flag 和测试反例，未发现 runtime view 透传私有 payload。
+- Scope review:
+  - 新增 `GET /sessions/{session_id}/runtime-view`，从本地已保存 main branch
+    snapshot / events 生成基础 tick、公开 world status、allowlist visualization、
+    Agent 公开状态、world log、Agent life log 和 latest event。
+  - session 不存在返回 `404`；无 main branch 时返回空 runtime 数据，不混合其他
+    branch。
+- Notes:
+  - subagent reviewer 指出黑名单过滤和 branch 混合风险；已改为 allowlist 输出，并
+    增加未知字段与多 branch/无 main branch 回归测试。
+  - 本 task 不调用 WorldEngine 新接口，不实现 runtime tick ingest、实时 streaming、
+    回放重建或前端展示。
+  - warning 来自现有 Starlette TestClient/httpx 兼容提示。
+
 ## 范围审核
 
-- 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：待实现后确认。
-- 是否未引入客户端 LLM key 管理：待实现后确认。
-- 是否未直接调用 LLM provider：待实现后确认。
-- 是否未生成权威世界事实：待实现后确认。
+- 是否只通过 public API / 本地公开 evidence 数据连接 WorldEngine：Task 2 是；仅
+  读取本地公开 snapshot / event。
+- 是否未引入客户端 LLM key 管理：Task 2 是。
+- 是否未直接调用 LLM provider：Task 2 是。
+- 是否未生成权威世界事实：Task 2 是；仅规整本地公开 runtime view，缺 main branch
+  时不混合 branch 数据。
 - 是否未引入玩家角色控制：待实现后确认。
-- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：待实现后确认。
-- 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：待实现后确认。
+- 是否未引入 WorldEngine 私有源码、私有路径或内部 helper：Task 2 是。
+- 是否未展示私有 Agent 内部状态、记忆、目标、隐藏推理或自我状态：Task 2 是；
+  runtime view 使用 allowlist 输出并覆盖私有字段反例。
 
 ## 遗留问题
 
-- v0.3 产品实现尚未开始。
+- Task 3-6 尚未开始。
 - 实时 tick streaming、完整 replay / branch 重建、导演引导提交闭环和完整 evidence
   bundle 导出仍属于后续 milestone。

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -109,6 +109,37 @@ class EventResponse(BaseModel):
     event_kind: str
     payload_json: str
     created_at: datetime
+
+
+class PublicAgentState(BaseModel):
+    agent_id: str
+    display_name: Optional[str]
+    location: Optional[str]
+    public_status: Optional[str]
+    visible_action: Optional[str]
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class RuntimeLogItem(BaseModel):
+    id: str
+    tick: int
+    event_kind: str
+    text: str
+    agent_id: Optional[str]
+    payload: Dict[str, Any]
+    created_at: datetime
+
+
+class RuntimeViewResponse(BaseModel):
+    session_id: str
+    worldengine_world_id: Optional[str]
+    world_status: str
+    tick: int
+    visualization: Dict[str, Any]
+    public_agents: List[PublicAgentState]
+    world_log: List[RuntimeLogItem]
+    agent_life_log: List[RuntimeLogItem]
+    latest_event: Optional[RuntimeLogItem]
 
 
 class EvidenceBundleMetadata(BaseModel):

@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from app.db import get_sessionmaker
-from app.models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot
+from app.models import ApiTrace, CommitPoint, Event, Session as DbSession, Snapshot, TimelineBranch
 from app.worldengine_client import create_world_via_public_api
 
 
@@ -317,3 +317,223 @@ def test_create_worldengine_session_does_not_persist_when_world_id_missing(clien
 
     assert response.status_code == 502
     assert client.get("/sessions").json()["sessions"] == []
+
+
+def test_runtime_view_returns_public_snapshot_events_and_tick(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(
+            session_name="Runtime Session",
+            worldengine_world_id="world-123",
+            public_world_status="running",
+        )
+        db.add(db_session)
+        db.flush()
+        snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=3,
+            snapshot_json=(
+                '{"visualization":{"tiles":[{"x":0,"y":0,"terrain":"grass"}],'
+                '"entities":[{"id":"agent-1","x":1,"y":2,"sprite":"person"}]},'
+                '"initial_state":{"agents":[{"id":"agent-1","display_name":"Ada",'
+                '"public_status":"walking","location":"market","visible_action":"trading",'
+                '"memory":"private","goal":"private","self_state":"hidden"}]},'
+                '"raw_response":{"debug":"hidden"}}'
+            ),
+        )
+        db.add(snapshot)
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=3, snapshot_id=snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="main",
+            commit_point_id=commit_point.id,
+            tick=3,
+            snapshot_reference=snapshot.id,
+            is_main=True,
+        )
+        db.add(branch)
+        db.flush()
+        snapshot.branch_id = branch.id
+        db.add_all(
+            [
+                Event(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=2,
+                    event_kind="world_weather",
+                    payload_json='{"text":"Light rain starts","private_prompt":"hidden","hidden_context":"debug"}',
+                ),
+                Event(
+                    session_id=db_session.id,
+                    branch_id=branch.id,
+                    tick=3,
+                    event_kind="agent_life",
+                    payload_json='{"agent_id":"agent-1","text":"Ada opens a stall","thoughts":"hidden","reasoning":"hidden"}',
+                ),
+            ]
+        )
+        db.commit()
+        session_id = db_session.id
+
+    response = client.get(f"/sessions/{session_id}/runtime-view")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["session_id"] == session_id
+    assert payload["worldengine_world_id"] == "world-123"
+    assert payload["world_status"] == "running"
+    assert payload["tick"] == 3
+    assert payload["visualization"]["tiles"] == [{"x": 0, "y": 0, "terrain": "grass"}]
+    assert payload["visualization"]["entities"] == [{"id": "agent-1", "x": 1, "y": 2, "sprite": "person"}]
+    assert "raw_response" not in payload["visualization"]
+    assert payload["public_agents"] == [
+        {
+            "agent_id": "agent-1",
+            "display_name": "Ada",
+            "location": "market",
+            "public_status": "walking",
+            "visible_action": "trading",
+            "payload": {},
+        }
+    ]
+    assert payload["world_log"][0]["text"] == "Light rain starts"
+    assert "private_prompt" not in payload["world_log"][0]["payload"]
+    assert "hidden_context" not in payload["world_log"][0]["payload"]
+    assert payload["agent_life_log"][0]["agent_id"] == "agent-1"
+    assert payload["agent_life_log"][0]["text"] == "Ada opens a stall"
+    assert "thoughts" not in payload["agent_life_log"][0]["payload"]
+    assert "reasoning" not in payload["agent_life_log"][0]["payload"]
+    assert payload["latest_event"]["event_kind"] == "agent_life"
+
+
+def test_runtime_view_uses_main_branch_snapshot_and_events(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(session_name="Branch Runtime", public_world_status="running")
+        db.add(db_session)
+        db.flush()
+
+        main_snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=2,
+            snapshot_json='{"visualization":{"tiles":[{"x":0,"y":0,"terrain":"main"}]}}',
+        )
+        other_snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=9,
+            snapshot_json='{"visualization":{"tiles":[{"x":9,"y":9,"terrain":"other"}]}}',
+        )
+        db.add_all([main_snapshot, other_snapshot])
+        db.flush()
+
+        main_commit = CommitPoint(session_id=db_session.id, tick=2, snapshot_id=main_snapshot.id)
+        other_commit = CommitPoint(session_id=db_session.id, tick=9, snapshot_id=other_snapshot.id)
+        db.add_all([main_commit, other_commit])
+        db.flush()
+
+        main_branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="main",
+            commit_point_id=main_commit.id,
+            tick=2,
+            snapshot_reference=main_snapshot.id,
+            is_main=True,
+        )
+        other_branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="experiment",
+            commit_point_id=other_commit.id,
+            tick=9,
+            snapshot_reference=other_snapshot.id,
+            is_main=False,
+        )
+        db.add_all([main_branch, other_branch])
+        db.flush()
+        main_snapshot.branch_id = main_branch.id
+        other_snapshot.branch_id = other_branch.id
+        db.add_all(
+            [
+                Event(
+                    session_id=db_session.id,
+                    branch_id=main_branch.id,
+                    tick=2,
+                    event_kind="world_main",
+                    payload_json='{"text":"Main event"}',
+                ),
+                Event(
+                    session_id=db_session.id,
+                    branch_id=other_branch.id,
+                    tick=9,
+                    event_kind="world_other",
+                    payload_json='{"text":"Other event"}',
+                ),
+            ]
+        )
+        db.commit()
+        session_id = db_session.id
+
+    response = client.get(f"/sessions/{session_id}/runtime-view")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["tick"] == 2
+    assert payload["visualization"]["tiles"] == [{"x": 0, "y": 0, "terrain": "main"}]
+    assert [item["event_kind"] for item in payload["world_log"]] == ["world_main"]
+
+
+def test_runtime_view_without_main_branch_does_not_mix_branch_data(client):
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as db:
+        db_session = DbSession(session_name="No Main Runtime", public_world_status="created")
+        db.add(db_session)
+        db.flush()
+        snapshot = Snapshot(
+            session_id=db_session.id,
+            tick=7,
+            snapshot_json='{"visualization":{"tiles":[{"x":7,"y":7,"terrain":"orphan"}]}}',
+        )
+        db.add(snapshot)
+        db.flush()
+        commit_point = CommitPoint(session_id=db_session.id, tick=7, snapshot_id=snapshot.id)
+        db.add(commit_point)
+        db.flush()
+        branch = TimelineBranch(
+            session_id=db_session.id,
+            branch_name="experiment",
+            commit_point_id=commit_point.id,
+            tick=7,
+            snapshot_reference=snapshot.id,
+            is_main=False,
+        )
+        db.add(branch)
+        db.flush()
+        snapshot.branch_id = branch.id
+        db.add(
+            Event(
+                session_id=db_session.id,
+                branch_id=branch.id,
+                tick=7,
+                event_kind="world_orphan",
+                payload_json='{"text":"Should not appear"}',
+            )
+        )
+        db.commit()
+        session_id = db_session.id
+
+    response = client.get(f"/sessions/{session_id}/runtime-view")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["tick"] == 0
+    assert payload["visualization"] == {}
+    assert payload["world_log"] == []
+    assert payload["latest_event"] is None
+
+
+def test_runtime_view_returns_404_for_missing_session(client):
+    response = client.get("/sessions/missing/runtime-view")
+
+    assert response.status_code == 404

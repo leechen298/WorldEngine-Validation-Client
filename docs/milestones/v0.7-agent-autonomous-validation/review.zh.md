@@ -1,6 +1,6 @@
 # v0.7 Agent Autonomous Validation Review
 
-状态：计划完成 / 等待 Task 1 提交
+状态：计划完成 / WAITING_FOR_WORLDENGINE_GATE_1
 
 ## 实现授权
 
@@ -79,3 +79,21 @@ implementation、Codex 浏览器自主验证、第二 Agent 复核或人工验�
 
 当前 v0.7 仅达到文档计划就绪。Validation Client v0.7 runtime implementation 仍
 等待 WorldEngine Gate 1 contract readiness。
+
+## Gate 1 Preflight Records
+
+### 2026-06-04 Codex 自主验证预检
+
+- Commit: `b38df21`
+- File:
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/2026-06-04-codex-preflight.zh.md`
+- Commands:
+  - `git diff --check`: 通过。
+  - `pnpm run test`: Web 测试通过，API 阶段被沙箱阻止访问 `~/.cache/uv`，命令以
+    exit code 2 结束。
+  - `uv run --project apps/api pytest -q`: 提升权限后通过，48 passed, 1 warning。
+  - `pnpm run build`: 通过。
+- Conclusion:
+  - `BLOCKED / WAITING_FOR_WORLDENGINE_GATE_1`
+  - 基础 Web/API 测试和 Web build 通过。
+  - 完整 v0.7 Codex 自主验证仍被 WorldEngine Gate 1 阻塞。

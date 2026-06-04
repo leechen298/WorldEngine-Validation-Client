@@ -41,6 +41,17 @@ function terrainColor(tile: TilePayload): number {
   return 0x5ec269;
 }
 
+function destroyPixiApp(app: Application | null) {
+  if (!app) {
+    return;
+  }
+  try {
+    app.destroy();
+  } catch (_error) {
+    // Pixi cleanup should not be allowed to unmount the whole React page.
+  }
+}
+
 export function PixelWorldCanvas({ visualization }: PixelWorldCanvasProps) {
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const tiles = useMemo(() => readItems<TilePayload>(visualization, "tiles").filter(hasFinitePosition), [visualization]);
@@ -63,7 +74,7 @@ export function PixelWorldCanvas({ visualization }: PixelWorldCanvasProps) {
       app = new Application();
       await app.init({ backgroundAlpha: 0, height: 280, width: 360 });
       if (cancelled || !host) {
-        app.destroy();
+        destroyPixiApp(app);
         return;
       }
       host.replaceChildren(app.canvas);
@@ -91,7 +102,7 @@ export function PixelWorldCanvas({ visualization }: PixelWorldCanvasProps) {
 
     return () => {
       cancelled = true;
-      app?.destroy();
+      destroyPixiApp(app);
     };
   }, [entities, hasVisualization, tiles]);
 

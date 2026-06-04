@@ -278,9 +278,14 @@ If Playwright is selected, run:
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-pnpm --dir apps/web exec playwright test
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 \
+pnpm --dir apps/web test:e2e
 git diff --check
 ```
+
+Start WorldEngine, Validation Client API, and Validation Client Web first; the
+v0.7 Playwright config records browser evidence and does not start API services.
 
 Done when artifacts are saved, failures include screenshots, and success
 produces `agent-run.jsonl` and `api-summary.json`.

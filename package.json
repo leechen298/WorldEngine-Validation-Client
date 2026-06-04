@@ -11,6 +11,7 @@
     "build:web": "pnpm --dir apps/web build",
     "dev:web": "pnpm --dir apps/web dev",
     "dev:api": "uv run --project apps/api uvicorn app.main:app --reload --app-dir apps/api",
+    "dev:api:e2e": "uv run --project apps/api uvicorn app.main:app --host 127.0.0.1 --port 8765 --app-dir apps/api",
     "build": "pnpm run build:web"
   }
 }

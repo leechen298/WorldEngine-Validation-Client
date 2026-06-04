@@ -113,8 +113,9 @@ If dirty files affect this validation and cannot be explained, stop.
 ### 4.1 WorldEngine
 
 ```bash
-cd /Users/leechen/projects/WorldEnginProjects/WorldEngine/backend
-.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+cd /Users/leechen/projects/WorldEnginProjects/WorldEngine
+PYTHONPATH=backend uv run --with-requirements backend/requirements.txt --no-project \
+  uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 Record:
@@ -130,7 +131,9 @@ startup result:
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-uv run --project apps/api uvicorn app.main:app --host 127.0.0.1 --port 8765 --app-dir apps/api
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+WORLDENGINE_VALIDATION_DATABASE_PATH=.worldengine-validation-client/e2e.sqlite3 \
+pnpm run dev:api:e2e
 ```
 
 Record:
@@ -146,10 +149,12 @@ startup result:
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-pnpm --dir apps/web dev
+VITE_API_BASE_URL=http://127.0.0.1:8765 \
+pnpm --dir apps/web dev --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Record the actual Web URL from dev server output. Do not assume a fixed port.
+Record the actual Web URL from dev server output. v0.7 Playwright E2E defaults
+to `http://127.0.0.1:5173`.
 
 ## 5. Public Contract Preflight
 
@@ -194,6 +199,19 @@ git diff --check
 
 If v0.7 implementation adds Playwright or equivalent E2E, run that command and
 record artifact paths.
+
+v0.7 Playwright E2E command:
+
+```bash
+cd /Users/leechen/projects/WorldEngine-Validation-Client
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 \
+pnpm --dir apps/web test:e2e
+```
+
+This command expects the three services in 4.1 through 4.3 to be running.
+Playwright owns browser flow and artifact output only; it does not start the
+API service.
 
 On command failure:
 

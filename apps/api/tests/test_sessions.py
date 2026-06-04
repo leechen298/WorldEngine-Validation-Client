@@ -310,8 +310,11 @@ async def test_worldengine_client_submits_director_guidance_via_discovered_publi
     assert result["api_trace"]["status_code"] == 202
     assert requests[0][0:2] == ("GET", "/openapi.json")
     assert requests[1][0:2] == ("POST", "/worlds/world-123/director-guidance")
-    assert b"world-123" in requests[1][2]
+    assert b"world-123" not in requests[1][2]
     assert b"private_path" not in requests[1][2]
+    assert "world-123" in result["api_trace"]["request_summary_json"]
+    assert "public_explanation_length" in result["api_trace"]["response_summary_json"]
+    assert "Weather trend guidance accepted" not in result["api_trace"]["response_summary_json"]
     assert "private_prompt" not in result["api_trace"]["response_summary_json"]
     assert "provider_secret" not in result["api_trace"]["response_summary_json"]
 

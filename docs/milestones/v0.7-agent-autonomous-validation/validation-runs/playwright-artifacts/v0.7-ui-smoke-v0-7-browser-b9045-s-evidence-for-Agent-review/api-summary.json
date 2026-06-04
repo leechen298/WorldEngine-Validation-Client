@@ -1,0 +1,28 @@
+{
+  "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+  "session_id": "9b82e502-04cf-4e76-8722-2380fbab125b",
+  "api_calls": [
+    {
+      "method": "POST",
+      "path": "/worlds",
+      "status": 200,
+      "public_summary": {
+        "world_id": "world-16df0fbcaa35",
+        "status": "created"
+      },
+      "error_class": null
+    },
+    {
+      "method": "POST",
+      "path": "/worlds/{world_id}/director-guidance",
+      "status": 200,
+      "public_summary": {
+        "status": "accepted",
+        "public_explanation_length": 173,
+        "applied_event_id": "f40164e8-13bb-49bb-b170-e9c628b3a777",
+        "error_message": null
+      },
+      "error_class": null
+    }
+  ]
+}

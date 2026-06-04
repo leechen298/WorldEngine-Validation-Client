@@ -1,0 +1,661 @@
+{
+  "manifest": {
+    "bundle_schema_version": "0.7.0",
+    "generated_at": "2026-06-04T07:47:47.660508Z",
+    "session_id": "9b82e502-04cf-4e76-8722-2380fbab125b",
+    "session_name": "v0.7 E2E 1780559266617",
+    "worldengine_world_id": "world-16df0fbcaa35",
+    "world_status": "created",
+    "latest_validation_run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+    "evidence_bundle_filename": "evidence-bundle-9b82e502-04cf-4e76-8722-2380fbab125b.json",
+    "counts": {
+      "branches": 2,
+      "events": 1,
+      "state_diffs": 0,
+      "snapshots": 1,
+      "commit_points": 1,
+      "director_intents": 1,
+      "api_traces": 2,
+      "validation_runs": 1,
+      "operation_log_entries": 24,
+      "evaluator_outputs": 0,
+      "replay_index": 1
+    },
+    "redaction_flags": {
+      "llm_keys_included": false,
+      "private_worldengine_internals_included": true
+    },
+    "warnings": [
+      "public evaluator outputs unavailable",
+      "sensitive content redacted from evidence records"
+    ]
+  },
+  "records": {
+    "branches": [
+      {
+        "id": "24981adc-c677-45b9-ba5d-a3ec9ac4a52a",
+        "branch_name": "e2e-branch-1780559266617",
+        "commit_point_id": "79ac6277-2eb1-4d3e-bb02-f7a7943be1c4",
+        "tick": 0,
+        "snapshot_reference": "da09a2e5-fd8d-4a43-9f61-742e6be05b7f",
+        "is_main": false,
+        "created_at": "2026-06-04T07:47:47.342583"
+      },
+      {
+        "id": "e7a21a32-4587-4620-b314-52325228ff91",
+        "branch_name": "main",
+        "commit_point_id": "79ac6277-2eb1-4d3e-bb02-f7a7943be1c4",
+        "tick": 0,
+        "snapshot_reference": "da09a2e5-fd8d-4a43-9f61-742e6be05b7f",
+        "is_main": true,
+        "created_at": "2026-06-04T07:47:46.776379"
+      }
+    ],
+    "commit_points": [
+      {
+        "id": "79ac6277-2eb1-4d3e-bb02-f7a7943be1c4",
+        "tick": 0,
+        "event_id": "e31fbcb6-7493-4397-8a90-dc33d1cc1342",
+        "snapshot_id": "da09a2e5-fd8d-4a43-9f61-742e6be05b7f",
+        "created_at": "2026-06-04T07:47:46.776028"
+      }
+    ],
+    "events": [
+      {
+        "id": "e31fbcb6-7493-4397-8a90-dc33d1cc1342",
+        "branch_id": "e7a21a32-4587-4620-b314-52325228ff91",
+        "tick": 0,
+        "event_kind": "world_created",
+        "payload": {
+          "world_id": "world-16df0fbcaa35",
+          "status": "created"
+        },
+        "created_at": "2026-06-04T07:47:46.776671"
+      }
+    ],
+    "state_diffs": [],
+    "snapshots": [
+      {
+        "id": "da09a2e5-fd8d-4a43-9f61-742e6be05b7f",
+        "branch_id": "e7a21a32-4587-4620-b314-52325228ff91",
+        "tick": 0,
+        "snapshot": {
+          "initial_state": {
+            "summary": "A generic public WorldEngine world was created from the supplied world prompt.",
+            "public_agents": [
+              {
+                "agent_id": "agent.observer",
+                "display_name": "Observer",
+                "location": "origin",
+                "public_status": "idle",
+                "visible_action": "observing the initial world state"
+              }
+            ],
+            "environment": {}
+          },
+          "visualization": {
+            "tilemap": {
+              "width": 3,
+              "height": 3,
+              "origin": [
+                1,
+                1
+              ]
+            },
+            "entities": [
+              {
+                "entity_id": "agent.observer",
+                "kind": "agent",
+                "x": 1,
+                "y": 1
+              }
+            ]
+          }
+        },
+        "created_at": "2026-06-04T07:47:46.775647"
+      }
+    ],
+    "director_intents": [
+      {
+        "id": "226da4e2-72d8-4022-847d-ce203c8ada5c",
+        "branch_id": "e7a21a32-4587-4620-b314-52325228ff91",
+        "tick": 0,
+        "instruction_text": "让居民更关注市场合作，但不要直接投放物品。",
+        "status": "accepted",
+        "public_explanation": "[redacted]",
+        "applied_event_id": "f40164e8-13bb-49bb-b170-e9c628b3a777",
+        "error_message": null,
+        "created_at": "2026-06-04T07:47:47.275846"
+      }
+    ],
+    "api_traces": [
+      {
+        "method": "POST",
+        "url_path": "/worlds",
+        "status_code": 200,
+        "request_summary": {
+          "world_prompt_length": 25
+        },
+        "response_summary": {
+          "world_id": "world-16df0fbcaa35",
+          "status": "created"
+        },
+        "error_message": null,
+        "llm_keys_included": false,
+        "private_worldengine_internals_included": false
+      },
+      {
+        "method": "POST",
+        "url_path": "/worlds/{world_id}/director-guidance",
+        "status_code": 200,
+        "request_summary": {
+          "world_id": "world-16df0fbcaa35",
+          "instruction_text_length": 21,
+          "branch_id": "e7a21a32-4587-4620-b314-52325228ff91",
+          "tick": 0,
+          "public_context": {
+            "session_id": "9b82e502-04cf-4e76-8722-2380fbab125b"
+          }
+        },
+        "response_summary": {
+          "status": "accepted",
+          "public_explanation_length": 173,
+          "applied_event_id": "f40164e8-13bb-49bb-b170-e9c628b3a777",
+          "error_message": null
+        },
+        "error_message": null,
+        "llm_keys_included": false,
+        "private_worldengine_internals_included": false
+      }
+    ],
+    "validation_runs": [
+      {
+        "id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "actor": "codex",
+        "status": "running",
+        "web_url": "http://127.0.0.1:5173",
+        "api_base_url": "http://127.0.0.1:8765",
+        "worldengine_api_base": "http://127.0.0.1:8000",
+        "evidence_bundle_path": null,
+        "notes": "v0.7 browser validation run",
+        "created_at": "2026-06-04T07:47:46.784348",
+        "updated_at": "2026-06-04T07:47:46.784350"
+      }
+    ],
+    "operation_log_entries": [
+      {
+        "id": "db706eac-6abb-410f-978d-0fedef8ec0fc",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.803203",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "session_library.page_open",
+        "target_label": "Session Library",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "session library loaded before world creation",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "ff70918c-21f4-4155-90a2-a6eec2a45e72",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.805916",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "worldengine.health_check",
+        "target_label": "WorldEngine connection status",
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/health/worldengine",
+        "response_status": 200,
+        "response_summary": "ok",
+        "visible_result": "WorldEngine status displayed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "730f223a-6ca3-4b23-b6a8-01d71b4aa9f2",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.807830",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "session.create_worldengine.submit",
+        "target_label": "创建世界",
+        "input_text": "一个公开可观察的海港像素世界，有居民、道路和市场。",
+        "request_method": "POST",
+        "request_path": "/sessions/worldengine",
+        "response_status": 201,
+        "response_summary": "session 9b82e502-04cf-4e76-8722-2380fbab125b world world-16df0fbcaa35",
+        "visible_result": "runtime console opened",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "baa28671-5e69-463d-8ba6-19e45a6f7018",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.822617",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "runtime_console.page_open",
+        "target_label": "Runtime Console",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "runtime console opened",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "1243be91-ebc1-4e16-9466-f5e4da32f410",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.825504",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "runtime_console.page_open",
+        "target_label": "Runtime Console",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "runtime console opened",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "1f5426f8-a40d-4dd6-abda-25cdefe8a994",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.826650",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_branches",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches",
+        "response_status": 200,
+        "response_summary": "1 branches",
+        "visible_result": "branch list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "ee4a0cb7-65b0-4104-9105-fa3f16c71aab",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.830861",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_commit_points",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches/commit-points",
+        "response_status": 200,
+        "response_summary": "1 commit points",
+        "visible_result": "commit points refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "686017d6-63cf-4e55-8ecf-a56df8ffdc2a",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.831320",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_director_intents",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/director-intents",
+        "response_status": 200,
+        "response_summary": "0 director intents",
+        "visible_result": "director intent list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "9bc77545-7fd9-41d8-83f7-97fe5c5400ed",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.835731",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_commit_points",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches/commit-points",
+        "response_status": 200,
+        "response_summary": "1 commit points",
+        "visible_result": "commit points refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "6f17ee94-94dc-40af-b19e-43a60dbdc669",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.836781",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_director_intents",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/director-intents",
+        "response_status": 200,
+        "response_summary": "0 director intents",
+        "visible_result": "director intent list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "611b9b9b-f90a-4405-9f31-027a265eee71",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.838121",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_branches",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches",
+        "response_status": 200,
+        "response_summary": "1 branches",
+        "visible_result": "branch list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "dc49a6f4-2d52-4aca-ac26-40a64fbb547a",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.842181",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_runtime_view",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/runtime-view",
+        "response_status": 200,
+        "response_summary": "tick 0",
+        "visible_result": "public runtime view refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "9a70ac0d-d976-435e-a813-4eca7cb54ee1",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.859097",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_runtime_view",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/runtime-view",
+        "response_status": 200,
+        "response_summary": "tick 0",
+        "visible_result": "public runtime view refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "cdc8e1d6-4e47-4271-8b4e-d47710ed7e61",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:46.859330",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "evidence.manifest.load",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/evidence/bundle/manifest",
+        "response_status": 200,
+        "response_summary": "bundle 0.7.0",
+        "visible_result": "evidence bundle manifest displayed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "10fcf4e7-1a99-40bb-825f-bf578ac66c12",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.034085",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "evidence.manifest.load",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/evidence/bundle/manifest",
+        "response_status": 200,
+        "response_summary": "bundle 0.7.0",
+        "visible_result": "evidence bundle manifest displayed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "6eaa81a2-8669-4c65-b5d8-d1108dea4d72",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.203000",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "runtime.run",
+        "target_label": "Run",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "runtime state changed to running",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "3c8d123a-a247-4d73-9c69-f613359e5be4",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.227320",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "runtime.pause",
+        "target_label": "Pause",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "runtime state changed to paused",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "31bb377c-4cf5-494e-910f-66c08605223a",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.249549",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "runtime.single_tick",
+        "target_label": "Single Tick",
+        "input_text": null,
+        "request_method": null,
+        "request_path": null,
+        "response_status": null,
+        "response_summary": null,
+        "visible_result": "single tick requested",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "06bbe197-ce4e-4cc1-937d-c0c065fab66a",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.286354",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "director_guidance.submit",
+        "target_label": "提交引导",
+        "input_text": "让居民更关注市场合作，但不要直接投放物品。",
+        "request_method": "POST",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/director-intents",
+        "response_status": 201,
+        "response_summary": "intent 226da4e2-72d8-4022-847d-ce203c8ada5c accepted",
+        "visible_result": "director intent accepted",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "240b3daa-6493-4fcd-a9e9-809b4de46b98",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.294315",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_director_intents",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/director-intents",
+        "response_status": 200,
+        "response_summary": "1 director intents",
+        "visible_result": "director intent list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "12c12bc3-bbed-4dc2-8322-11da262cba1e",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.350010",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "branch.create",
+        "target_label": "从当前 commit point 创建 branch",
+        "input_text": "e2e-branch-1780559266617",
+        "request_method": "POST",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches",
+        "response_status": 201,
+        "response_summary": "branch 24981adc-c677-45b9-ba5d-a3ec9ac4a52a",
+        "visible_result": "created branch e2e-branch-1780559266617",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "12851728-40fc-414c-9232-2a3ee1265d6c",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.359078",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_branches",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches",
+        "response_status": 200,
+        "response_summary": "2 branches",
+        "visible_result": "branch list refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "b165df1b-146d-4b28-9216-be8c5e89a89f",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.365564",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_commit_points",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/branches/commit-points",
+        "response_status": 200,
+        "response_summary": "1 commit points",
+        "visible_result": "commit points refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      },
+      {
+        "id": "3103efe4-ed35-457a-a498-16ada3dbed06",
+        "run_id": "858e88c5-cd8a-4669-b091-3aab76e2821a",
+        "timestamp": "2026-06-04T07:47:47.375473",
+        "actor": "codex",
+        "phase": "browser",
+        "url": "http://127.0.0.1:5173/",
+        "action_type": "api.get_replay_view",
+        "target_label": null,
+        "input_text": null,
+        "request_method": "GET",
+        "request_path": "/sessions/9b82e502-04cf-4e76-8722-2380fbab125b/replay-view",
+        "response_status": 200,
+        "response_summary": "branch 24981adc-c677-45b9-ba5d-a3ec9ac4a52a tick 0",
+        "visible_result": "replay view refreshed",
+        "screenshot_path": null,
+        "downloaded_file": null,
+        "notes": null
+      }
+    ],
+    "evaluator_outputs": [],
+    "replay_index": [
+      {
+        "commit_point_id": "79ac6277-2eb1-4d3e-bb02-f7a7943be1c4",
+        "tick": 0,
+        "event_id": "e31fbcb6-7493-4397-8a90-dc33d1cc1342",
+        "snapshot_id": "da09a2e5-fd8d-4a43-9f61-742e6be05b7f",
+        "branch_ids": [
+          "24981adc-c677-45b9-ba5d-a3ec9ac4a52a",
+          "e7a21a32-4587-4620-b314-52325228ff91"
+        ],
+        "branch_names": [
+          "e2e-branch-1780559266617",
+          "main"
+        ]
+      }
+    ]
+  }
+}

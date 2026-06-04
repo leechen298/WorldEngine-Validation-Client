@@ -539,7 +539,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         request_path: `/sessions/${sessionId}/director-intents`,
         response_status: 201,
         response_summary: `intent ${intent.id} ${intent.status}`,
-        visible_result: intent.public_explanation || `director intent ${intent.status}`,
+        visible_result: `director intent ${intent.status}`,
       });
       set((state) => ({
         directorIntentsBySession: {

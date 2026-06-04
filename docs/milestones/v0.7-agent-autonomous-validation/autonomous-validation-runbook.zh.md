@@ -109,8 +109,9 @@ git diff --check
 ### 4.1 WorldEngine
 
 ```bash
-cd /Users/leechen/projects/WorldEnginProjects/WorldEngine/backend
-.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+cd /Users/leechen/projects/WorldEnginProjects/WorldEngine
+PYTHONPATH=backend uv run --with-requirements backend/requirements.txt --no-project \
+  uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 记录：
@@ -126,7 +127,9 @@ startup result:
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-uv run --project apps/api uvicorn app.main:app --host 127.0.0.1 --port 8765 --app-dir apps/api
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+WORLDENGINE_VALIDATION_DATABASE_PATH=.worldengine-validation-client/e2e.sqlite3 \
+pnpm run dev:api:e2e
 ```
 
 记录：
@@ -142,10 +145,11 @@ startup result:
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-pnpm --dir apps/web dev
+VITE_API_BASE_URL=http://127.0.0.1:8765 \
+pnpm --dir apps/web dev --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-记录实际 Web URL。不要假设端口固定；以 dev server 输出为准。
+记录实际 Web URL。v0.7 Playwright E2E 默认使用 `http://127.0.0.1:5173`。
 
 ## 5. Public Contract Preflight
 
@@ -190,6 +194,18 @@ git diff --check
 
 如果 v0.7 实现加入 Playwright 或等价 E2E，运行对应 E2E 命令并记录 artifact
 路径。
+
+v0.7 Playwright E2E 命令：
+
+```bash
+cd /Users/leechen/projects/WorldEngine-Validation-Client
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 \
+pnpm --dir apps/web test:e2e
+```
+
+该命令要求 4.1 到 4.3 的三个服务已经启动；Playwright 只负责浏览器 flow 和
+artifact 输出，不负责启动 API 服务。
 
 任何命令失败时：
 

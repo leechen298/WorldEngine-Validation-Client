@@ -198,7 +198,6 @@ async def submit_director_guidance_via_public_api(
             raise RuntimeError("WorldEngine public director guidance endpoint not found")
 
         request_payload = {
-            "world_id": world_id,
             "instruction_text": instruction_text,
             "branch_id": branch_id,
             "tick": tick,
@@ -215,7 +214,7 @@ async def submit_director_guidance_via_public_api(
     error_message = payload.get("error_message")
     response_summary = {
         "status": status,
-        "public_explanation": public_explanation,
+        "public_explanation_length": len(str(public_explanation)) if public_explanation is not None else 0,
         "applied_event_id": applied_event_id,
         "error_message": error_message,
     }

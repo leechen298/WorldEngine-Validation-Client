@@ -213,3 +213,76 @@ implementation、Codex 浏览器自主验证、第二 Agent 复核或人工验�
     `RuntimeConsole` tests. The warnings did not fail the test run.
 - Result:
   - Task 4 complete.
+
+### Task 5: Browser E2E / UI smoke runner
+
+- Commit: pending in current step.
+- Files:
+  - `apps/api/app/worldengine_client.py`
+  - `apps/api/tests/test_sessions.py`
+  - `apps/web/e2e/v0.7-ui-smoke.spec.ts`
+  - `apps/web/package.json`
+  - `apps/web/playwright.config.ts`
+  - `apps/web/src/components/PixelWorldCanvas.tsx`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/vite.config.ts`
+  - `package.json`
+  - `pnpm-lock.yaml`
+  - `docs/milestones/v0.7-agent-autonomous-validation/autonomous-validation-runbook.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/autonomous-validation-runbook.zh.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/handoff-status.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/handoff-status.zh.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/implementation-task-plan.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/implementation-task-plan.zh.md`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/`
+- Implementation:
+  - Added Playwright dependency and `pnpm --dir apps/web test:e2e`.
+  - Added `apps/web/playwright.config.ts` with deterministic artifact output
+    under `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts`.
+  - Added `apps/web/e2e/v0.7-ui-smoke.spec.ts`.
+  - E2E flow covers session library, WorldEngine status, WorldEngine session
+    creation, runtime console, pixel canvas/public state/log panels, Run/Pause
+    controls, Single Tick, director guidance, replay slider, branch creation,
+    evidence bundle download, screenshot export, `agent-run.jsonl`, and
+    `api-summary.json`.
+  - Vitest config now excludes Playwright E2E files from unit tests.
+  - Added `dev:api:e2e` script for deterministic API port 8765.
+  - Fixed `PixelWorldCanvas` so Pixi cleanup errors cannot unmount the runtime
+    console in real browser E2E.
+  - Fixed public director guidance body so Validation Client does not send
+    `world_id` as an extra request-body field to WorldEngine.
+  - Redacted director guidance API trace summary by storing
+    `public_explanation_length` instead of the full public explanation text,
+    avoiding private-state marker terms in Agent review artifacts.
+  - Updated autonomous validation runbooks, implementation task plans, and
+    handoff status.
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_sessions.py tests/test_validation_runs.py tests/test_evidence.py -q`:
+    37 passed, 1 warning.
+  - `pnpm --dir apps/web test`: 25 passed.
+  - `pnpm --dir apps/web build`: passed.
+  - WorldEngine service:
+    `PYTHONPATH=backend uv run --with-requirements backend/requirements.txt --no-project uvicorn app.main:app --host 127.0.0.1 --port 8000`: started.
+  - Validation Client API service:
+    `WORLDENGINE_API_BASE=http://127.0.0.1:8000 WORLDENGINE_VALIDATION_DATABASE_PATH=.worldengine-validation-client/e2e.sqlite3 pnpm run dev:api:e2e`: started.
+  - Validation Client Web service:
+    `VITE_API_BASE_URL=http://127.0.0.1:8765 pnpm --dir apps/web dev --host 127.0.0.1 --port 5173 --strictPort`: started.
+  - E2E:
+    `WORLDENGINE_API_BASE=http://127.0.0.1:8000 VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 pnpm --dir apps/web test:e2e`:
+    1 passed.
+  - Redaction scan:
+    `rg -n "api_key|apikey|authorization|credential|password|provider_secret|private_prompt|raw_response|self_state|hidden_context|source_path|private_path|token|secret|422" docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts`:
+    no matches.
+  - `git diff --check`: passed.
+- Artifact paths:
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/.last-run.json`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/v0.7-ui-smoke-v0-7-browser-b9045-s-evidence-for-Agent-review/agent-run.jsonl`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/v0.7-ui-smoke-v0-7-browser-b9045-s-evidence-for-Agent-review/api-summary.json`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/v0.7-ui-smoke-v0-7-browser-b9045-s-evidence-for-Agent-review/evidence-bundle-manifest.json`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/v0.7-ui-smoke-v0-7-browser-b9045-s-evidence-for-Agent-review/evidence-bundle.json`
+  - `docs/milestones/v0.7-agent-autonomous-validation/validation-runs/playwright-artifacts/v0.7-ui-smoke-v0-7-browser-b9045-s-evidence-for-Agent-review/runtime-console.png`
+- Result:
+  - Task 5 complete.
+  - Validation Client v0.7 reaches `READY_FOR_CODEX_AUTONOMOUS_VALIDATION`.
+  - This smoke run is implementation evidence, not the formal Codex autonomous
+    validation run report and not human validation.

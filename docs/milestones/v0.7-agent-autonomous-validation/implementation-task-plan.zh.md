@@ -293,9 +293,14 @@ git diff --check
 
 ```bash
 cd /Users/leechen/projects/WorldEngine-Validation-Client
-pnpm --dir apps/web exec playwright test
+WORLDENGINE_API_BASE=http://127.0.0.1:8000 \
+VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 \
+pnpm --dir apps/web test:e2e
 git diff --check
 ```
+
+需要先启动 WorldEngine、Validation Client API 和 Validation Client Web；v0.7
+Playwright 配置只负责浏览器 flow 和 evidence 输出，不负责启动 API 服务。
 
 完成标准：
 

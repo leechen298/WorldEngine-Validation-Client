@@ -15,7 +15,7 @@ implementation、Codex 浏览器自主验证、第二 Agent 复核或人工验�
 
 ### Task 1: v0.7 里程碑文档和路由
 
-- Commit: `71780dd`
+- Commit: `1652793`
 - Files:
   - `AGENTS.md`
   - `AGENTS.zh.md`

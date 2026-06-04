@@ -197,6 +197,8 @@ class EvidenceBundleCounts(BaseModel):
     commit_points: int
     director_intents: int
     api_traces: int
+    validation_runs: int = 0
+    operation_log_entries: int = 0
     evaluator_outputs: int = 0
     replay_index: int = 0
 
@@ -213,6 +215,8 @@ class EvidenceBundleManifest(BaseModel):
     session_name: str
     worldengine_world_id: Optional[str]
     world_status: str
+    latest_validation_run_id: Optional[str] = None
+    evidence_bundle_filename: Optional[str] = None
     counts: EvidenceBundleCounts
     redaction_flags: EvidenceBundleRedactionFlags
     warnings: List[str] = Field(default_factory=list)
@@ -226,6 +230,8 @@ class EvidenceBundleRecords(BaseModel):
     snapshots: List[Dict[str, Any]] = Field(default_factory=list)
     director_intents: List[Dict[str, Any]] = Field(default_factory=list)
     api_traces: List[Dict[str, Any]] = Field(default_factory=list)
+    validation_runs: List[Dict[str, Any]] = Field(default_factory=list)
+    operation_log_entries: List[Dict[str, Any]] = Field(default_factory=list)
     evaluator_outputs: List[Dict[str, Any]] = Field(default_factory=list)
     replay_index: List[Dict[str, Any]] = Field(default_factory=list)
 
@@ -245,3 +251,88 @@ class CommitPointResponse(BaseModel):
     branch_ids: List[str] = []
     branch_names: List[str] = []
     created_at: datetime
+
+
+class ValidationRunCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str = Field(min_length=1)
+    actor: str = Field(default="codex", min_length=1, max_length=80)
+    web_url: Optional[str] = Field(default=None, max_length=500)
+    api_base_url: Optional[str] = Field(default=None, max_length=500)
+    worldengine_api_base: Optional[str] = Field(default=None, max_length=500)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ValidationRunResponse(BaseModel):
+    id: str
+    session_id: str
+    actor: str
+    status: str
+    web_url: Optional[str]
+    api_base_url: Optional[str]
+    worldengine_api_base: Optional[str]
+    evidence_bundle_path: Optional[str]
+    notes: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+
+class OperationLogCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actor: str = Field(default="codex", min_length=1, max_length=80)
+    phase: str = Field(default="browser", min_length=1, max_length=80)
+    url: Optional[str] = Field(default=None, max_length=500)
+    action_type: str = Field(min_length=1, max_length=120)
+    target_label: Optional[str] = Field(default=None, max_length=240)
+    input_text: Optional[str] = Field(default=None, max_length=5000)
+    request_method: Optional[str] = Field(default=None, max_length=20)
+    request_path: Optional[str] = Field(default=None, max_length=500)
+    response_status: Optional[int] = Field(default=None, ge=100, le=599)
+    response_summary: Optional[str] = Field(default=None, max_length=5000)
+    visible_result: Optional[str] = Field(default=None, max_length=5000)
+    screenshot_path: Optional[str] = Field(default=None, max_length=500)
+    downloaded_file: Optional[str] = Field(default=None, max_length=500)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+
+
+class OperationLogResponse(BaseModel):
+    id: str
+    run_id: str
+    session_id: str
+    timestamp: datetime
+    actor: str
+    phase: str
+    url: Optional[str]
+    action_type: str
+    target_label: Optional[str]
+    input_text: Optional[str]
+    request_method: Optional[str]
+    request_path: Optional[str]
+    response_status: Optional[int]
+    response_summary: Optional[str]
+    visible_result: Optional[str]
+    screenshot_path: Optional[str]
+    downloaded_file: Optional[str]
+    notes: Optional[str]
+
+
+class OperationLogListResponse(BaseModel):
+    run_id: str
+    session_id: str
+    entries: List[OperationLogResponse]
+
+
+class ApiSummaryItem(BaseModel):
+    method: str
+    path: str
+    status: Optional[int]
+    public_summary: Dict[str, Any]
+    error_class: Optional[str]
+
+
+class ValidationRunApiSummaryResponse(BaseModel):
+    run_id: str
+    session_id: str
+    api_calls: List[ApiSummaryItem]

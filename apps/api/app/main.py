@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .db import init_db
-from .routes import evidence, health, sessions, timelines
+from .routes import evidence, health, sessions, timelines, validation_runs
 
 
 @asynccontextmanager
@@ -31,3 +31,4 @@ app.include_router(health.router)
 app.include_router(sessions.router)
 app.include_router(timelines.router)
 app.include_router(evidence.router)
+app.include_router(validation_runs.router)

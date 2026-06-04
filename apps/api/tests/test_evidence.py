@@ -60,7 +60,7 @@ def test_evidence_bundle_manifest_preserves_metadata_endpoint_and_reserves_recor
     assert manifest_response.status_code == 200
     payload = manifest_response.json()
     assert set(payload.keys()) == {"manifest", "records"}
-    assert payload["manifest"]["bundle_schema_version"] == "0.6.0"
+    assert payload["manifest"]["bundle_schema_version"] == "0.7.0"
     assert payload["manifest"]["session_id"] == session_id
     assert payload["manifest"]["session_name"] == "Manifest Session"
     assert payload["manifest"]["worldengine_world_id"] is None
@@ -83,6 +83,8 @@ def test_evidence_bundle_manifest_preserves_metadata_endpoint_and_reserves_recor
         "snapshots": [],
         "director_intents": [],
         "api_traces": [],
+        "validation_runs": [],
+        "operation_log_entries": [],
         "evaluator_outputs": [],
         "replay_index": payload["records"]["replay_index"],
     }

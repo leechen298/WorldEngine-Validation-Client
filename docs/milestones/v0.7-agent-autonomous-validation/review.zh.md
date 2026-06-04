@@ -97,3 +97,76 @@ implementation、Codex 浏览器自主验证、第二 Agent 复核或人工验�
   - `BLOCKED / WAITING_FOR_WORLDENGINE_GATE_1`
   - 基础 Web/API 测试和 Web build 通过。
   - 完整 v0.7 Codex 自主验证仍被 WorldEngine Gate 1 阻塞。
+
+### 2026-06-04 WorldEngine Gate 1 解除记录
+
+- WorldEngine Commit: `b10061c`
+- Gate result: `WORLDENGINE_CONTRACT_READY`
+- Public contract evidence:
+  - WorldEngine `GET /manifest` 可用。
+  - WorldEngine OpenAPI 暴露 `POST /worlds`。
+  - WorldEngine `POST /worlds` 返回 public `world_id`、`status`、
+    `public_initial_state` 和 `visualization`。
+  - WorldEngine public director guidance endpoint 可用。
+  - Validation Client `/health/worldengine` 可识别 `world_creation: available`。
+  - Validation Client `POST /sessions/worldengine` 已通过兼容性探针创建
+    WorldEngine-backed session。
+- Commands:
+  - WorldEngine focused tests:
+    `PYTHONPATH=backend uv run --with-requirements backend/requirements.txt --no-project pytest backend/app/tests/test_world_generation_schema.py backend/app/tests/test_public_handoff_contract_api.py backend/app/tests/test_generation_core_readiness_api.py -q`：
+    20 passed, 1 warning。
+  - Validation Client compatibility probe:
+    `GET /health/worldengine`：200。
+  - Validation Client compatibility probe:
+    `POST /sessions/worldengine`：201。
+- Decision:
+  - Gate 1 no longer blocks Validation Client v0.7 implementation.
+  - Current user authorization allows proceeding through implementation gates
+    until the repository reaches the Codex autonomous validation handoff state.
+
+## Implementation Records
+
+### Task 2 / 2.5 / 3: validation run, operation log, and evidence association
+
+- Commit: pending in current step.
+- Files:
+  - `apps/api/app/main.py`
+  - `apps/api/app/models.py`
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/app/routes/validation_runs.py`
+  - `apps/api/app/schemas.py`
+  - `apps/api/tests/test_evidence.py`
+  - `apps/api/tests/test_validation_runs.py`
+- Implementation:
+  - Added `ValidationRun` records for Codex / Agent browser validation runs.
+  - Added `OperationLogEntry` records with timestamp, run id, actor, phase, URL,
+    action, target, input text, request method/path, response status/summary,
+    visible result, screenshot path, downloaded file, and notes.
+  - Added `/validation-runs`, `/validation-runs/{run_id}/operation-log`,
+    `/validation-runs/{run_id}/operation-log.jsonl`,
+    `/validation-runs/{run_id}/api-summary`, and
+    `/validation-runs/{run_id}/api-summary/download`.
+  - Upgraded evidence bundle schema to `0.7.0`.
+  - Added latest validation run id, evidence bundle filename, validation run
+    counts, operation-log counts, validation run records, and operation-log
+    records to evidence bundle output.
+  - Reused existing event/diff/snapshot/commit-point/branch storage; no reverse
+    event inference was introduced.
+- Boundary review:
+  - The client still does not manage LLM keys.
+  - The client still does not call LLM providers directly.
+  - The client still does not import WorldEngine source code.
+  - Operation logs reject private prompt, provider secret, raw provider trace,
+    API key, token, password, Agent private memory, private goal, self_state,
+    hidden context, and private source-path markers.
+  - API summary uses public trace summaries only and does not export request
+    prompt content.
+- Commands:
+  - `cd apps/api && uv run pytest tests/test_evidence.py tests/test_validation_runs.py tests/test_sessions.py tests/test_health.py -q`:
+    46 passed, 1 warning.
+  - `git diff --check`: passed.
+- Result:
+  - Task 2 complete.
+  - Task 2.5 remains satisfied by the existing event/diff/snapshot/commit-point
+    storage plus the new v0.7 evidence association fields.
+  - Task 3 complete for backend evidence/API summary association.

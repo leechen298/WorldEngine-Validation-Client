@@ -34,6 +34,7 @@ class Session(Base):
     snapshots: Mapped[list["Snapshot"]] = relationship("Snapshot", back_populates="session")
     director_intents: Mapped[list["DirectorIntent"]] = relationship("DirectorIntent", back_populates="session")
     api_traces: Mapped[list["ApiTrace"]] = relationship("ApiTrace", back_populates="session")
+    validation_runs: Mapped[list["ValidationRun"]] = relationship("ValidationRun", back_populates="session")
 
 
 class CommitPoint(Base):
@@ -143,3 +144,47 @@ class ApiTrace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
 
     session: Mapped["Session"] = relationship("Session", back_populates="api_traces")
+
+
+class ValidationRun(Base):
+    __tablename__ = "validation_runs"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id: Mapped[str] = mapped_column(String, ForeignKey("sessions.id"), nullable=False)
+    actor: Mapped[str] = mapped_column(String, nullable=False, default="codex")
+    status: Mapped[str] = mapped_column(String, nullable=False, default="running")
+    web_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    api_base_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    worldengine_api_base: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    evidence_bundle_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now, onupdate=_now)
+
+    session: Mapped["Session"] = relationship("Session", back_populates="validation_runs")
+    operation_logs: Mapped[list["OperationLogEntry"]] = relationship("OperationLogEntry", back_populates="validation_run")
+
+
+class OperationLogEntry(Base):
+    __tablename__ = "operation_log_entries"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    run_id: Mapped[str] = mapped_column(String, ForeignKey("validation_runs.id"), nullable=False)
+    session_id: Mapped[str] = mapped_column(String, ForeignKey("sessions.id"), nullable=False)
+    actor: Mapped[str] = mapped_column(String, nullable=False, default="codex")
+    phase: Mapped[str] = mapped_column(String, nullable=False, default="browser")
+    url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    action_type: Mapped[str] = mapped_column(String, nullable=False)
+    target_label: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    input_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    request_method: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    request_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    response_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    response_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    visible_result: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    screenshot_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    downloaded_file: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_now)
+
+    validation_run: Mapped["ValidationRun"] = relationship("ValidationRun", back_populates="operation_logs")

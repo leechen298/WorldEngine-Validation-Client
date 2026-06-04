@@ -13,10 +13,12 @@ from ..models import (
     CommitPoint,
     DirectorIntent,
     Event,
+    OperationLogEntry,
     Session as DbSession,
     Snapshot,
     StateDiff,
     TimelineBranch,
+    ValidationRun,
 )
 from ..schemas import (
     EvidenceBundleCounts,
@@ -93,6 +95,8 @@ def _bundle_counts(session_id: str, db: Session) -> EvidenceBundleCounts:
         commit_points=count(CommitPoint),
         director_intents=count(DirectorIntent),
         api_traces=count(ApiTrace),
+        validation_runs=count(ValidationRun),
+        operation_log_entries=count(OperationLogEntry),
         replay_index=count(CommitPoint),
     )
 
@@ -337,6 +341,53 @@ def _bundle_records(session_id: str, db: Session) -> tuple[EvidenceBundleRecords
             }
         )
 
+    validation_run_records = []
+    for run in db.execute(
+        select(ValidationRun).where(ValidationRun.session_id == session_id).order_by(ValidationRun.created_at, ValidationRun.id)
+    ).scalars():
+        validation_run_records.append(
+            {
+                "id": run.id,
+                "actor": run.actor,
+                "status": run.status,
+                "web_url": run.web_url,
+                "api_base_url": run.api_base_url,
+                "worldengine_api_base": run.worldengine_api_base,
+                "evidence_bundle_path": run.evidence_bundle_path,
+                "notes": run.notes,
+                "created_at": run.created_at.isoformat(),
+                "updated_at": run.updated_at.isoformat(),
+            }
+        )
+
+    operation_log_records = []
+    for entry in db.execute(
+        select(OperationLogEntry)
+        .where(OperationLogEntry.session_id == session_id)
+        .order_by(OperationLogEntry.created_at, OperationLogEntry.id)
+    ).scalars():
+        operation_log_records.append(
+            {
+                "id": entry.id,
+                "run_id": entry.run_id,
+                "timestamp": entry.created_at.isoformat(),
+                "actor": entry.actor,
+                "phase": entry.phase,
+                "url": entry.url,
+                "action_type": entry.action_type,
+                "target_label": entry.target_label,
+                "input_text": entry.input_text,
+                "request_method": entry.request_method,
+                "request_path": entry.request_path,
+                "response_status": entry.response_status,
+                "response_summary": entry.response_summary,
+                "visible_result": entry.visible_result,
+                "screenshot_path": entry.screenshot_path,
+                "downloaded_file": entry.downloaded_file,
+                "notes": entry.notes,
+            }
+        )
+
     if found_sensitive_payload:
         _append_warning(warnings, "sensitive content redacted from evidence records")
 
@@ -352,6 +403,8 @@ def _bundle_records(session_id: str, db: Session) -> tuple[EvidenceBundleRecords
         snapshots=snapshot_records,
         director_intents=director_intent_records,
         api_traces=api_trace_records,
+        validation_runs=validation_run_records,
+        operation_log_entries=operation_log_records,
         evaluator_outputs=[],
         replay_index=replay_index,
     )
@@ -402,14 +455,26 @@ def _build_bundle_response(session_id: str, db: Session) -> EvidenceBundleRespon
     )
     if trace_flags.llm_keys_included or trace_flags.private_worldengine_internals_included:
         warnings.append("api traces include flagged sensitive content")
+    latest_run = (
+        db.execute(
+            select(ValidationRun)
+            .where(ValidationRun.session_id == session_id)
+            .order_by(ValidationRun.created_at.desc(), ValidationRun.id.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
 
     manifest = EvidenceBundleManifest(
-        bundle_schema_version="0.6.0",
+        bundle_schema_version="0.7.0",
         generated_at=datetime.now(UTC),
         session_id=session.id,
         session_name=session.session_name,
         worldengine_world_id=session.worldengine_world_id,
         world_status=session.public_world_status or session.status,
+        latest_validation_run_id=latest_run.id if latest_run else None,
+        evidence_bundle_filename=f"evidence-bundle-{session_id}.json",
         counts=_bundle_counts(session_id, db),
         redaction_flags=redaction_flags,
         warnings=warnings,

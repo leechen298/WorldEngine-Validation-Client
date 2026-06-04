@@ -170,3 +170,46 @@ implementation、Codex 浏览器自主验证、第二 Agent 复核或人工验�
   - Task 2.5 remains satisfied by the existing event/diff/snapshot/commit-point
     storage plus the new v0.7 evidence association fields.
   - Task 3 complete for backend evidence/API summary association.
+
+### Task 4: Web UI operation-log hooks
+
+- Commit: pending in current step.
+- Files:
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/pages/SessionLibrary.tsx`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `apps/web/src/__tests__/SessionLibrary.test.tsx`
+- Implementation:
+  - Added frontend types and API client methods for validation runs,
+    operation-log entries, and API summaries.
+  - Added `ensureValidationRun(sessionId)` and `logOperation(sessionId, payload)`
+    to the session store.
+  - Automatically creates a validation run for newly created WorldEngine
+    sessions and existing sessions opened from the session library.
+  - Records session creation, health status display, runtime view load, replay
+    view load, branch list load, commit-point load, director intent load,
+    director guidance submit, branch creation, evidence manifest load, and
+    evidence bundle download.
+  - Records UI-only actions for runtime console open, Run, Pause, Single Tick,
+    replay slider change, commit-point selection, branch selection, and opening
+    an existing session.
+  - Operation-log write failures are intentionally non-blocking and do not
+    interrupt the client workflow.
+- Boundary review:
+  - Frontend does not manage LLM keys.
+  - Frontend does not call LLM providers.
+  - Frontend operation logs use public user input, public API paths, public
+    response summaries, visible UI result text, screenshot path placeholders,
+    and downloaded evidence filenames.
+  - Logs do not claim evaluator PASS or human PASS.
+- Commands:
+  - `pnpm --dir apps/web test`: 25 passed.
+  - `pnpm --dir apps/web build`: passed.
+- Notes:
+  - Vitest emits existing React `act(...)` warnings from async store updates in
+    `RuntimeConsole` tests. The warnings did not fail the test run.
+- Result:
+  - Task 4 complete.

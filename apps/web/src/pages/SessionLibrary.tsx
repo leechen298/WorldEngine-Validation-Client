@@ -13,6 +13,7 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
     isLoading,
     error,
     connectionStatus,
+    logOperation,
     loadSessions,
     loadHealth,
     createWorldEngineSession,
@@ -39,6 +40,16 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
     } finally {
       setCreating(false);
     }
+  };
+
+  const openExistingSession = (sessionId: string, sessionName: string) => {
+    logOperation(sessionId, {
+      action_type: "session_library.open_existing_session",
+      target_label: sessionName,
+      input_text: sessionId,
+      visible_result: "runtime console opened from session library",
+    });
+    onOpenSession(sessionId);
   };
 
   return (
@@ -74,7 +85,11 @@ export function SessionLibrary({ onOpenSession }: SessionLibraryProps) {
           <ul className="session-list">
             {sessions.map((session) => (
               <li key={session.id}>
-                <button className="session-item session-button" type="button" onClick={() => onOpenSession(session.id)}>
+                <button
+                  className="session-item session-button"
+                  type="button"
+                  onClick={() => openExistingSession(session.id, session.session_name)}
+                >
                   <strong>{session.session_name}</strong>
                   <span>分支：{session.branch_count}</span>
                   <span>状态：{session.status}</span>

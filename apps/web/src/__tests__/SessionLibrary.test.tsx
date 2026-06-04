@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { createWorldSession, getSessions, getWorldEngineHealth } from "../api/client";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { appendOperationLog, createValidationRun, createWorldSession, getSessions, getWorldEngineHealth } from "../api/client";
 import { useSessionStore } from "../store/sessionStore";
 import { SessionLibrary } from "../pages/SessionLibrary";
 
@@ -27,6 +27,39 @@ vi.mock("../api/client", () => ({
     },
   }),
   getSessions: vi.fn(),
+  createValidationRun: vi.fn().mockResolvedValue({
+    id: "run-1",
+    session_id: "session-2",
+    actor: "codex",
+    status: "running",
+    web_url: "http://localhost",
+    api_base_url: "http://127.0.0.1:8765",
+    worldengine_api_base: "http://127.0.0.1:8000",
+    evidence_bundle_path: null,
+    notes: "v0.7 browser validation run",
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  }),
+  appendOperationLog: vi.fn().mockResolvedValue({
+    id: "log-1",
+    run_id: "run-1",
+    session_id: "session-2",
+    timestamp: "2026-01-01T00:00:00Z",
+    actor: "codex",
+    phase: "browser",
+    url: "http://localhost",
+    action_type: "session.create_worldengine.submit",
+    target_label: "创建世界",
+    input_text: null,
+    request_method: "POST",
+    request_path: "/sessions/worldengine",
+    response_status: 201,
+    response_summary: "ok",
+    visible_result: "runtime console opened",
+    screenshot_path: null,
+    downloaded_file: null,
+    notes: null,
+  }),
   createSession: vi.fn().mockResolvedValue({
     id: "session-2",
     session_name: "Demo",
@@ -85,6 +118,7 @@ describe("SessionLibrary", () => {
       error: null,
       connectionStatus: null,
       lastBranches: {},
+      validationRunBySession: {},
     });
   });
 
@@ -142,6 +176,46 @@ describe("SessionLibrary", () => {
     });
     expect(getSessions).toHaveBeenCalledTimes(2);
     expect(openSession).toHaveBeenCalledWith("session-2");
+    expect(createValidationRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        session_id: "session-2",
+        actor: "codex",
+      }),
+    );
+    expect(appendOperationLog).toHaveBeenCalledWith(
+      "run-1",
+      expect.objectContaining({
+        action_type: "session.create_worldengine.submit",
+        input_text: "A public world prompt",
+        request_method: "POST",
+        request_path: "/sessions/worldengine",
+        response_status: 201,
+      }),
+    );
+  });
+
+  it("logs opening an existing session", async () => {
+    const openSession = vi.fn();
+    render(<SessionLibrary onOpenSession={openSession} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Demo/ }));
+
+    expect(openSession).toHaveBeenCalledWith("session-1");
+    expect(createValidationRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        session_id: "session-1",
+      }),
+    );
+    await waitFor(() =>
+      expect(appendOperationLog).toHaveBeenCalledWith(
+        "run-1",
+        expect.objectContaining({
+          action_type: "session_library.open_existing_session",
+          target_label: "Demo",
+          input_text: "session-1",
+        }),
+      ),
+    );
   });
 
   it("shows a readable error when world creation fails", async () => {

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
+  appendOperationLog,
   createDirectorIntent,
+  createValidationRun,
   downloadEvidenceBundle,
   getEvidenceBundleManifest,
   getCommitPoints,
@@ -13,7 +15,40 @@ import { useSessionStore } from "../store/sessionStore";
 import { RuntimeConsole } from "../pages/RuntimeConsole";
 
 vi.mock("../api/client", () => ({
+  appendOperationLog: vi.fn().mockResolvedValue({
+    id: "log-1",
+    run_id: "run-1",
+    session_id: "session-id",
+    timestamp: "2026-06-04T00:00:00Z",
+    actor: "codex",
+    phase: "browser",
+    url: "http://localhost",
+    action_type: "runtime_console.page_open",
+    target_label: "Runtime Console",
+    input_text: null,
+    request_method: null,
+    request_path: null,
+    response_status: null,
+    response_summary: null,
+    visible_result: "runtime console opened",
+    screenshot_path: null,
+    downloaded_file: null,
+    notes: null,
+  }),
   createDirectorIntent: vi.fn(),
+  createValidationRun: vi.fn().mockResolvedValue({
+    id: "run-1",
+    session_id: "session-id",
+    actor: "codex",
+    status: "running",
+    web_url: "http://localhost",
+    api_base_url: "http://127.0.0.1:8765",
+    worldengine_api_base: "http://127.0.0.1:8000",
+    evidence_bundle_path: null,
+    notes: "v0.7 browser validation run",
+    created_at: "2026-06-04T00:00:00Z",
+    updated_at: "2026-06-04T00:00:00Z",
+  }),
   downloadEvidenceBundle: vi.fn(),
   getEvidenceBundleManifest: vi.fn(),
   getCommitPoints: vi.fn().mockResolvedValue([]),
@@ -80,12 +115,14 @@ describe("RuntimeConsole", () => {
     vi.mocked(getEvidenceBundleManifest).mockClear();
     vi.mocked(getEvidenceBundleManifest).mockResolvedValue({
       manifest: {
-        bundle_schema_version: "0.6.0",
+        bundle_schema_version: "0.7.0",
         generated_at: "2026-06-04T00:00:00Z",
         session_id: "session-id",
         session_name: "Evidence Session",
         worldengine_world_id: null,
         world_status: "created",
+        latest_validation_run_id: null,
+        evidence_bundle_filename: "evidence-bundle-session-id.json",
         counts: {
           branches: 1,
           events: 0,
@@ -94,6 +131,8 @@ describe("RuntimeConsole", () => {
           commit_points: 1,
           director_intents: 0,
           api_traces: 0,
+          validation_runs: 0,
+          operation_log_entries: 0,
           evaluator_outputs: 0,
           replay_index: 1,
         },
@@ -111,6 +150,8 @@ describe("RuntimeConsole", () => {
         snapshots: [],
         director_intents: [],
         api_traces: [],
+        validation_runs: [],
+        operation_log_entries: [],
         evaluator_outputs: [],
         replay_index: [],
       },
@@ -120,12 +161,14 @@ describe("RuntimeConsole", () => {
       filename: "evidence-bundle-session-id-2026-06-04.json",
       bundle: {
         manifest: {
-          bundle_schema_version: "0.6.0",
+          bundle_schema_version: "0.7.0",
           generated_at: "2026-06-04T00:00:00Z",
           session_id: "session-id",
           session_name: "Evidence Session",
           worldengine_world_id: null,
           world_status: "created",
+          latest_validation_run_id: null,
+          evidence_bundle_filename: "evidence-bundle-session-id.json",
           counts: {
             branches: 1,
             events: 0,
@@ -134,6 +177,8 @@ describe("RuntimeConsole", () => {
             commit_points: 1,
             director_intents: 0,
             api_traces: 0,
+            validation_runs: 0,
+            operation_log_entries: 0,
             evaluator_outputs: 0,
             replay_index: 1,
           },
@@ -151,6 +196,8 @@ describe("RuntimeConsole", () => {
           snapshots: [],
           director_intents: [],
           api_traces: [],
+          validation_runs: [],
+          operation_log_entries: [],
           evaluator_outputs: [],
           replay_index: [],
         },
@@ -162,6 +209,8 @@ describe("RuntimeConsole", () => {
     vi.mocked(getReplayView).mockResolvedValue(null as any);
     vi.mocked(getSessionEvents).mockClear();
     vi.mocked(createDirectorIntent).mockClear();
+    vi.mocked(createValidationRun).mockClear();
+    vi.mocked(appendOperationLog).mockClear();
   });
 
   it("renders runtime controls", async () => {

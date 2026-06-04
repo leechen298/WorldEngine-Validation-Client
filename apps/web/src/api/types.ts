@@ -136,6 +136,8 @@ export interface EvidenceBundleCounts {
   commit_points: number;
   director_intents: number;
   api_traces: number;
+  validation_runs: number;
+  operation_log_entries: number;
   evaluator_outputs: number;
   replay_index: number;
 }
@@ -152,6 +154,8 @@ export interface EvidenceBundleManifest {
   session_name: string;
   worldengine_world_id: string | null;
   world_status: string;
+  latest_validation_run_id: string | null;
+  evidence_bundle_filename: string | null;
   counts: EvidenceBundleCounts;
   redaction_flags: EvidenceBundleRedactionFlags;
   warnings: EvidenceBundleWarning[];
@@ -165,6 +169,8 @@ export interface EvidenceBundleRecords {
   snapshots: Record<string, unknown>[];
   director_intents: Record<string, unknown>[];
   api_traces: Record<string, unknown>[];
+  validation_runs: Record<string, unknown>[];
+  operation_log_entries: Record<string, unknown>[];
   evaluator_outputs: Record<string, unknown>[];
   replay_index: Record<string, unknown>[];
 }
@@ -191,4 +197,76 @@ export interface CreateWorldSessionRequest {
 export interface CreateBranchRequest {
   branch_name: string;
   commit_point_id: string;
+}
+
+export interface CreateValidationRunRequest {
+  session_id: string;
+  actor?: string;
+  web_url?: string | null;
+  api_base_url?: string | null;
+  worldengine_api_base?: string | null;
+  notes?: string | null;
+}
+
+export interface ValidationRun {
+  id: string;
+  session_id: string;
+  actor: string;
+  status: string;
+  web_url: string | null;
+  api_base_url: string | null;
+  worldengine_api_base: string | null;
+  evidence_bundle_path: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OperationLogRequest {
+  actor?: string;
+  phase?: string;
+  url?: string | null;
+  action_type: string;
+  target_label?: string | null;
+  input_text?: string | null;
+  request_method?: string | null;
+  request_path?: string | null;
+  response_status?: number | null;
+  response_summary?: string | null;
+  visible_result?: string | null;
+  screenshot_path?: string | null;
+  downloaded_file?: string | null;
+  notes?: string | null;
+}
+
+export interface OperationLogEntry extends Required<Pick<OperationLogRequest, "action_type">> {
+  id: string;
+  run_id: string;
+  session_id: string;
+  timestamp: string;
+  actor: string;
+  phase: string;
+  url: string | null;
+  target_label: string | null;
+  input_text: string | null;
+  request_method: string | null;
+  request_path: string | null;
+  response_status: number | null;
+  response_summary: string | null;
+  visible_result: string | null;
+  screenshot_path: string | null;
+  downloaded_file: string | null;
+  notes: string | null;
+}
+
+export interface ValidationRunApiSummary {
+  run_id: string;
+  session_id: string;
+  api_calls: {
+    method: string;
+    path: string;
+    status: number | null;
+    public_summary: Record<string, unknown>;
+    error_class: string | null;
+  }[];
 }

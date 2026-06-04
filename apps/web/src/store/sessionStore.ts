@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import {
+  appendOperationLog,
   createBranch as apiCreateBranch,
   createDirectorIntent as apiCreateDirectorIntent,
   createSession,
+  createValidationRun,
   createWorldSession,
   downloadEvidenceBundle as apiDownloadEvidenceBundle,
   getEvidenceBundleManifest,
@@ -23,10 +25,15 @@ import type {
   EvidenceBundleDownload,
   EvidenceBundleResponse,
   HealthWorldEngineResponse,
+  OperationLogRequest,
   ReplayView,
   RuntimeView,
   SessionSummary,
+  ValidationRun,
 } from "../api/types";
+
+const WEB_URL = typeof window === "undefined" ? null : window.location.origin;
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8765";
 
 interface SessionState {
   sessions: SessionSummary[];
@@ -52,8 +59,11 @@ interface SessionState {
   evidenceBundleBySession: Record<string, EvidenceBundleResponse>;
   evidenceBundleErrorBySession: Record<string, string>;
   evidenceBundleLoadingBySession: Record<string, boolean>;
+  validationRunBySession: Record<string, ValidationRun>;
   loadSessions: () => Promise<void>;
   loadHealth: () => Promise<void>;
+  ensureValidationRun: (sessionId: string) => Promise<ValidationRun | null>;
+  logOperation: (sessionId: string, payload: OperationLogRequest) => Promise<void>;
   loadBranches: (sessionId: string) => Promise<BranchSummary[]>;
   loadCommitPoints: (sessionId: string) => Promise<CommitPointSummary[]>;
   loadRuntimeView: (sessionId: string) => Promise<RuntimeView | null>;
@@ -92,6 +102,50 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   evidenceBundleBySession: {},
   evidenceBundleErrorBySession: {},
   evidenceBundleLoadingBySession: {},
+  validationRunBySession: {},
+
+  ensureValidationRun: async (sessionId: string) => {
+    const existing = get().validationRunBySession[sessionId];
+    if (existing) {
+      return existing;
+    }
+    try {
+      const run = await createValidationRun({
+        session_id: sessionId,
+        actor: "codex",
+        web_url: WEB_URL,
+        api_base_url: API_BASE,
+        worldengine_api_base: get().connectionStatus?.worldengineApiBase || null,
+        notes: "v0.7 browser validation run",
+      });
+      set((state) => ({
+        validationRunBySession: {
+          ...state.validationRunBySession,
+          [sessionId]: run,
+        },
+      }));
+      return run;
+    } catch (_error) {
+      return null;
+    }
+  },
+
+  logOperation: async (sessionId: string, payload: OperationLogRequest) => {
+    const run = await get().ensureValidationRun(sessionId);
+    if (!run) {
+      return;
+    }
+    try {
+      await appendOperationLog(run.id, {
+        actor: "codex",
+        phase: "browser",
+        url: typeof window === "undefined" ? null : window.location.href,
+        ...payload,
+      });
+    } catch (_error) {
+      // Operation logs are validation evidence; they should not block the UI flow.
+    }
+  },
 
   loadSessions: async () => {
     set({ isLoading: true, error: null });
@@ -156,6 +210,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const payload = await getBranches(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "api.get_branches",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/branches`,
+        response_status: 200,
+        response_summary: `${payload.branches.length} branches`,
+        visible_result: "branch list refreshed",
+      });
       const state = get();
       set({
         lastBranches: {
@@ -166,6 +228,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       });
       return payload.branches;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "api.get_branches.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/branches`,
+        response_summary: (error as Error).message,
+        visible_result: "branch list failed",
+      });
       set({ error: (error as Error).message, isLoading: false });
       return [];
     }
@@ -174,6 +243,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   loadCommitPoints: async (sessionId: string) => {
     try {
       const commitPoints = await getCommitPoints(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "api.get_commit_points",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/branches/commit-points`,
+        response_status: 200,
+        response_summary: `${commitPoints.length} commit points`,
+        visible_result: "commit points refreshed",
+      });
       set((state) => ({
         commitPointsBySession: {
           ...state.commitPointsBySession,
@@ -182,6 +259,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return commitPoints;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "api.get_commit_points.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/branches/commit-points`,
+        response_summary: (error as Error).message,
+        visible_result: "commit points failed",
+      });
       set({ error: (error as Error).message });
       return [];
     }
@@ -196,6 +280,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
     try {
       const runtimeView = await getRuntimeView(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "api.get_runtime_view",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/runtime-view`,
+        response_status: 200,
+        response_summary: `tick ${runtimeView.tick}`,
+        visible_result: "public runtime view refreshed",
+      });
       set((state) => ({
         runtimeViewBySession: {
           ...state.runtimeViewBySession,
@@ -208,6 +300,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return runtimeView;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "api.get_runtime_view.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/runtime-view`,
+        response_summary: (error as Error).message,
+        visible_result: "public runtime view failed",
+      });
       set((state) => ({
         runtimeErrorBySession: {
           ...state.runtimeErrorBySession,
@@ -240,6 +339,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
     try {
       const replayView = await getReplayView(sessionId, options);
+      await get().logOperation(sessionId, {
+        action_type: "api.get_replay_view",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/replay-view`,
+        response_status: 200,
+        response_summary: `branch ${replayView.branch_id} tick ${replayView.tick}`,
+        visible_result: "replay view refreshed",
+      });
       set((state) => ({
         replayViewBySession: {
           ...state.replayViewBySession,
@@ -260,6 +367,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return replayView;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "api.get_replay_view.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/replay-view`,
+        response_summary: (error as Error).message,
+        visible_result: "replay view failed",
+      });
       set((state) => ({
         replayErrorBySession: {
           ...state.replayErrorBySession,
@@ -291,6 +405,31 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       });
       const payload = await getSessions();
       set({ sessions: payload.sessions, isLoading: false });
+      await get().ensureValidationRun(newSession.id);
+      await get().logOperation(newSession.id, {
+        action_type: "session_library.page_open",
+        target_label: "Session Library",
+        visible_result: "session library loaded before world creation",
+      });
+      await get().logOperation(newSession.id, {
+        action_type: "worldengine.health_check",
+        target_label: "WorldEngine connection status",
+        request_method: "GET",
+        request_path: "/health/worldengine",
+        response_status: get().connectionStatus?.status === "error" ? null : 200,
+        response_summary: get().connectionStatus?.status || "unknown",
+        visible_result: get().connectionStatus?.healthText || "WorldEngine status displayed",
+      });
+      await get().logOperation(newSession.id, {
+        action_type: "session.create_worldengine.submit",
+        target_label: "创建世界",
+        input_text: worldPrompt,
+        request_method: "POST",
+        request_path: "/sessions/worldengine",
+        response_status: 201,
+        response_summary: `session ${newSession.id} world ${newSession.worldengine_world_id || "local"}`,
+        visible_result: "runtime console opened",
+      });
       return newSession;
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
@@ -305,6 +444,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         branch_name: branchName,
         commit_point_id: commitPointId,
       });
+      await get().logOperation(sessionId, {
+        action_type: "branch.create",
+        target_label: "从当前 commit point 创建 branch",
+        input_text: branchName,
+        request_method: "POST",
+        request_path: `/sessions/${sessionId}/branches`,
+        response_status: 201,
+        response_summary: `branch ${branch.id}`,
+        visible_result: `created branch ${branch.branch_name}`,
+      });
       const state = get();
       set({
         lastBranches: {
@@ -315,6 +464,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       });
       return branch;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "branch.create.failed",
+        target_label: "从当前 commit point 创建 branch",
+        input_text: branchName,
+        request_method: "POST",
+        request_path: `/sessions/${sessionId}/branches`,
+        response_summary: (error as Error).message,
+        visible_result: "branch creation failed",
+      });
       set({ error: (error as Error).message, isLoading: false });
       throw error;
     }
@@ -323,6 +481,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   loadDirectorIntents: async (sessionId: string) => {
     try {
       const payload = await getDirectorIntents(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "api.get_director_intents",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/director-intents`,
+        response_status: 200,
+        response_summary: `${payload.director_intents.length} director intents`,
+        visible_result: "director intent list refreshed",
+      });
       set((state) => ({
         directorIntentsBySession: {
           ...state.directorIntentsBySession,
@@ -335,6 +501,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return payload.director_intents;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "api.get_director_intents.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/director-intents`,
+        response_summary: (error as Error).message,
+        visible_result: "director intent list failed",
+      });
       set((state) => ({
         directorIntentErrorBySession: {
           ...state.directorIntentErrorBySession,
@@ -358,6 +531,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
     try {
       const intent = await apiCreateDirectorIntent(sessionId, payload);
+      await get().logOperation(sessionId, {
+        action_type: "director_guidance.submit",
+        target_label: "提交引导",
+        input_text: payload.instruction_text,
+        request_method: "POST",
+        request_path: `/sessions/${sessionId}/director-intents`,
+        response_status: 201,
+        response_summary: `intent ${intent.id} ${intent.status}`,
+        visible_result: intent.public_explanation || `director intent ${intent.status}`,
+      });
       set((state) => ({
         directorIntentsBySession: {
           ...state.directorIntentsBySession,
@@ -377,6 +560,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return intent;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "director_guidance.submit.failed",
+        target_label: "提交引导",
+        input_text: payload.instruction_text,
+        request_method: "POST",
+        request_path: `/sessions/${sessionId}/director-intents`,
+        response_summary: (error as Error).message,
+        visible_result: "director guidance failed",
+      });
       set((state) => ({
         directorIntentSubmittingBySession: {
           ...state.directorIntentSubmittingBySession,
@@ -404,6 +596,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
     try {
       const bundle = await getEvidenceBundleManifest(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "evidence.manifest.load",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/evidence/bundle/manifest`,
+        response_status: 200,
+        response_summary: `bundle ${bundle.manifest.bundle_schema_version}`,
+        visible_result: "evidence bundle manifest displayed",
+      });
       set((state) => ({
         evidenceBundleBySession: {
           ...state.evidenceBundleBySession,
@@ -420,6 +620,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return bundle;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "evidence.manifest.load.failed",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/evidence/bundle/manifest`,
+        response_summary: (error as Error).message,
+        visible_result: "evidence bundle manifest failed",
+      });
       set((state) => ({
         evidenceBundleLoadingBySession: {
           ...state.evidenceBundleLoadingBySession,
@@ -447,6 +654,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }));
     try {
       const download = await apiDownloadEvidenceBundle(sessionId);
+      await get().logOperation(sessionId, {
+        action_type: "evidence.bundle.download",
+        target_label: "下载 evidence bundle",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/evidence/bundle/download`,
+        response_status: 200,
+        response_summary: download.filename,
+        visible_result: "evidence bundle downloaded",
+        downloaded_file: download.filename,
+      });
       set((state) => ({
         evidenceBundleBySession: {
           ...state.evidenceBundleBySession,
@@ -463,6 +680,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }));
       return download;
     } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "evidence.bundle.download.failed",
+        target_label: "下载 evidence bundle",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/evidence/bundle/download`,
+        response_summary: (error as Error).message,
+        visible_result: "evidence bundle download failed",
+      });
       set((state) => ({
         evidenceBundleLoadingBySession: {
           ...state.evidenceBundleLoadingBySession,

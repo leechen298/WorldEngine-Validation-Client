@@ -4,16 +4,21 @@ import type {
   CreateBranchRequest,
   CreateDirectorIntentRequest,
   CreateSessionRequest,
+  CreateValidationRunRequest,
   CreateWorldSessionRequest,
   DirectorIntent,
   EvidenceBundleDownload,
   EvidenceBundleResponse,
   HealthResponse,
   HealthWorldEngineResponse,
+  OperationLogEntry,
+  OperationLogRequest,
   ReplayView,
   RuntimeView,
   SessionEvent,
   SessionSummary,
+  ValidationRun,
+  ValidationRunApiSummary,
 } from "./types";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8765";
@@ -154,4 +159,22 @@ export async function downloadEvidenceBundle(sessionId: string): Promise<Evidenc
     filename: filenameMatch?.[1] || `evidence-bundle-${sessionId}.json`,
     bundle: (await response.json()) as EvidenceBundleResponse,
   };
+}
+
+export async function createValidationRun(payload: CreateValidationRunRequest): Promise<ValidationRun> {
+  return request<ValidationRun>("/validation-runs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function appendOperationLog(runId: string, payload: OperationLogRequest): Promise<OperationLogEntry> {
+  return request<OperationLogEntry>(`/validation-runs/${runId}/operation-log`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getValidationRunApiSummary(runId: string): Promise<ValidationRunApiSummary> {
+  return request<ValidationRunApiSummary>(`/validation-runs/${runId}/api-summary`);
 }

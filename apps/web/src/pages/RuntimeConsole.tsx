@@ -22,6 +22,8 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     evidenceBundleBySession = {},
     evidenceBundleErrorBySession = {},
     evidenceBundleLoadingBySession = {},
+    ensureValidationRun = async () => null,
+    logOperation = async () => undefined,
     loadBranches,
     loadCommitPoints = async () => [],
     loadDirectorIntents = async () => [],
@@ -77,8 +79,15 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [lastEvidenceDownload, setLastEvidenceDownload] = useState("");
 
   useEffect(() => {
+    ensureValidationRun(sessionId).then(() =>
+      logOperation(sessionId, {
+        action_type: "runtime_console.page_open",
+        target_label: "Runtime Console",
+        visible_result: "runtime console opened",
+      }),
+    );
     loadBranches(sessionId);
-  }, [loadBranches, sessionId]);
+  }, [ensureValidationRun, loadBranches, logOperation, sessionId]);
 
   useEffect(() => {
     loadCommitPoints(sessionId);
@@ -114,6 +123,12 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   };
 
   const loadReplayAtTick = (tick: number) => {
+    logOperation(sessionId, {
+      action_type: "replay.slider.change",
+      target_label: "目标 tick",
+      input_text: String(tick),
+      visible_result: `requested replay tick ${tick}`,
+    });
     loadReplayView(sessionId, {
       branchId: selectedBranchId || undefined,
       tick,
@@ -122,10 +137,22 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
 
   const selectCommitPoint = (commitPoint: (typeof commitPoints)[number]) => {
     setSelectedCommitPointId(commitPoint.id);
+    logOperation(sessionId, {
+      action_type: "replay.commit_point.select",
+      target_label: `Tick ${commitPoint.tick}`,
+      input_text: commitPoint.id,
+      visible_result: `selected commit point at tick ${commitPoint.tick}`,
+    });
     loadReplayAtTick(commitPoint.tick);
   };
 
   const selectBranch = (branch: (typeof branches)[number]) => {
+    logOperation(sessionId, {
+      action_type: "branch.select",
+      target_label: branch.branch_name,
+      input_text: branch.id,
+      visible_result: `selected branch ${branch.branch_name}`,
+    });
     loadReplayView(sessionId, {
       branchId: branch.id,
       tick: branch.current_tick,
@@ -168,13 +195,42 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
         <button type="button" onClick={onBack}>
           返回会话库
         </button>
-        <button type="button" onClick={() => setRuntimeState("running")}>
+        <button
+          type="button"
+          onClick={() => {
+            setRuntimeState("running");
+            logOperation(sessionId, {
+              action_type: "runtime.run",
+              target_label: "Run",
+              visible_result: "runtime state changed to running",
+            });
+          }}
+        >
           Run
         </button>
-        <button type="button" onClick={() => setRuntimeState("paused")}>
+        <button
+          type="button"
+          onClick={() => {
+            setRuntimeState("paused");
+            logOperation(sessionId, {
+              action_type: "runtime.pause",
+              target_label: "Pause",
+              visible_result: "runtime state changed to paused",
+            });
+          }}
+        >
           Pause
         </button>
-        <button type="button" onClick={() => void 0}>
+        <button
+          type="button"
+          onClick={() => {
+            logOperation(sessionId, {
+              action_type: "runtime.single_tick",
+              target_label: "Single Tick",
+              visible_result: "single tick requested",
+            });
+          }}
+        >
           Single Tick
         </button>
         <span>状态：{runtimeState}</span>

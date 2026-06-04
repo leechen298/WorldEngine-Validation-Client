@@ -26,11 +26,29 @@
 3. `docs/specs/validation-client-design.zh.md`
 4. active milestone 的 `README.zh.md`
 5. active milestone 的 `plan.zh.md`
-6. active milestone 的 `review.zh.md`
-7. `docs/adr/` 下相关 ADR
-8. `docs/agent-guides/routing.zh.md`
-9. `docs/agent-guides/workflow.zh.md`
-10. `docs/agent-guides/boundaries.zh.md`
+6. active milestone 的 `implementation-task-plan.zh.md`，如果该文件存在
+7. active milestone 的 `cross-repo-validation-gate-matrix.zh.md`，如果该文件存在
+8. active milestone 的 `planning-readiness-checklist.zh.md`，如果该文件存在
+9. active milestone 的 `review.zh.md`
+10. `docs/adr/` 下相关 ADR
+11. `docs/agent-guides/routing.zh.md`
+12. `docs/agent-guides/workflow.zh.md`
+13. `docs/agent-guides/boundaries.zh.md`
+
+如果请求是自主验证、Agent 验证或人工验证，还必须读取：
+
+14. active milestone 的 `validation.zh.md`
+15. `docs/agent-guides/validation-workflow.zh.md`
+16. active milestone 的 `autonomous-validation-runbook.zh.md`，如果该文件存在
+17. active milestone 的 `codex-run-report-template.zh.md`，如果该文件存在
+18. active milestone 的 `agent-review-template.zh.md`，如果该文件存在
+19. active milestone 的 `human-validation-template.zh.md`，如果该文件存在
+
+如果请求是后续聊天交接、下一步、handoff、quickstart 或复制 `/goal` prompt，
+还必须读取：
+
+20. active milestone 的 `planning-readiness-checklist.zh.md`，如果该文件存在
+21. active milestone 的 `next-chat-quickstart.zh.md`，如果该文件存在
 
 v0.1 的 active milestone 是：
 
@@ -47,6 +65,8 @@ docs/milestones/v0.1-foundation/
 | 审核 / review / 检查 vX.Y | 匹配 milestone 加当前 git diff | `docs/agent-guides/workflow.zh.md` |
 | 修改技术栈或架构决策 | `docs/adr/` | `docs/agent-guides/workflow.zh.md` |
 | 修改产品边界或总体设计 | `docs/specs/validation-client-design.zh.md` | `docs/agent-guides/boundaries.zh.md` |
+| 自主验证 / Agent 验证 vX.Y | 匹配 milestone 加 `validation.zh.md` | `docs/agent-guides/validation-workflow.zh.md` |
+| 人工验证 vX.Y | 匹配 milestone、最近 Codex run 和 `validation.zh.md` | `docs/agent-guides/validation-workflow.zh.md` |
 
 触发词只负责路由。它不授权跳过 milestone 文档、任务顺序、验证、review 记录
 或 task 级提交。
@@ -72,5 +92,5 @@ docs/milestones/v0.1-foundation/
 
 验证客户端不得管理 LLM key、直接调用 LLM provider、生成权威世界事实、导入
 WorldEngine 源码或修改 Agent 内部状态。Timeline branch 按代码分支建模：
-可重建 tick 或 event point 是 commit point；branch 是命名世界线，不得表达
-父子所有关系。
+可重建 tick 或 event point 是 commit point；branch 是命名世界线，只表达命名、
+切换、回放和继续推进。

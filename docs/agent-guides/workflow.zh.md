@@ -5,6 +5,9 @@
 这个工作流是强约束。它用于防止 agent 把整个 milestone 一次性做成不可审查的
 大批量改动。
 
+验证请求路由到 `validation-workflow.zh.md`。不得用实现 task loop 代替自主验
+证、Agent 复核或人工验证交接。
+
 ## 强执行规则
 
 1. 严格按 `plan.zh.md` 的 task 顺序执行 milestone 工作。

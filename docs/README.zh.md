@@ -37,6 +37,39 @@ docs/
       README.zh.md
       plan.zh.md
       review.zh.md
+    v0.7-agent-autonomous-validation/
+      README.zh.md
+      plan.zh.md
+      implementation-task-plan.zh.md
+      implementation-task-plan.md
+      codex-autonomous-validation-master-plan.zh.md
+      codex-autonomous-validation-master-plan.md
+      handoff-prompts.zh.md
+      handoff-prompts.md
+      codex-run-report-template.zh.md
+      codex-run-report-template.md
+      agent-review-template.zh.md
+      agent-review-template.md
+      human-validation-template.zh.md
+      human-validation-template.md
+      autonomous-validation-runbook.zh.md
+      autonomous-validation-runbook.md
+      cross-repo-validation-gate-matrix.zh.md
+      cross-repo-validation-gate-matrix.md
+      planning-readiness-checklist.zh.md
+      planning-readiness-checklist.md
+      handoff-status.zh.md
+      handoff-status.md
+      next-chat-quickstart.zh.md
+      next-chat-quickstart.md
+      review.zh.md
+      validation.zh.md
+      validation-runs/
+  agent-guides/
+    routing.zh.md
+    workflow.zh.md
+    boundaries.zh.md
+    validation-workflow.zh.md
   adr/
     0001-tech-stack.zh.md
 ```
@@ -47,7 +80,27 @@ docs/
 
 - `README.zh.md`：目标、范围、状态和入口。
 - `plan.zh.md`：实现计划、步骤和验证方式。
+- `implementation-task-plan.zh.md`：当 milestone 需要交给后续开发聊天时，记录
+  更细的 task-by-task 实施计划、文件责任、验证命令和 stop rules。
 - `review.zh.md`：实现后记录变更、命令、结果和遗留问题。
+- `validation.zh.md`：当 milestone 涉及验证行为或验证结论时，记录 Codex 自主
+  验证、Agent 复核和人工验证交接方案。
+- `codex-autonomous-validation-master-plan.zh.md`：当 milestone 要交接到 Codex
+  自主验证和人工验证时，记录跨 WorldEngine / Validation Client / Agent / 人类
+  的完整阶段计划。
+- `handoff-prompts.zh.md`：记录后续 WorldEngine 开发、Validation Client 开发、
+  Codex 自主验证、第二 Agent 复核和人工验证聊天可直接使用的 `/goal` prompts。
+- `codex-run-report-template.zh.md`、`agent-review-template.zh.md`、
+  `human-validation-template.zh.md`：固定三类验证报告的输入、检查项和结论枚举。
+- `autonomous-validation-runbook.zh.md`：记录真实 Codex 自主验证运行当天的执行
+  顺序、命令、浏览器 flow、证据落盘和 stop rules。
+- `cross-repo-validation-gate-matrix.zh.md`：记录 WorldEngine、Validation
+  Client、Codex、第二 Agent 和人工验证之间的不可跳关门禁、证据和结论枚举。
+- `planning-readiness-checklist.zh.md`：记录当前计划是否已经可交给后续聊天执行、
+  当前唯一允许的下一步和未完成项。
+- `handoff-status.zh.md`：记录单页当前状态、blocker、当前 gate 和唯一允许的下一步。
+- `next-chat-quickstart.zh.md`：记录后续聊天可直接复制使用的分阶段 `/goal`
+  prompts。
 
 高风险设计或长期技术选择使用 `docs/adr/` 记录。
 
@@ -65,6 +118,9 @@ docs/
 开发 v0.4
 开发 v0.5
 开发 v0.6
+开发 v0.7
+自主验证 v0.7
+人工验证 v0.7
 ```
 
 Agent 应先读取对应 milestone：
@@ -79,6 +135,21 @@ docs/milestones/v0.1-foundation/review.zh.md
 `docs/agent-guides/workflow.md` 的逐 task 流程进入实现。
 
 然后按计划实现、验证并更新 `review.zh.md`。
+
+验证请求走 `docs/agent-guides/validation-workflow.zh.md`。Codex / Agent 自主验证
+只能证明客户端、证据和边界足以进入人工验证；人工验证负责判断世界可观察性、
+Agent 自然性、导演边界和体验可信度。
+
+v0.7 之后的完整自主验证计划入口：
+
+```text
+docs/milestones/v0.7-agent-autonomous-validation/codex-autonomous-validation-master-plan.zh.md
+docs/milestones/v0.7-agent-autonomous-validation/cross-repo-validation-gate-matrix.zh.md
+docs/milestones/v0.7-agent-autonomous-validation/planning-readiness-checklist.zh.md
+docs/milestones/v0.7-agent-autonomous-validation/handoff-status.zh.md
+docs/milestones/v0.7-agent-autonomous-validation/implementation-task-plan.zh.md
+docs/milestones/v0.7-agent-autonomous-validation/handoff-prompts.zh.md
+```
 
 ## 流程原则
 

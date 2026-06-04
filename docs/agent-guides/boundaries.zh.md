@@ -59,5 +59,5 @@ Timeline branches 按代码分支建模。
 - 可重建 tick 或 event point 是 `commit point`。
 - branch 是命名世界线。
 - branch 可以从选定 commit point 继续推进。
-- branch 不表达父子所有关系。
-- 不得在数据模型或文档中引入 `parent timeline`、`child timeline` 或层级语义。
+- branch 语义只包含命名、切换、回放和继续推进。
+- 数据模型和文档保持这种直接语义。

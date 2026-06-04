@@ -60,6 +60,6 @@ Timeline branches are modeled like code branches.
 - A reconstructable tick or event point is a `commit point`.
 - A branch is a named world line.
 - A branch can continue from a selected commit point.
-- Branches do not imply parent-child ownership.
-- Do not introduce `parent timeline`, `child timeline`, or hierarchy language
-  into the data model or documentation.
+- Branch semantics are limited to naming, switching, replay, and continued
+  progression.
+- Keep data model and documentation language aligned with that direct meaning.

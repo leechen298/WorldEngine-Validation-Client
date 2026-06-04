@@ -5,6 +5,10 @@ Chinese mirror: `workflow.zh.md`.
 This workflow is strict. It exists to prevent agents from completing an entire
 milestone as one unreviewable batch.
 
+Validation requests are routed through `validation-workflow.md`. Do not use the
+implementation task loop as a substitute for autonomous validation, Agent
+review, or human validation handoff.
+
 ## Hard Execution Rules
 
 1. Execute milestone work strictly in `plan.zh.md` task order.

@@ -84,3 +84,26 @@
 - replay index。
 - 脱敏 API trace。
 - WorldEngine 公开 evaluator 输出。
+
+## v0.7 Agent Autonomous Validation
+
+目标：建立 Codex / Agent 自主验证、Agent 复核和人工验证交接流程。
+
+范围：
+
+- 基础 E2E / UI smoke 验证。
+- Agent 以人的视角操作客户端。
+- 细粒度操作日志，记录点击、输入、API 请求、响应摘要、截图和下载文件。
+- 另一个 Agent 对上一轮操作日志、截图和 evidence bundle 做只读复核。
+- 人工验证交接清单。
+- WorldEngine LLM provider 前置评估边界。
+
+非目标：
+
+- 客户端管理 LLM key。
+- 客户端直接调用 LLM provider。
+- 客户端生成权威 evaluator 结论。
+- 人工体验判断自动化。
+
+v0.7 的 Codex / Agent PASS 只表示“可以进入人工验证”，不表示世界体验或 Agent
+自然性已经通过。

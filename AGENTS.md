@@ -27,11 +27,30 @@ Before planning, implementing, reviewing, or completing milestone work, read:
 3. `docs/specs/validation-client-design.zh.md`
 4. the active milestone `README.zh.md`
 5. the active milestone `plan.zh.md`
-6. the active milestone `review.zh.md`
-7. relevant ADRs under `docs/adr/`
-8. `docs/agent-guides/routing.md`
-9. `docs/agent-guides/workflow.md`
-10. `docs/agent-guides/boundaries.md`
+6. the active milestone `implementation-task-plan.zh.md`, if that file exists
+7. the active milestone `cross-repo-validation-gate-matrix.zh.md`, if that file exists
+8. the active milestone `planning-readiness-checklist.zh.md`, if that file exists
+9. the active milestone `review.zh.md`
+10. relevant ADRs under `docs/adr/`
+11. `docs/agent-guides/routing.md`
+12. `docs/agent-guides/workflow.md`
+13. `docs/agent-guides/boundaries.md`
+
+For validation requests such as autonomous validation, Agent validation, or
+human validation, also read:
+
+14. the active milestone `validation.zh.md`
+15. `docs/agent-guides/validation-workflow.md`
+16. the active milestone `autonomous-validation-runbook.zh.md`, if it exists
+17. the active milestone `codex-run-report-template.zh.md`, if it exists
+18. the active milestone `agent-review-template.zh.md`, if it exists
+19. the active milestone `human-validation-template.zh.md`, if it exists
+
+For next-chat handoff, next-step, handoff, quickstart, or copy-ready `/goal`
+prompt requests, also read:
+
+20. the active milestone `planning-readiness-checklist.zh.md`, if it exists
+21. the active milestone `next-chat-quickstart.zh.md`, if it exists
 
 For v0.1, the active milestone is:
 
@@ -48,6 +67,8 @@ docs/milestones/v0.1-foundation/
 | review / audit / inspect vX.Y | matching milestone plus current git diff | `docs/agent-guides/workflow.md` |
 | change tech stack or architecture decision | `docs/adr/` | `docs/agent-guides/workflow.md` |
 | change product boundary or overall design | `docs/specs/validation-client-design.zh.md` | `docs/agent-guides/boundaries.md` |
+| autonomous / Agent validation vX.Y | matching milestone plus `validation.zh.md` | `docs/agent-guides/validation-workflow.md` |
+| human validation vX.Y | matching milestone, latest Codex run, and `validation.zh.md` | `docs/agent-guides/validation-workflow.md` |
 
 A trigger phrase is routing only. It does not authorize skipping milestone
 documents, task order, verification, review records, or task-level commits.
@@ -78,4 +99,4 @@ The validation client must not manage LLM keys, call LLM providers directly,
 generate authoritative world facts, import WorldEngine source code, or mutate
 Agent internal state. Timeline branches are modeled like code branches:
 reconstructable ticks or event points are commit points; branches are named
-world lines and must not imply parent-child ownership.
+world lines for naming, switching, replay, and continued progression.

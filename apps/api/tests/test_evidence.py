@@ -139,6 +139,65 @@ def test_evidence_bundle_manifest_preserves_blocked_status_for_missing_required_
     assert all(status in {"blocked", "not_run", "pass"} for status in [item["status"] for item in manifest["artifact_index"]])
 
 
+def test_evidence_bundle_named_artifacts_expose_blocked_provider_and_redaction_scan(client):
+    session = client.post("/sessions", json={"session_name": "Named Artifacts"}).json()
+
+    response = client.get(
+        f"/sessions/{session['id']}/evidence/bundle/artifacts",
+        params={"scenario": "provider-live-smoke-deepseek"},
+    )
+
+    assert response.status_code == 200
+    artifacts = response.json()
+    assert artifacts["result.json"]["status"] == "blocked"
+    assert artifacts["result.json"]["client_role"] == "display_export_only"
+    assert artifacts["provider-live-summary.json"] == {
+        "schema_version": "0.8.0",
+        "scenario": "provider-live-smoke-deepseek",
+        "status": "blocked",
+        "source": "worldengine_public_endpoint",
+        "worldengine_owned_call": True,
+        "call_attempted": False,
+        "public_failure_category": "required artifact provider-live-summary.json is not generated",
+        "redaction": {"status": "pass", "blocking_flags": []},
+        "evidence_refs": [],
+        "failures": ["required artifact provider-live-summary.json is not generated"],
+    }
+    assert artifacts["redaction-scan.json"]["status"] == "pass"
+    assert artifacts["redaction-scan.json"]["blocking_flags"] == []
+    assert "provider_secret" not in str(artifacts)
+    assert "api_key" not in str(artifacts)
+
+
+def test_evidence_bundle_named_artifacts_fail_when_redaction_flags_block(client):
+    session = client.post("/sessions", json={"session_name": "Leaky Artifacts"}).json()
+    session_id = session["id"]
+
+    SessionLocal = app_db.get_sessionmaker()
+    with SessionLocal() as db:
+        db.add(
+            ApiTrace(
+                session_id=session_id,
+                method="POST",
+                url_path="/worlds",
+                status_code=200,
+                request_summary_json='{"world_prompt_length": 20}',
+                response_summary_json='{"world_id": "world-1"}',
+                llm_keys_included=True,
+                private_worldengine_internals_included=False,
+            )
+        )
+        db.commit()
+
+    response = client.get(f"/sessions/{session_id}/evidence/bundle/artifacts")
+
+    assert response.status_code == 200
+    artifacts = response.json()
+    assert artifacts["result.json"]["status"] == "fail"
+    assert artifacts["redaction-scan.json"]["status"] == "fail"
+    assert artifacts["redaction-scan.json"]["blocking_flags"] == ["llm_keys_included"]
+
+
 def test_evidence_bundle_manifest_aggregates_api_trace_redaction_flags(client):
     session = client.post("/sessions", json={"session_name": "Dirty Trace Session"}).json()
     session_id = session["id"]

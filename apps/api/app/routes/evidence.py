@@ -377,6 +377,196 @@ def _result_status(*, redaction_status: dict[str, Any], unsupported_items: list[
     return "pass"
 
 
+def _unsupported_for_artifact(name: str, unsupported_items: list[str]) -> list[str]:
+    return [item for item in unsupported_items if f" {name} " in f" {item} "]
+
+
+def _summary_artifact(
+    *,
+    name: str,
+    scenario: str,
+    source: str,
+    status_value: str,
+    redaction_status: dict[str, Any],
+    unsupported_items: list[str],
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    failures = _unsupported_for_artifact(name, unsupported_items)
+    payload = {
+        "schema_version": "0.8.0",
+        "scenario": scenario,
+        "status": status_value,
+        "source": source,
+        "redaction": redaction_status,
+        "evidence_refs": [],
+        "failures": failures,
+    }
+    if extra:
+        payload.update(extra)
+    return payload
+
+
+def _build_named_artifacts(bundle: EvidenceBundleResponse) -> dict[str, Any]:
+    manifest = bundle.manifest
+    artifact_status = {item["name"]: item["status"] for item in manifest.artifact_index}
+    unsupported_items = manifest.unsupported_items
+    redaction_status = manifest.redaction_status
+    scenario = manifest.scenario
+    counts = manifest.counts
+
+    artifacts: dict[str, Any] = {
+        "manifest.json": manifest.model_dump(mode="json"),
+        "result.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": manifest.result_status,
+            "client_role": manifest.client_role,
+            "provider_owner": manifest.provider_owner,
+            "evaluator_role": manifest.evaluator_role,
+            "unsupported_items": unsupported_items,
+            "checker_contract": manifest.checker_contract,
+            "redaction": redaction_status,
+        },
+        "operation-log.jsonl": bundle.records.operation_log_entries,
+        "api-log.jsonl": bundle.records.api_traces,
+        "api-summary.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": artifact_status.get("api-summary.json", "not_run"),
+            "api_trace_count": counts.api_traces,
+            "redaction": redaction_status,
+        },
+        "provider-live-summary.json": _summary_artifact(
+            name="provider-live-summary.json",
+            scenario=scenario,
+            source="worldengine_public_endpoint",
+            status_value=artifact_status.get("provider-live-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+            extra={
+                "worldengine_owned_call": True,
+                "call_attempted": False,
+                "public_failure_category": (
+                    _unsupported_for_artifact("provider-live-summary.json", unsupported_items) or [None]
+                )[0],
+            },
+        ),
+        "world-creation-summary.json": _summary_artifact(
+            name="world-creation-summary.json",
+            scenario=scenario,
+            source="worldengine_public_evidence",
+            status_value=artifact_status.get("world-creation-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "world-rule-summary.json": _summary_artifact(
+            name="world-rule-summary.json",
+            scenario=scenario,
+            source="worldengine_public_evidence",
+            status_value=artifact_status.get("world-rule-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "rule-parameter-summary.json": _summary_artifact(
+            name="rule-parameter-summary.json",
+            scenario=scenario,
+            source="worldengine_public_evidence",
+            status_value=artifact_status.get("rule-parameter-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "event-legality-summary.json": _summary_artifact(
+            name="event-legality-summary.json",
+            scenario=scenario,
+            source="worldengine_public_evidence",
+            status_value=artifact_status.get("event-legality-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "agent-autonomy-summary.json": _summary_artifact(
+            name="agent-autonomy-summary.json",
+            scenario=scenario,
+            source="worldengine_public_evidence",
+            status_value=artifact_status.get("agent-autonomy-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "diff-replay-summary.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": artifact_status.get("diff-replay-summary.json", "not_run"),
+            "source": "validation_client",
+            "events_ref": "records.events",
+            "snapshots_ref": "records.snapshots",
+            "diffs_ref": "records.state_diffs",
+            "replay_supported": counts.commit_points > 0,
+            "state_jump_targets": [item["commit_point_id"] for item in bundle.records.replay_index],
+            "missing_replay_links": [],
+            "redaction": redaction_status,
+        },
+        "world-lifecycle-summary.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": artifact_status.get("world-lifecycle-summary.json", "not_run"),
+            "source": "validation_client",
+            "session_id": manifest.session_id,
+            "worldengine_world_id": manifest.worldengine_world_id,
+            "world_status": manifest.world_status,
+            "counts": counts.model_dump(mode="json"),
+            "redaction": redaction_status,
+        },
+        "narrative-projection-summary.json": _summary_artifact(
+            name="narrative-projection-summary.json",
+            scenario=scenario,
+            source="worldengine_public_projection",
+            status_value=artifact_status.get("narrative-projection-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "diagnostic-conversation-summary.json": _summary_artifact(
+            name="diagnostic-conversation-summary.json",
+            scenario=scenario,
+            source="worldengine_public_projection",
+            status_value=artifact_status.get("diagnostic-conversation-summary.json", "not_run"),
+            redaction_status=redaction_status,
+            unsupported_items=unsupported_items,
+        ),
+        "redaction-scan.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": redaction_status["status"],
+            "blocking_flags": redaction_status["blocking_flags"],
+        },
+        "scorecard-summary.json": {
+            "schema_version": "0.8.0",
+            "scenario": scenario,
+            "status": artifact_status.get("scorecard-summary.json", "not_run"),
+            "verdict_source": "worldengine_checker",
+            "score_items": [],
+            "critical_failures": unsupported_items if manifest.result_status != "pass" else [],
+            "unverified_items": unsupported_items,
+            "final_status": manifest.result_status,
+        },
+        "second-agent-review.md": {
+            "status": artifact_status.get("second-agent-review.md", "not_run"),
+            "summary": "Second-Agent review has not run in this bundle.",
+        },
+        "transcript.md": {
+            "status": artifact_status.get("transcript.md", "not_run"),
+            "summary": "Transcript has not been generated.",
+        },
+        "console.log": {
+            "status": artifact_status.get("console.log", "not_run"),
+            "summary": "Console log has not been generated.",
+        },
+        "screenshots/": {
+            "status": artifact_status.get("screenshots/", "not_run"),
+            "summary": "Screenshots have not been generated.",
+        },
+    }
+    return artifacts
+
+
 def _bundle_records(session_id: str, db: Session) -> tuple[EvidenceBundleRecords, EvidenceBundleRedactionFlags, list[str]]:
     warnings: list[str] = ["public evaluator outputs unavailable"]
     found_sensitive_payload = False
@@ -647,6 +837,16 @@ def get_bundle_manifest(
     db: Session = Depends(get_db),
 ):
     return _build_bundle_response(session_id, db, scenario=scenario)
+
+
+@router.get("/bundle/artifacts")
+def get_bundle_artifacts(
+    session_id: str,
+    scenario: str = "worldengine-full-lifecycle-autonomous",
+    db: Session = Depends(get_db),
+):
+    bundle = _build_bundle_response(session_id, db, scenario=scenario)
+    return JSONResponse(content=_build_named_artifacts(bundle), media_type="application/json")
 
 
 def _build_bundle_response(

@@ -98,4 +98,32 @@ Task 2 已通过 focused verification 并已提交。
 
 ## 当前实现结论
 
-Task 3 已通过 focused verification，等待提交。
+Task 3 已通过 focused verification 并已提交。
+
+### Task 4: Named artifact builders 和 redaction scan
+
+- Commit: pending
+- Files:
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/tests/test_evidence.py`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
+- Implementation:
+  - 新增 `GET /sessions/{session_id}/evidence/bundle/artifacts`。
+  - 输出 v0.9 named artifacts：`manifest.json`、`result.json`、`operation-log.jsonl`、`api-log.jsonl`、`api-summary.json`、provider/world/rule/event/Agent/replay/lifecycle/narrative/diagnostic summaries、`redaction-scan.json`、`scorecard-summary.json`、second-Agent/transcript/console/screenshots 占位状态。
+  - `provider-live-summary.json` 在缺少 WorldEngine provider live evidence 时保留 `blocked`，并记录 public failure category。
+  - `redaction-scan.json` 根据 bundle redaction flags 输出 `pass` 或 `fail`，blocking flags 不清空也不改写。
+  - `result.json` 继承 manifest result status；redaction blocking leak 会使 result 变为 `fail`。
+- Commands:
+  - RED: `cd apps/api && uv run pytest tests/test_evidence.py -q`: 失败，2 failed，`/bundle/artifacts` 返回 404。
+  - GREEN: `cd apps/api && uv run pytest tests/test_evidence.py tests/test_validation_runs.py -q`: 16 passed, 1 warning。
+  - `git diff --check`: 通过，exit 0，无输出。
+- Scope review:
+  - Artifact builders 只打包当前客户端公开/脱敏证据，不调用 provider，不创建 WorldEngine 权威证据。
+  - Direct API 证据输出为 `api-log.jsonl`，用户可见操作仍为 `operation-log.jsonl`。
+  - `blocked`、`not_run`、`fail` 被保留，不升级为 PASS。
+- Notes:
+  - GREEN 测试 warning 为既有 `StarletteDeprecationWarning`。
+
+## 当前实现结论
+
+Task 4 已通过 focused verification，等待提交。

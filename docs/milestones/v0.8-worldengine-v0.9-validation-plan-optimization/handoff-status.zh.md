@@ -10,6 +10,7 @@ Owner：Validation Client
 
 当前 blocker：当前环境中 WorldEngine public surface 不可达；`/health/worldengine`
 返回 `reachable=false`、`world_creation=unknown`、`v0_9_validation=not_run`。
+当前 E2E 可在该情况下生成结构化 `checker-handoff/`，结论为 `blocked`。
 
 唯一允许下一步：启动或接入可达的 WorldEngine v0.9 public endpoint 后，重新运行
 `pnpm --dir apps/web test:e2e`，生成完整 `checker-handoff/`，再按 WorldEngine

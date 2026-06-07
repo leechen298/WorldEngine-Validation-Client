@@ -215,6 +215,11 @@ export interface EvidenceBundleDownload {
   bundle: EvidenceBundleResponse;
 }
 
+export interface EvidenceArtifactsDownload {
+  filename: string;
+  artifacts: Record<string, unknown>;
+}
+
 export interface CreateSessionRequest {
   session_name: string;
 }

@@ -8,9 +8,16 @@ interface RuntimeConsoleProps {
   onBack: () => void;
 }
 
+const EVIDENCE_SCENARIOS = [
+  "worldengine-full-lifecycle-autonomous",
+  "provider-live-smoke-deepseek",
+  "llm-backed-full-lifecycle-autonomous",
+];
+
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
   const [runTickBudget, setRunTickBudget] = useState(5);
+  const [selectedEvidenceScenario, setSelectedEvidenceScenario] = useState(EVIDENCE_SCENARIOS[0]);
   const {
     error,
     commitPointsBySession = {},
@@ -19,6 +26,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     directorIntentErrorBySession = {},
     directorIntentSubmittingBySession = {},
     directorIntentsBySession = {},
+    downloadEvidenceArtifacts = async () => null,
     downloadEvidenceBundle = async () => null,
     evidenceBundleBySession = {},
     evidenceBundleErrorBySession = {},
@@ -83,7 +91,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     !evidenceRedactionFlags.private_worldengine_internals_included;
   const evidenceRedactionStatus = evidenceBundle?.manifest.redaction_status?.status || (evidenceClean ? "pass" : "fail");
   const evidenceResultStatus = evidenceBundle?.manifest.result_status || "unknown";
-  const evidenceScenario = evidenceBundle?.manifest.scenario || "worldengine-full-lifecycle-autonomous";
+  const manifestEvidenceScenario = evidenceBundle?.manifest.scenario || selectedEvidenceScenario;
   const [lastEvidenceDownload, setLastEvidenceDownload] = useState("");
 
   useEffect(() => {
@@ -110,8 +118,8 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   }, [loadDirectorIntents, sessionId]);
 
   useEffect(() => {
-    loadEvidenceBundle(sessionId);
-  }, [loadEvidenceBundle, sessionId]);
+    loadEvidenceBundle(sessionId, selectedEvidenceScenario);
+  }, [loadEvidenceBundle, selectedEvidenceScenario, sessionId]);
 
   const submitDirectorCommand = async (event: FormEvent) => {
     event.preventDefault();
@@ -183,11 +191,26 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   };
 
   const downloadLocalEvidenceBundle = async () => {
-    const download = await downloadEvidenceBundle(sessionId);
+    const download = await downloadEvidenceBundle(sessionId, selectedEvidenceScenario);
     if (!download) {
       return;
     }
     const blob = new Blob([JSON.stringify(download.bundle, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = download.filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setLastEvidenceDownload(download.filename);
+  };
+
+  const downloadCheckerHandoff = async () => {
+    const download = await downloadEvidenceArtifacts(sessionId, selectedEvidenceScenario);
+    if (!download) {
+      return;
+    }
+    const blob = new Blob([JSON.stringify(download.artifacts, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -379,6 +402,18 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           </section>
           <section className="page-card evidence-panel">
             <h3>本地会话证据包</h3>
+            <label htmlFor="evidence-scenario">验证场景</label>
+            <select
+              id="evidence-scenario"
+              onChange={(event) => setSelectedEvidenceScenario(event.target.value)}
+              value={selectedEvidenceScenario}
+            >
+              {EVIDENCE_SCENARIOS.map((scenario) => (
+                <option key={scenario} value={scenario}>
+                  {scenario}
+                </option>
+              ))}
+            </select>
             {evidenceBundle ? (
               <>
                 <div className="evidence-counts">
@@ -389,7 +424,7 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
                   <span>api traces：{evidenceCounts?.api_traces ?? 0}</span>
                 </div>
                 <p>脱敏状态：{evidenceClean ? "clean" : "flagged"}</p>
-                <p>v0.8 scenario：{evidenceScenario}</p>
+                <p>v0.8 scenario：{manifestEvidenceScenario}</p>
                 <p>结果状态：{evidenceResultStatus}</p>
                 <p>Redaction scan：{evidenceRedactionStatus}</p>
                 <p>Scorecard：{scorecardArtifact?.status || "not_run"}</p>
@@ -417,6 +452,9 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
             )}
             <button disabled={evidenceBundleLoading} onClick={downloadLocalEvidenceBundle} type="button">
               下载 evidence bundle
+            </button>
+            <button disabled={evidenceBundleLoading} onClick={downloadCheckerHandoff} type="button">
+              下载 checker handoff
             </button>
             {lastEvidenceDownload ? <p>已下载：{lastEvidenceDownload}</p> : null}
           </section>

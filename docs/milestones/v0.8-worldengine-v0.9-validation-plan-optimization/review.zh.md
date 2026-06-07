@@ -193,7 +193,7 @@ Task 6 已实现 E2E/handoff readiness，但当前环境缺少可达 WorldEngine
 
 ### Task 7: 总体验证和 review 收口
 
-- Commit: pending
+- Commit: `47050bb`
 - Files:
   - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
   - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.md`
@@ -219,3 +219,34 @@ Task 6 已实现 E2E/handoff readiness，但当前环境缺少可达 WorldEngine
 ## 当前实现结论
 
 v0.8 implementation package 已完成并通过客户端侧 broad validation；下一关需要可达 WorldEngine v0.9 public surface 后重新运行 E2E/checker handoff。
+
+### Code Review Remediation: scenario propagation, blocked handoff, and redaction
+
+- Commit: pending
+- Findings addressed:
+  - P1 scenario 未贯穿 UI/manifest/download。
+  - P1 WorldEngine 不可达时 E2E 只失败，没有干净 `BLOCKED` handoff。
+  - P2 UI 用户路径缺少 named artifact handoff 下载。
+  - P2 本地 summary artifact status 过早 `pass`。
+  - P2 `api-summary` 缺少二次脱敏。
+- Implementation:
+  - `scenario` 参数贯穿 `getEvidenceBundleManifest`、`downloadEvidenceBundle`、`downloadEvidenceArtifacts`、Runtime Console 选择器、E2E manifest/download/artifacts。
+  - 新增 `/sessions/{session_id}/evidence/bundle/artifacts/download`，UI 增加 `下载 checker handoff`。
+  - E2E 在 WorldEngine public surface 不可达时写入 `checker-handoff/manifest.json`、`result.json`、`redaction-scan.json`、`scorecard-summary.json`、`api-summary.json`、`operation-log.jsonl` 和 `worldengine-health.json`，并以 `blocked` 退出成功。
+  - `world-lifecycle-summary.json` 与 `diff-replay-summary.json` 改为需要更完整的本地证据组合才可 `pass`；partial local records 保持 `blocked`。
+  - `/validation-runs/{run_id}/api-summary` 对 path 和 `public_summary` 复用 evidence sanitizer。
+- Commands:
+  - RED: `cd apps/api && uv run pytest tests/test_evidence.py tests/test_validation_runs.py -q`：4 failed，覆盖 scenario download、artifacts download、local summary status、api-summary redaction。
+  - RED: `pnpm --dir apps/web test src/__tests__/RuntimeConsole.test.tsx`：1 failed，缺少 `验证场景` 和 handoff 下载路径。
+  - GREEN: `cd apps/api && uv run pytest tests/test_evidence.py tests/test_validation_runs.py -q`：20 passed, 1 warning。
+  - GREEN: `pnpm --dir apps/web test src/__tests__/RuntimeConsole.test.tsx`：22 passed；仍有既有 React `act(...)` warning。
+  - `pnpm --dir apps/web test:e2e`（非沙箱）：1 passed，WorldEngine 不可达被导出为结构化 `BLOCKED` handoff。
+  - `pnpm --dir apps/web test`：2 test files passed, 27 tests passed；仍有既有 React `act(...)` warning。
+  - `pnpm --dir apps/web build`：通过。
+  - `cd apps/api && uv run pytest -q`：61 passed, 1 warning。
+  - `pnpm run test`：web 27 passed，API 61 passed, 1 warning。
+  - `pnpm run build`：通过。
+  - `git diff --check`：通过，exit 0，无输出。
+- Scope review:
+  - 仍不调用 provider，不读 WorldEngine 私有源码，不生成 PASS。
+  - 当前 WorldEngine gate 仍是 `BLOCKED_ON_WORLDENGINE_REACHABILITY`，但 blocked handoff 现在是结构化产物而不是 Playwright failure。

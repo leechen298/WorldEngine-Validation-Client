@@ -1,5 +1,5 @@
 from app import db as app_db
-from app.models import ApiTrace, DirectorIntent, Event, Snapshot, StateDiff
+from app.models import ApiTrace, CommitPoint, DirectorIntent, Event, Snapshot, StateDiff
 
 
 def test_bundle_metadata_counts_commit_points_and_branches(client):
@@ -167,6 +167,65 @@ def test_evidence_bundle_named_artifacts_expose_blocked_provider_and_redaction_s
     assert artifacts["redaction-scan.json"]["blocking_flags"] == []
     assert "provider_secret" not in str(artifacts)
     assert "api_key" not in str(artifacts)
+
+
+def test_evidence_bundle_download_preserves_requested_scenario(client):
+    session = client.post("/sessions", json={"session_name": "Scenario Download"}).json()
+
+    response = client.get(
+        f"/sessions/{session['id']}/evidence/bundle/download",
+        params={"scenario": "provider-live-smoke-deepseek"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["manifest"]["scenario"] == "provider-live-smoke-deepseek"
+    assert payload["manifest"]["result_status"] == "blocked"
+
+
+def test_evidence_bundle_named_artifact_download_preserves_requested_scenario(client):
+    session = client.post("/sessions", json={"session_name": "Named Download"}).json()
+
+    response = client.get(
+        f"/sessions/{session['id']}/evidence/bundle/artifacts/download",
+        params={"scenario": "provider-live-smoke-deepseek"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["manifest.json"]["scenario"] == "provider-live-smoke-deepseek"
+    assert payload["result.json"]["scenario"] == "provider-live-smoke-deepseek"
+    assert payload["provider-live-summary.json"]["status"] == "blocked"
+
+
+def test_evidence_bundle_required_local_summaries_do_not_pass_from_partial_local_records(client):
+    session = client.post("/sessions", json={"session_name": "Partial Local Records"}).json()
+    session_id = session["id"]
+
+    SessionLocal = app_db.get_sessionmaker()
+    with SessionLocal() as db:
+        db.add(
+            ApiTrace(
+                session_id=session_id,
+                method="POST",
+                url_path="/worlds",
+                status_code=200,
+                request_summary_json='{"world_prompt_length": 20}',
+                response_summary_json='{"world_id": "world-1"}',
+            )
+        )
+        db.add(CommitPoint(session_id=session_id, tick=0, payload_json='{"source": "local"}'))
+        db.commit()
+
+    response = client.get(
+        f"/sessions/{session_id}/evidence/bundle/manifest",
+        params={"scenario": "worldengine-full-lifecycle-autonomous"},
+    )
+
+    assert response.status_code == 200
+    artifacts = {item["name"]: item for item in response.json()["manifest"]["artifact_index"]}
+    assert artifacts["world-lifecycle-summary.json"]["status"] == "blocked"
+    assert artifacts["diff-replay-summary.json"]["status"] == "blocked"
 
 
 def test_evidence_bundle_named_artifacts_fail_when_redaction_flags_block(client):

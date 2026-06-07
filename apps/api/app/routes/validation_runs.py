@@ -17,6 +17,7 @@ from ..schemas import (
     ValidationRunCreatePayload,
     ValidationRunResponse,
 )
+from .evidence import _sanitize_payload
 
 router = APIRouter(prefix="/validation-runs", tags=["validation-runs"])
 
@@ -50,6 +51,11 @@ def _json_or_empty(raw_value: str | None) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def _sanitize_summary(value: Any) -> Any:
+    sanitized, _found_sensitive, _found_llm_key = _sanitize_payload(value)
+    return sanitized
 
 
 def _contains_forbidden(value: Any) -> bool:
@@ -218,9 +224,9 @@ def get_api_summary(run_id: str, db: Session = Depends(get_db)):
     api_calls = [
         ApiSummaryItem(
             method=trace.method,
-            path=trace.url_path,
+            path=_sanitize_summary(trace.url_path),
             status=trace.status_code,
-            public_summary=_json_or_empty(trace.response_summary_json),
+            public_summary=_sanitize_summary(_json_or_empty(trace.response_summary_json)),
             error_class=trace.error_message.split(":", 1)[0] if trace.error_message else None,
         )
         for trace in traces

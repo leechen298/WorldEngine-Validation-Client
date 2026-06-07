@@ -4,6 +4,7 @@ import {
   appendOperationLog,
   createDirectorIntent,
   createValidationRun,
+  downloadEvidenceArtifacts,
   downloadEvidenceBundle,
   getEvidenceBundleManifest,
   getCommitPoints,
@@ -49,11 +50,14 @@ vi.mock("../api/client", () => ({
     created_at: "2026-06-04T00:00:00Z",
     updated_at: "2026-06-04T00:00:00Z",
   }),
+  downloadEvidenceArtifacts: vi.fn(),
   downloadEvidenceBundle: vi.fn(),
+  getBranches: vi.fn().mockResolvedValue({ session_id: "session-id", branches: [] }),
   getEvidenceBundleManifest: vi.fn(),
   getCommitPoints: vi.fn().mockResolvedValue([]),
   getDirectorIntents: vi.fn().mockResolvedValue({ session_id: "session-id", director_intents: [] }),
   getReplayView: vi.fn().mockResolvedValue(null),
+  getRuntimeView: vi.fn().mockResolvedValue(null),
   getSessionEvents: vi.fn().mockResolvedValue([]),
 }));
 
@@ -201,6 +205,14 @@ describe("RuntimeConsole", () => {
           evaluator_outputs: [],
           replay_index: [],
         },
+      },
+    });
+    vi.mocked(downloadEvidenceArtifacts).mockClear();
+    vi.mocked(downloadEvidenceArtifacts).mockResolvedValue({
+      filename: "evidence-artifacts-session-id-provider-live-smoke-deepseek-2026-06-04.json",
+      artifacts: {
+        "manifest.json": { scenario: "provider-live-smoke-deepseek", result_status: "blocked" },
+        "result.json": { scenario: "provider-live-smoke-deepseek", status: "blocked" },
       },
     });
     vi.mocked(getDirectorIntents).mockClear();
@@ -1051,7 +1063,7 @@ describe("RuntimeConsole", () => {
 
     const bundle = await useSessionStore.getState().loadEvidenceBundle("session-id");
 
-    expect(getEvidenceBundleManifest).toHaveBeenCalledWith("session-id");
+    expect(getEvidenceBundleManifest).toHaveBeenCalledWith("session-id", undefined);
     expect(bundle?.manifest.counts.branches).toBe(1);
     expect(useSessionStore.getState().evidenceBundleBySession["session-id"]?.manifest.session_id).toBe("session-id");
     expect(useSessionStore.getState().evidenceBundleErrorBySession["session-id"]).toBe("");
@@ -1102,11 +1114,33 @@ describe("RuntimeConsole", () => {
     fireEvent.click(screen.getByRole("button", { name: "下载 evidence bundle" }));
 
     await waitFor(() => {
-      expect(downloadEvidenceBundle).toHaveBeenCalledWith("session-id");
+      expect(downloadEvidenceBundle).toHaveBeenCalledWith("session-id", "worldengine-full-lifecycle-autonomous");
     });
     expect(await screen.findByText("已下载：evidence-bundle-session-id-2026-06-04.json")).toBeInTheDocument();
     expect(URL.createObjectURL).toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:evidence-bundle");
+  });
+
+  it("keeps selected evidence scenario aligned across manifest and downloads", async () => {
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(await screen.findByLabelText("验证场景")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("验证场景"), { target: { value: "provider-live-smoke-deepseek" } });
+
+    await waitFor(() => {
+      expect(getEvidenceBundleManifest).toHaveBeenLastCalledWith("session-id", "provider-live-smoke-deepseek");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "下载 evidence bundle" }));
+    await waitFor(() => {
+      expect(downloadEvidenceBundle).toHaveBeenCalledWith("session-id", "provider-live-smoke-deepseek");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "下载 checker handoff" }));
+    await waitFor(() => {
+      expect(downloadEvidenceArtifacts).toHaveBeenCalledWith("session-id", "provider-live-smoke-deepseek");
+    });
+    expect(await screen.findByText("已下载：evidence-artifacts-session-id-provider-live-smoke-deepseek-2026-06-04.json")).toBeInTheDocument();
   });
 
   it("shows v0.8 artifact status and logs bounded runtime controls", async () => {

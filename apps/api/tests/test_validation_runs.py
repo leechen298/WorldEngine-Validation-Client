@@ -122,3 +122,34 @@ def test_validation_run_api_summary_uses_public_trace_summary(client):
         }
     ]
     assert "world_prompt_length" not in str(payload)
+
+
+def test_validation_run_api_summary_redacts_sensitive_trace_payload(client):
+    session = client.post("/sessions", json={"session_name": "API Summary Redaction"}).json()
+    run = client.post("/validation-runs", json={"session_id": session["id"]}).json()
+
+    SessionLocal = app_db.get_sessionmaker()
+    with SessionLocal() as database:
+        database.add(
+            ApiTrace(
+                session_id=session["id"],
+                method="POST",
+                url_path="/worlds?api_key=secret-value",
+                status_code=200,
+                request_summary_json='{"world_prompt_length": 24}',
+                response_summary_json='{"world_id": "world-1", "provider_secret": "sk-live"}',
+                error_message=None,
+                llm_keys_included=False,
+                private_worldengine_internals_included=False,
+            )
+        )
+        database.commit()
+
+    response = client.get(f"/validation-runs/{run['id']}/api-summary")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["api_calls"][0]["path"] == "[redacted]"
+    assert payload["api_calls"][0]["public_summary"] == {"world_id": "world-1"}
+    assert "secret-value" not in str(payload)
+    assert "provider_secret" not in str(payload)

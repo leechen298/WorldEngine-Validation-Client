@@ -1,0 +1,25 @@
+{
+  "schema_version": "0.8.0",
+  "scenario": "worldengine-full-lifecycle-autonomous",
+  "status": "blocked",
+  "client_role": "display_export_only",
+  "provider_owner": "worldengine",
+  "evaluator_role": "worldengine_checker_or_second_agent_review",
+  "unsupported_items": [
+    "WorldEngine public surface is not reachable"
+  ],
+  "checker_contract": {
+    "scenario": "worldengine-full-lifecycle-autonomous",
+    "status_values": [
+      "pass",
+      "fail",
+      "blocked",
+      "not_run"
+    ],
+    "pass_source": "worldengine_checker_or_second_agent_review"
+  },
+  "redaction": {
+    "status": "pass",
+    "blocking_flags": []
+  }
+}

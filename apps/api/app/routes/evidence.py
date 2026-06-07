@@ -314,9 +314,9 @@ def _artifact_generated(name: str, counts: EvidenceBundleCounts) -> bool:
     if name == "operation-log.jsonl":
         return counts.operation_log_entries > 0
     if name == "diff-replay-summary.json":
-        return counts.commit_points > 0 or counts.state_diffs > 0 or counts.snapshots > 0
+        return counts.commit_points > 0 and counts.state_diffs > 0 and counts.snapshots > 0
     if name == "world-lifecycle-summary.json":
-        return counts.events > 0 or counts.snapshots > 0 or counts.api_traces > 0
+        return counts.events > 0 and counts.snapshots > 0 and counts.api_traces > 0
     if name == "redaction-scan.json":
         return True
     return False
@@ -849,6 +849,22 @@ def get_bundle_artifacts(
     return JSONResponse(content=_build_named_artifacts(bundle), media_type="application/json")
 
 
+@router.get("/bundle/artifacts/download")
+def download_bundle_artifacts(
+    session_id: str,
+    scenario: str = "worldengine-full-lifecycle-autonomous",
+    db: Session = Depends(get_db),
+):
+    bundle = _build_bundle_response(session_id, db, scenario=scenario)
+    generated_date = bundle.manifest.generated_at.date().isoformat()
+    filename = f"evidence-artifacts-{session_id}-{scenario}-{generated_date}.json"
+    return JSONResponse(
+        content=_build_named_artifacts(bundle),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 def _build_bundle_response(
     session_id: str,
     db: Session,
@@ -921,10 +937,14 @@ def _build_bundle_response(
 
 
 @router.get("/bundle/download")
-def download_bundle(session_id: str, db: Session = Depends(get_db)):
-    bundle = _build_bundle_response(session_id, db)
+def download_bundle(
+    session_id: str,
+    scenario: str = "worldengine-full-lifecycle-autonomous",
+    db: Session = Depends(get_db),
+):
+    bundle = _build_bundle_response(session_id, db, scenario=scenario)
     generated_date = bundle.manifest.generated_at.date().isoformat()
-    filename = f"evidence-bundle-{session_id}-{generated_date}.json"
+    filename = f"evidence-bundle-{session_id}-{scenario}-{generated_date}.json"
     return JSONResponse(
         content=bundle.model_dump(mode="json"),
         media_type="application/json",

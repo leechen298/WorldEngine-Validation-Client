@@ -1,0 +1,10 @@
+{
+  "schema_version": "0.8.0",
+  "scenario": "worldengine-full-lifecycle-autonomous",
+  "status": "blocked",
+  "api_trace_count": 0,
+  "redaction": {
+    "status": "pass",
+    "blocking_flags": []
+  }
+}

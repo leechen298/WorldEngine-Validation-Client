@@ -32,12 +32,99 @@ async function writeHandoffArtifact(testInfo: TestInfo, name: string, payload: u
   await writeJson(artifactPath, payload);
 }
 
+async function writeBlockedHandoff(testInfo: TestInfo, healthPayload: any) {
+  const manifest = {
+    schema_version: "0.8.0",
+    bundle_id: `v0.8-blocked-${Date.now()}`,
+    scenario,
+    result_status: "blocked",
+    client_role: "display_export_only",
+    provider_owner: "worldengine",
+    evaluator_role: "worldengine_checker_or_second_agent_review",
+    redaction_status: { status: "pass", blocking_flags: [] },
+    artifact_index: [
+      {
+        name: "result.json",
+        path: "result.json",
+        required: true,
+        displayable: true,
+        exportable: true,
+        producer: "validation_client",
+        schema_version: "0.8.0",
+        status: "blocked",
+        redaction_status: "pass",
+      },
+      {
+        name: "worldengine-health.json",
+        path: "worldengine-health.json",
+        required: true,
+        displayable: true,
+        exportable: true,
+        producer: "validation_client",
+        schema_version: "0.8.0",
+        status: "blocked",
+        redaction_status: "pass",
+      },
+    ],
+    checker_contract: {
+      scenario,
+      status_values: ["pass", "fail", "blocked", "not_run"],
+      pass_source: "worldengine_checker_or_second_agent_review",
+    },
+    unsupported_items: ["WorldEngine public surface is not reachable"],
+  };
+  await writeHandoffArtifact(testInfo, "manifest.json", manifest);
+  await writeHandoffArtifact(testInfo, "result.json", {
+    schema_version: "0.8.0",
+    scenario,
+    status: "blocked",
+    client_role: "display_export_only",
+    provider_owner: "worldengine",
+    evaluator_role: "worldengine_checker_or_second_agent_review",
+    unsupported_items: manifest.unsupported_items,
+    checker_contract: manifest.checker_contract,
+    redaction: manifest.redaction_status,
+  });
+  await writeHandoffArtifact(testInfo, "worldengine-health.json", healthPayload);
+  await writeHandoffArtifact(testInfo, "redaction-scan.json", {
+    schema_version: "0.8.0",
+    scenario,
+    status: "pass",
+    blocking_flags: [],
+  });
+  await writeHandoffArtifact(testInfo, "scorecard-summary.json", {
+    schema_version: "0.8.0",
+    scenario,
+    status: "blocked",
+    verdict_source: "worldengine_checker",
+    score_items: [],
+    critical_failures: manifest.unsupported_items,
+    unverified_items: manifest.unsupported_items,
+    final_status: "blocked",
+  });
+  await writeHandoffArtifact(testInfo, "operation-log.jsonl", []);
+  await writeHandoffArtifact(testInfo, "api-summary.json", {
+    schema_version: "0.8.0",
+    scenario,
+    status: "blocked",
+    api_trace_count: 0,
+    redaction: manifest.redaction_status,
+  });
+}
+
 test("v0.8 browser flow exports checker handoff artifacts", async ({ page, request }, testInfo) => {
   const health = await request.get(`${apiBase}/health/worldengine`);
   expect(health.ok()).toBeTruthy();
   const healthPayload = await health.json();
   await writeJson(testInfo.outputPath("worldengine-health.json"), healthPayload);
-  expect(healthPayload.worldengine.capabilities.world_creation).toBe("available");
+  if (healthPayload.worldengine.capabilities.world_creation !== "available") {
+    testInfo.annotations.push({
+      type: "blocked",
+      description: "WorldEngine public surface is not reachable; blocked handoff artifacts were exported.",
+    });
+    await writeBlockedHandoff(testInfo, healthPayload);
+    return;
+  }
 
   const runSlug = Date.now();
   const sessionName = `v0.8 E2E ${runSlug}`;
@@ -56,6 +143,8 @@ test("v0.8 browser flow exports checker handoff artifacts", async ({ page, reque
   await expect(page.getByRole("heading", { name: "公开状态摘要" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "World Log" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Agent Life Log" })).toBeVisible();
+  await page.getByLabel("验证场景").selectOption(scenario);
+  await expect(page.getByText(`v0.8 scenario：${scenario}`)).toBeVisible();
 
   await page.getByLabel("运行 tick 数").fill("7");
   await page.getByRole("button", { name: "Run 7 ticks" }).click();
@@ -90,13 +179,19 @@ test("v0.8 browser flow exports checker handoff artifacts", async ({ page, reque
   await download.saveAs(testInfo.outputPath("evidence-bundle.json"));
   await expect(page.getByText(/已下载：evidence-bundle-/)).toBeVisible();
 
+  const handoffDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "下载 checker handoff" }).click();
+  const handoffDownload = await handoffDownloadPromise;
+  await handoffDownload.saveAs(testInfo.outputPath("checker-handoff.json"));
+  await expect(page.getByText(/已下载：evidence-artifacts-/)).toBeVisible();
+
   const sessionsResponse = await request.get(`${apiBase}/sessions`);
   expect(sessionsResponse.ok()).toBeTruthy();
   const sessionsPayload = await sessionsResponse.json();
   const session = sessionsPayload.sessions.find((item: { session_name: string }) => item.session_name === sessionName);
   expect(session).toBeTruthy();
 
-  const evidenceResponse = await request.get(`${apiBase}/sessions/${session.id}/evidence/bundle/manifest`);
+  const evidenceResponse = await request.get(`${apiBase}/sessions/${session.id}/evidence/bundle/manifest?scenario=${scenario}`);
   expect(evidenceResponse.ok()).toBeTruthy();
   const evidencePayload = await evidenceResponse.json();
   await fs.writeFile(testInfo.outputPath("evidence-bundle-manifest.json"), JSON.stringify(evidencePayload, null, 2));

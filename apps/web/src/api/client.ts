@@ -7,6 +7,7 @@ import type {
   CreateValidationRunRequest,
   CreateWorldSessionRequest,
   DirectorIntent,
+  EvidenceArtifactsDownload,
   EvidenceBundleDownload,
   EvidenceBundleResponse,
   HealthResponse,
@@ -129,12 +130,23 @@ export async function createDirectorIntent(
   });
 }
 
-export async function getEvidenceBundleManifest(sessionId: string): Promise<EvidenceBundleResponse> {
-  return request<EvidenceBundleResponse>(`/sessions/${sessionId}/evidence/bundle/manifest`);
+function scenarioSuffix(scenario?: string): string {
+  if (!scenario) {
+    return "";
+  }
+  const params = new URLSearchParams({ scenario });
+  return `?${params.toString()}`;
 }
 
-export async function downloadEvidenceBundle(sessionId: string): Promise<EvidenceBundleDownload> {
-  const response = await fetch(`${API_BASE}/sessions/${sessionId}/evidence/bundle/download`, {
+export async function getEvidenceBundleManifest(
+  sessionId: string,
+  scenario?: string,
+): Promise<EvidenceBundleResponse> {
+  return request<EvidenceBundleResponse>(`/sessions/${sessionId}/evidence/bundle/manifest${scenarioSuffix(scenario)}`);
+}
+
+async function fetchJsonDownload<T>(url: string, fallbackFilename: string): Promise<{ filename: string; payload: T }> {
+  const response = await fetch(`${API_BASE}${url}`, {
     headers: {
       "Content-Type": "application/json",
     },
@@ -156,8 +168,33 @@ export async function downloadEvidenceBundle(sessionId: string): Promise<Evidenc
   const disposition = response.headers.get("content-disposition") || "";
   const filenameMatch = disposition.match(/filename="([^"]+)"/);
   return {
-    filename: filenameMatch?.[1] || `evidence-bundle-${sessionId}.json`,
-    bundle: (await response.json()) as EvidenceBundleResponse,
+    filename: filenameMatch?.[1] || fallbackFilename,
+    payload: (await response.json()) as T,
+  };
+}
+
+export async function downloadEvidenceBundle(sessionId: string, scenario?: string): Promise<EvidenceBundleDownload> {
+  const download = await fetchJsonDownload<EvidenceBundleResponse>(
+    `/sessions/${sessionId}/evidence/bundle/download${scenarioSuffix(scenario)}`,
+    `evidence-bundle-${sessionId}.json`,
+  );
+  return {
+    filename: download.filename,
+    bundle: download.payload,
+  };
+}
+
+export async function downloadEvidenceArtifacts(
+  sessionId: string,
+  scenario?: string,
+): Promise<EvidenceArtifactsDownload> {
+  const download = await fetchJsonDownload<Record<string, unknown>>(
+    `/sessions/${sessionId}/evidence/bundle/artifacts/download${scenarioSuffix(scenario)}`,
+    `evidence-artifacts-${sessionId}.json`,
+  );
+  return {
+    filename: download.filename,
+    artifacts: download.payload,
   };
 }
 

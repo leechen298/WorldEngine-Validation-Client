@@ -6,6 +6,7 @@ import {
   createSession,
   createValidationRun,
   createWorldSession,
+  downloadEvidenceArtifacts as apiDownloadEvidenceArtifacts,
   downloadEvidenceBundle as apiDownloadEvidenceBundle,
   getEvidenceBundleManifest,
   getBranches,
@@ -22,6 +23,7 @@ import type {
   CommitPointSummary,
   CreateDirectorIntentRequest,
   DirectorIntent,
+  EvidenceArtifactsDownload,
   EvidenceBundleDownload,
   EvidenceBundleResponse,
   HealthWorldEngineResponse,
@@ -79,8 +81,9 @@ interface SessionState {
     sessionId: string,
     payload: CreateDirectorIntentRequest,
   ) => Promise<DirectorIntent | null>;
-  loadEvidenceBundle: (sessionId: string) => Promise<EvidenceBundleResponse | null>;
-  downloadEvidenceBundle: (sessionId: string) => Promise<EvidenceBundleDownload | null>;
+  loadEvidenceBundle: (sessionId: string, scenario?: string) => Promise<EvidenceBundleResponse | null>;
+  downloadEvidenceBundle: (sessionId: string, scenario?: string) => Promise<EvidenceBundleDownload | null>;
+  downloadEvidenceArtifacts: (sessionId: string, scenario?: string) => Promise<EvidenceArtifactsDownload | null>;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -585,7 +588,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  loadEvidenceBundle: async (sessionId: string) => {
+  loadEvidenceBundle: async (sessionId: string, scenario?: string) => {
     set((state) => ({
       evidenceBundleLoadingBySession: {
         ...state.evidenceBundleLoadingBySession,
@@ -597,11 +600,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       },
     }));
     try {
-      const bundle = await getEvidenceBundleManifest(sessionId);
+      const bundle = await getEvidenceBundleManifest(sessionId, scenario);
+      const requestPath = `/sessions/${sessionId}/evidence/bundle/manifest${scenario ? `?scenario=${scenario}` : ""}`;
       await get().logOperation(sessionId, {
         action_type: "evidence.manifest.load",
         request_method: "GET",
-        request_path: `/sessions/${sessionId}/evidence/bundle/manifest`,
+        request_path: requestPath,
         response_status: 200,
         response_summary: `bundle ${bundle.manifest.bundle_schema_version}`,
         visible_result: "evidence bundle manifest displayed",
@@ -625,7 +629,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       await get().logOperation(sessionId, {
         action_type: "evidence.manifest.load.failed",
         request_method: "GET",
-        request_path: `/sessions/${sessionId}/evidence/bundle/manifest`,
+        request_path: `/sessions/${sessionId}/evidence/bundle/manifest${scenario ? `?scenario=${scenario}` : ""}`,
         response_summary: (error as Error).message,
         visible_result: "evidence bundle manifest failed",
       });
@@ -643,7 +647,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  downloadEvidenceBundle: async (sessionId: string) => {
+  downloadEvidenceBundle: async (sessionId: string, scenario?: string) => {
     set((state) => ({
       evidenceBundleLoadingBySession: {
         ...state.evidenceBundleLoadingBySession,
@@ -655,12 +659,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       },
     }));
     try {
-      const download = await apiDownloadEvidenceBundle(sessionId);
+      const download = await apiDownloadEvidenceBundle(sessionId, scenario);
+      const requestPath = `/sessions/${sessionId}/evidence/bundle/download${scenario ? `?scenario=${scenario}` : ""}`;
       await get().logOperation(sessionId, {
         action_type: "evidence.bundle.download",
         target_label: "下载 evidence bundle",
         request_method: "GET",
-        request_path: `/sessions/${sessionId}/evidence/bundle/download`,
+        request_path: requestPath,
         response_status: 200,
         response_summary: download.filename,
         visible_result: "evidence bundle downloaded",
@@ -686,9 +691,69 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         action_type: "evidence.bundle.download.failed",
         target_label: "下载 evidence bundle",
         request_method: "GET",
-        request_path: `/sessions/${sessionId}/evidence/bundle/download`,
+        request_path: `/sessions/${sessionId}/evidence/bundle/download${scenario ? `?scenario=${scenario}` : ""}`,
         response_summary: (error as Error).message,
         visible_result: "evidence bundle download failed",
+      });
+      set((state) => ({
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
+          [sessionId]: (error as Error).message,
+        },
+      }));
+      return null;
+    }
+  },
+
+  downloadEvidenceArtifacts: async (sessionId: string, scenario?: string) => {
+    set((state) => ({
+      evidenceBundleLoadingBySession: {
+        ...state.evidenceBundleLoadingBySession,
+        [sessionId]: true,
+      },
+      evidenceBundleErrorBySession: {
+        ...state.evidenceBundleErrorBySession,
+        [sessionId]: "",
+      },
+    }));
+    try {
+      const download = await apiDownloadEvidenceArtifacts(sessionId, scenario);
+      const requestPath = `/sessions/${sessionId}/evidence/bundle/artifacts/download${
+        scenario ? `?scenario=${scenario}` : ""
+      }`;
+      await get().logOperation(sessionId, {
+        action_type: "evidence.artifacts.download",
+        target_label: "下载 checker handoff",
+        request_method: "GET",
+        request_path: requestPath,
+        response_status: 200,
+        response_summary: download.filename,
+        visible_result: "checker handoff artifacts downloaded",
+        downloaded_file: download.filename,
+      });
+      set((state) => ({
+        evidenceBundleLoadingBySession: {
+          ...state.evidenceBundleLoadingBySession,
+          [sessionId]: false,
+        },
+        evidenceBundleErrorBySession: {
+          ...state.evidenceBundleErrorBySession,
+          [sessionId]: "",
+        },
+      }));
+      return download;
+    } catch (error) {
+      await get().logOperation(sessionId, {
+        action_type: "evidence.artifacts.download.failed",
+        target_label: "下载 checker handoff",
+        request_method: "GET",
+        request_path: `/sessions/${sessionId}/evidence/bundle/artifacts/download${scenario ? `?scenario=${scenario}` : ""}`,
+        response_summary: (error as Error).message,
+        visible_result: "checker handoff artifact download failed",
       });
       set((state) => ({
         evidenceBundleLoadingBySession: {

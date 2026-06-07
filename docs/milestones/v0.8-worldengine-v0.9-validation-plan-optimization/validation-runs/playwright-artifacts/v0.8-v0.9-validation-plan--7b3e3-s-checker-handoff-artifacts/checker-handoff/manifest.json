@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.8.0",
+  "bundle_id": "v0.8-blocked-1780826230290",
+  "scenario": "worldengine-full-lifecycle-autonomous",
+  "result_status": "blocked",
+  "client_role": "display_export_only",
+  "provider_owner": "worldengine",
+  "evaluator_role": "worldengine_checker_or_second_agent_review",
+  "redaction_status": {
+    "status": "pass",
+    "blocking_flags": []
+  },
+  "artifact_index": [
+    {
+      "name": "result.json",
+      "path": "result.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    },
+    {
+      "name": "worldengine-health.json",
+      "path": "worldengine-health.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    }
+  ],
+  "checker_contract": {
+    "scenario": "worldengine-full-lifecycle-autonomous",
+    "status_values": [
+      "pass",
+      "fail",
+      "blocked",
+      "not_run"
+    ],
+    "pass_source": "worldengine_checker_or_second_agent_review"
+  },
+  "unsupported_items": [
+    "WorldEngine public surface is not reachable"
+  ]
+}

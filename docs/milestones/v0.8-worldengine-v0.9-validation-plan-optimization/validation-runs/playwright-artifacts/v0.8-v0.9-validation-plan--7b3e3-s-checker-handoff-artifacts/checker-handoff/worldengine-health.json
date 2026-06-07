@@ -1,0 +1,38 @@
+{
+  "status": "degraded",
+  "worldengine": {
+    "reachable": false,
+    "health": null,
+    "manifest": null,
+    "openapi": null,
+    "capabilities": {
+      "manifest_available": false,
+      "openapi_available": false,
+      "world_creation": "unknown",
+      "v0_9_validation": "not_run",
+      "v0_9_public_surfaces": {
+        "provider_live_smoke": "not_run",
+        "worldview_generation": "not_run",
+        "world_creation": "not_run",
+        "runtime_state": "not_run",
+        "runtime_step": "not_run",
+        "runtime_run": "not_run",
+        "runtime_pause": "not_run",
+        "runtime_resume": "not_run",
+        "world_events": "not_run",
+        "world_event_steps": "not_run",
+        "archive_snapshots": "not_run",
+        "world_params": "not_run",
+        "world_direction": "not_run",
+        "director_guidance": "not_run",
+        "event_legality_evaluate": "not_run",
+        "agent_continuity_evaluate": "not_run",
+        "narrative_project": "not_run",
+        "diagnostic_dialogue_evaluate": "not_run"
+      }
+    },
+    "errors": [
+      "health: All connection attempts failed"
+    ]
+  }
+}

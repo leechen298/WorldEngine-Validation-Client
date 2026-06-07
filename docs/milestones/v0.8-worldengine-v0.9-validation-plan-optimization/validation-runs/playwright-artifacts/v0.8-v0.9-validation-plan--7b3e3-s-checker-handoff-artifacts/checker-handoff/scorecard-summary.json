@@ -1,0 +1,14 @@
+{
+  "schema_version": "0.8.0",
+  "scenario": "worldengine-full-lifecycle-autonomous",
+  "status": "blocked",
+  "verdict_source": "worldengine_checker",
+  "score_items": [],
+  "critical_failures": [
+    "WorldEngine public surface is not reachable"
+  ],
+  "unverified_items": [
+    "WorldEngine public surface is not reachable"
+  ],
+  "final_status": "blocked"
+}

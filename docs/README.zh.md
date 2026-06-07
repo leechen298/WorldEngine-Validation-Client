@@ -65,6 +65,52 @@ docs/
       review.zh.md
       validation.zh.md
       validation-runs/
+    v0.8-worldengine-v0.9-validation-plan-optimization/
+      README.zh.md
+      README.md
+      intent.zh.md
+      intent.md
+      contract.zh.md
+      contract.md
+      technical-design.zh.md
+      technical-design.md
+      test-plan.zh.md
+      test-plan.md
+      plan.zh.md
+      plan.md
+      implementation-task-plan.zh.md
+      implementation-task-plan.md
+      scenario-operation-matrix.zh.md
+      scenario-operation-matrix.md
+      artifact-contract.zh.md
+      artifact-contract.md
+      redaction-matrix.zh.md
+      redaction-matrix.md
+      autonomous-validation-runbook.zh.md
+      autonomous-validation-runbook.md
+      second-agent-review-template.zh.md
+      second-agent-review-template.md
+      cross-repo-validation-gate-matrix.zh.md
+      cross-repo-validation-gate-matrix.md
+      planning-readiness-checklist.zh.md
+      planning-readiness-checklist.md
+      handoff-status.zh.md
+      handoff-status.md
+      next-chat-quickstart.zh.md
+      next-chat-quickstart.md
+      handoff-prompts.zh.md
+      handoff-prompts.md
+      validation.zh.md
+      validation.md
+      codex-run-report-template.zh.md
+      codex-run-report-template.md
+      agent-review-template.zh.md
+      agent-review-template.md
+      human-validation-template.zh.md
+      human-validation-template.md
+      review.zh.md
+      review.md
+      validation-runs/
   agent-guides/
     routing.zh.md
     workflow.zh.md
@@ -121,6 +167,8 @@ docs/
 开发 v0.7
 自主验证 v0.7
 人工验证 v0.7
+开发 v0.8
+自主验证 v0.8
 ```
 
 Agent 应先读取对应 milestone：
@@ -149,6 +197,19 @@ docs/milestones/v0.7-agent-autonomous-validation/planning-readiness-checklist.zh
 docs/milestones/v0.7-agent-autonomous-validation/handoff-status.zh.md
 docs/milestones/v0.7-agent-autonomous-validation/implementation-task-plan.zh.md
 docs/milestones/v0.7-agent-autonomous-validation/handoff-prompts.zh.md
+```
+
+v0.8 WorldEngine v0.9 验证计划优化入口：
+
+```text
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/README.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/plan.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/implementation-task-plan.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/cross-repo-validation-gate-matrix.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/artifact-contract.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/scenario-operation-matrix.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/redaction-matrix.zh.md
+docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md
 ```
 
 ## 流程原则

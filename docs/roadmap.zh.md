@@ -107,3 +107,27 @@
 
 v0.7 的 Codex / Agent PASS 只表示“可以进入人工验证”，不表示世界体验或 Agent
 自然性已经通过。
+
+## v0.8 WorldEngine v0.9 Validation Plan Optimization
+
+目标：把客户端的测试计划、scenario 矩阵、artifact 合同、redaction 矩阵和
+checker handoff 对齐 WorldEngine v0.9。
+
+范围：
+
+- WorldEngine v0.9 public surface discovery。
+- scenario-aware evidence bundle manifest 和 artifact index。
+- provider/world/rule/event/Agent/replay/narrative/diagnostic named artifacts。
+- status preservation：`pass`、`fail`、`blocked`、`not_run`。
+- operation log 与 direct API harvest log 分离。
+- bounded runtime controls。
+- scorecard、checker 和第二 Agent review 展示。
+
+非目标：
+
+- 客户端直接调用 LLM provider。
+- 客户端管理 provider key。
+- 客户端生成权威世界事实、event legality、Agent autonomy 或 PASS 结论。
+
+v0.8 的客户端 PASS 只表示客户端证据承载和 handoff 能力满足当前门禁；WorldEngine
+validation PASS 仍由 WorldEngine checker/scorecard 和第二 Agent 复核决定。

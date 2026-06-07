@@ -37,6 +37,30 @@ PRIVATE_PAYLOAD_KEY_PARTS = (
 
 PRIVATE_ENDPOINT_PARTS = ("/internal", "/private", "/helpers", "/helper")
 
+V0_9_PUBLIC_SURFACE_SPECS: dict[str, tuple[str, str]] = {
+    "provider_live_smoke": ("POST", "/provider/live-smoke"),
+    "worldview_generation": ("POST", "/world/generation/worldview"),
+    "world_creation": ("POST", "/worlds"),
+    "runtime_state": ("GET", "/runtime/state"),
+    "runtime_step": ("POST", "/runtime/step"),
+    "runtime_run": ("POST", "/runtime/run"),
+    "runtime_pause": ("POST", "/runtime/pause"),
+    "runtime_resume": ("POST", "/runtime/resume"),
+    "world_events": ("GET", "/world/events"),
+    "world_event_steps": ("GET", "/world/event-steps"),
+    "archive_snapshots": ("GET", "/archive/snapshots"),
+    "world_params": ("GET", "/world/params"),
+    "world_direction": ("POST", "/worlds/{world_id}/direction"),
+    "director_guidance": ("POST", "/worlds/{world_id}/director-guidance"),
+    "event_legality_evaluate": ("POST", "/worlds/{world_id}/evolution/evaluate-event"),
+    "agent_continuity_evaluate": ("POST", "/worlds/{world_id}/agents/{agent_id}/continuity/evaluate"),
+    "narrative_project": ("POST", "/worlds/{world_id}/narrative/project"),
+    "diagnostic_dialogue_evaluate": (
+        "POST",
+        "/worlds/{world_id}/agents/{agent_id}/diagnostics/dialogue/evaluate",
+    ),
+}
+
 
 def _public_payload_summary(value: Any) -> Any:
     if isinstance(value, dict):
@@ -93,6 +117,50 @@ def _world_creation_endpoint(openapi: Dict[str, Any] | None) -> str | None:
     return None
 
 
+def _discover_v0_9_public_surfaces(openapi: Dict[str, Any] | None) -> Dict[str, Dict[str, str | None]]:
+    if not openapi:
+        return {
+            name: {"status": "not_run", "method": method, "path": path}
+            for name, (method, path) in V0_9_PUBLIC_SURFACE_SPECS.items()
+        }
+    paths = openapi.get("paths")
+    if not isinstance(paths, dict):
+        return {
+            name: {"status": "blocked", "method": method, "path": path}
+            for name, (method, path) in V0_9_PUBLIC_SURFACE_SPECS.items()
+        }
+
+    public_paths: dict[str, tuple[str, dict[str, Any]]] = {}
+    for raw_path, methods in paths.items():
+        path = str(raw_path)
+        normalized = path.rstrip("/").lower()
+        if any(part in normalized for part in PRIVATE_ENDPOINT_PARTS):
+            continue
+        if isinstance(methods, dict):
+            public_paths[normalized] = (path, methods)
+
+    surfaces: Dict[str, Dict[str, str | None]] = {}
+    for name, (method, expected_path) in V0_9_PUBLIC_SURFACE_SPECS.items():
+        normalized_expected = expected_path.rstrip("/").lower()
+        matched = public_paths.get(normalized_expected)
+        status = "blocked"
+        actual_path = expected_path
+        if matched is not None:
+            actual_path, methods = matched
+            if method.lower() in {str(item).lower() for item in methods}:
+                status = "available"
+        surfaces[name] = {"status": status, "method": method, "path": actual_path}
+    return surfaces
+
+
+def _summarize_v0_9_validation_status(surfaces: Dict[str, Dict[str, str | None]], openapi_available: bool) -> str:
+    if not openapi_available:
+        return "not_run"
+    if all(item.get("status") == "available" for item in surfaces.values()):
+        return "available"
+    return "blocked"
+
+
 def _director_guidance_endpoint(openapi: Dict[str, Any] | None) -> str | None:
     if not openapi:
         return None
@@ -130,6 +198,7 @@ def _summarize_openapi(payload: Dict[str, Any]) -> Dict[str, Any]:
         "title": info.get("title"),
         "version": info.get("version"),
         "world_creation_endpoint": _world_creation_endpoint(payload),
+        "v0_9_public_surfaces": _discover_v0_9_public_surfaces(payload),
     }
 
 
@@ -253,6 +322,10 @@ async def check_worldengine_health() -> Dict[str, Any]:
             "manifest_available": False,
             "openapi_available": False,
             "world_creation": "unknown",
+            "v0_9_validation": "not_run",
+            "v0_9_public_surfaces": {
+                name: "not_run" for name in V0_9_PUBLIC_SURFACE_SPECS
+            },
         },
         "errors": [],
     }
@@ -280,6 +353,14 @@ async def check_worldengine_health() -> Dict[str, Any]:
             openapi_resp.raise_for_status()
             result["openapi"] = _summarize_openapi(openapi_resp.json())
             result["capabilities"]["openapi_available"] = True
+            v0_9_surfaces = result["openapi"]["v0_9_public_surfaces"]
+            result["capabilities"]["v0_9_public_surfaces"] = {
+                name: str(surface["status"]) for name, surface in v0_9_surfaces.items()
+            }
+            result["capabilities"]["v0_9_validation"] = _summarize_v0_9_validation_status(
+                v0_9_surfaces,
+                openapi_available=True,
+            )
         except Exception as exc:  # noqa: BLE001
             result["errors"].append(f"openapi: {str(exc)}")
 

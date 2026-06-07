@@ -42,4 +42,33 @@ external_validation_authorized: no
 
 ## 当前结论
 
-Task 1 文档自审通过。按用户授权，下一步进入 Task 2：WorldEngine v0.9 public surface discovery。
+Task 1 文档自审通过并已提交。按用户授权，已进入实现。
+
+### Task 2: WorldEngine v0.9 public surface discovery
+
+- Commit: pending
+- Files:
+  - `apps/api/app/schemas.py`
+  - `apps/api/app/worldengine_client.py`
+  - `apps/api/tests/test_health.py`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
+- Implementation:
+  - 在 `/health/worldengine` response model 中保留 `v0_9_validation` 和 `v0_9_public_surfaces`。
+  - 在 WorldEngine OpenAPI summary 中输出 v0.9 public surface map。
+  - 识别 provider live smoke、worldview generation、world creation、runtime controls、events、snapshots、params、direction、director guidance、event legality、Agent continuity、narrative projection 和 diagnostic dialogue 等 public surfaces。
+  - OpenAPI 不可用时标记 `not_run`；OpenAPI 可用但 surface 缺失时标记 `blocked`；可发现时标记 `available`。
+  - 过滤 `/internal`、`/private`、helper 类 endpoint，不把 provider/private 字段写入 discovery summary。
+- Commands:
+  - RED: `cd apps/api && uv run pytest tests/test_health.py tests/test_sessions.py -q`: 失败，2 failed，新增测试缺少 `v0_9_validation` 字段。
+  - GREEN: `cd apps/api && uv run pytest tests/test_health.py tests/test_sessions.py -q`: 36 passed, 1 warning。
+  - `git diff --check`: 通过，exit 0，无输出。
+- Scope review:
+  - 仅扩展 public discovery 和 schema，不调用 provider，不访问 WorldEngine 私有源码或 helper。
+  - v0.9 readiness 只表达 public surface discovery 状态，不声明 provider live PASS 或 WorldEngine validation PASS。
+  - 既有 v0.7 Playwright artifacts 仍未纳入本任务。
+- Notes:
+  - GREEN 测试 warning 为既有 `StarletteDeprecationWarning`。
+
+## 当前实现结论
+
+Task 2 已通过 focused verification，等待提交。

@@ -15,6 +15,8 @@ class WorldEngineCapabilitySummary(BaseModel):
     manifest_available: bool
     openapi_available: bool
     world_creation: str
+    v0_9_validation: str = "not_run"
+    v0_9_public_surfaces: Dict[str, str] = Field(default_factory=dict)
 
 
 class WorldEngineHealthSummary(BaseModel):
@@ -30,6 +32,7 @@ class WorldEngineOpenAPISummary(BaseModel):
     title: Optional[str]
     version: Optional[str]
     world_creation_endpoint: Optional[str]
+    v0_9_public_surfaces: Dict[str, Dict[str, Optional[str]]] = Field(default_factory=dict)
 
 
 class WorldEngineProbeResponse(BaseModel):

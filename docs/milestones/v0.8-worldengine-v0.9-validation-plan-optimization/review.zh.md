@@ -130,7 +130,7 @@ Task 4 已通过 focused verification 并已提交。
 
 ### Task 5: Runtime console v0.8 evidence status 和 bounded controls
 
-- Commit: pending
+- Commit: `94f6581`
 - Files:
   - `apps/web/src/api/types.ts`
   - `apps/web/src/store/sessionStore.ts`
@@ -161,7 +161,7 @@ Task 5 已通过 web focused verification 并已提交。
 
 ### Task 6: v0.8 E2E / checker handoff readiness
 
-- Commit: pending
+- Commit: `27d4a40`
 - Files:
   - `apps/web/e2e/v0.8-v0.9-validation-plan.spec.ts`
   - `apps/web/playwright.config.ts`
@@ -179,7 +179,7 @@ Task 5 已通过 web focused verification 并已提交。
 - Commands:
   - RED/BLOCKED: `pnpm --dir apps/web test:e2e`: sandbox 失败，`uv` 无法访问 `/Users/leechen/.cache/uv`。
   - BLOCKED: `pnpm --dir apps/web test:e2e`（非沙箱批准后重跑）：API/Web server 启动成功；E2E 在 `/health/worldengine` preflight 阻塞，`world_creation` 为 `unknown`，WorldEngine `reachable=false`。
-  - `git diff --check`: pending。
+  - `git diff --check`: 通过，exit 0，无输出。
 - Scope review:
   - E2E 仅消费 public `/health/worldengine`、UI 和 evidence endpoints，不调用 provider key，不读取 WorldEngine 私有源码。
   - 因 `checker-handoff/` 未完整生成，未运行 WorldEngine checker，也不声明 Validation Client PASS 或 WorldEngine v0.9 PASS。
@@ -190,3 +190,32 @@ Task 5 已通过 web focused verification 并已提交。
 ## 当前实现结论
 
 Task 6 已实现 E2E/handoff readiness，但当前环境缺少可达 WorldEngine public surface，E2E 真实结论为 `BLOCKED`。
+
+### Task 7: 总体验证和 review 收口
+
+- Commit: pending
+- Files:
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/handoff-status.zh.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/handoff-status.md`
+- Commands:
+  - `cd apps/api && uv run pytest -q`: sandbox 失败，`uv` 无法访问 `/Users/leechen/.cache/uv`。
+  - `cd apps/api && uv run pytest -q`（非沙箱批准后重跑）：57 passed, 1 warning。
+  - `pnpm --dir apps/web test`: 2 test files passed, 26 tests passed；仍有既有 React `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过，Vite build completed。
+  - `pnpm run test`: sandbox 中 web 26 passed 后，API 段因 `uv` cache 权限失败。
+  - `pnpm run test`（非沙箱批准后重跑）：web 26 passed，API 57 passed, 1 warning。
+  - `pnpm run build`: 通过，Vite build completed。
+  - `git diff --check`: 通过，exit 0，无输出。
+- Scope review:
+  - 客户端实现、focused checks 和 broad checks 通过。
+  - v0.8 E2E/checker gate 当前阻塞于 WorldEngine public surface 不可达：`reachable=false`、`world_creation=unknown`、`v0_9_validation=not_run`。
+  - 未运行 WorldEngine checker，未运行第二 Agent 复核，不能声明 `PASS_READY_FOR_HUMAN_VALIDATION`。
+  - 当前真实状态是 `READY_FOR_CODEX_AUTONOMOUS_VALIDATION / BLOCKED_ON_WORLDENGINE_REACHABILITY`。
+- Notes:
+  - 既有 v0.7 Playwright artifacts 仍为未暂存脏文件，不属于 v0.8 提交。
+
+## 当前实现结论
+
+v0.8 implementation package 已完成并通过客户端侧 broad validation；下一关需要可达 WorldEngine v0.9 public surface 后重新运行 E2E/checker handoff。

@@ -14,6 +14,10 @@
 
 ## 自主验证
 
+当前状态：`READY_FOR_CODEX_AUTONOMOUS_VALIDATION / BLOCKED_ON_WORLDENGINE_REACHABILITY`。
+下一轮应先接入可达的 WorldEngine v0.9 public endpoint，然后重新运行 E2E/checker
+handoff。
+
 ```text
 /goal 自主验证 v0.8-worldengine-v0.9-validation-plan-optimization
 ```

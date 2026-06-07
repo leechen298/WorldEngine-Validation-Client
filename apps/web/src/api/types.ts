@@ -11,11 +11,18 @@ export interface HealthWorldEngineResponse {
     reachable: boolean;
     health: { status: string } | null;
     manifest: { version: string | null; capabilities: string[] } | null;
-    openapi: { title: string | null; version: string | null; world_creation_endpoint: string | null } | null;
+    openapi: {
+      title: string | null;
+      version: string | null;
+      world_creation_endpoint: string | null;
+      v0_9_public_surfaces?: Record<string, { status: string; method: string | null; path: string | null }>;
+    } | null;
     capabilities: {
       manifest_available: boolean;
       openapi_available: boolean;
       world_creation: string;
+      v0_9_validation?: string;
+      v0_9_public_surfaces?: Record<string, string>;
     };
     errors: string[];
   };
@@ -147,8 +154,27 @@ export interface EvidenceBundleRedactionFlags {
   private_worldengine_internals_included: boolean;
 }
 
+export interface EvidenceBundleArtifactIndexItem {
+  name: string;
+  path: string;
+  required: boolean;
+  displayable: boolean;
+  exportable: boolean;
+  producer: string;
+  schema_version: string;
+  status: string;
+  redaction_status: string;
+}
+
 export interface EvidenceBundleManifest {
   bundle_schema_version: string;
+  schema_version?: string;
+  bundle_id?: string;
+  scenario?: string;
+  result_status?: string;
+  client_role?: string;
+  provider_owner?: string;
+  evaluator_role?: string;
   generated_at: string;
   session_id: string;
   session_name: string;
@@ -158,6 +184,10 @@ export interface EvidenceBundleManifest {
   evidence_bundle_filename: string | null;
   counts: EvidenceBundleCounts;
   redaction_flags: EvidenceBundleRedactionFlags;
+  redaction_status?: { status: string; blocking_flags: string[] };
+  artifact_index?: EvidenceBundleArtifactIndexItem[];
+  checker_contract?: Record<string, unknown>;
+  unsupported_items?: string[];
   warnings: EvidenceBundleWarning[];
 }
 

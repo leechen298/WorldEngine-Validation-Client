@@ -16,7 +16,7 @@ external_validation_authorized: no
 
 ### Task 1: v0.8 文档、路由和自审
 
-- Commit: pending
+- Commit: `ae990a5`
 - Files:
   - `AGENTS.md`
   - `AGENTS.zh.md`
@@ -46,7 +46,7 @@ Task 1 文档自审通过并已提交。按用户授权，已进入实现。
 
 ### Task 2: WorldEngine v0.9 public surface discovery
 
-- Commit: pending
+- Commit: `fc43ff1`
 - Files:
   - `apps/api/app/schemas.py`
   - `apps/api/app/worldengine_client.py`
@@ -73,7 +73,7 @@ Task 2 已通过 focused verification 并已提交。
 
 ### Task 3: Scenario-aware evidence manifest 和 artifact index
 
-- Commit: pending
+- Commit: `626d4a3`
 - Files:
   - `apps/api/app/routes/evidence.py`
   - `apps/api/app/schemas.py`
@@ -102,7 +102,7 @@ Task 3 已通过 focused verification 并已提交。
 
 ### Task 4: Named artifact builders 和 redaction scan
 
-- Commit: pending
+- Commit: `fc1cf96`
 - Files:
   - `apps/api/app/routes/evidence.py`
   - `apps/api/tests/test_evidence.py`
@@ -126,4 +126,35 @@ Task 3 已通过 focused verification 并已提交。
 
 ## 当前实现结论
 
-Task 4 已通过 focused verification，等待提交。
+Task 4 已通过 focused verification 并已提交。
+
+### Task 5: Runtime console v0.8 evidence status 和 bounded controls
+
+- Commit: pending
+- Files:
+  - `apps/web/src/api/types.ts`
+  - `apps/web/src/store/sessionStore.ts`
+  - `apps/web/src/pages/RuntimeConsole.tsx`
+  - `apps/web/src/__tests__/RuntimeConsole.test.tsx`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.md`
+- Implementation:
+  - Web API types 接收 v0.9 public surface discovery 和 v0.8 evidence manifest fields。
+  - Runtime console 新增 bounded run tick 数输入，按钮显示 `Run N ticks`，并记录 `runtime.run_bounded`、`runtime.pause`、`runtime.resume` 操作日志。
+  - Evidence panel 展示 v0.8 scenario、result status、redaction scan、scorecard、second-Agent review 和 required artifact status。
+  - 默认 validation run notes 更新为 v0.8 WorldEngine v0.9 validation plan optimization run。
+- Commands:
+  - RED: `pnpm --dir apps/web test`: 失败，1 failed，新增 bounded runtime 测试期望 run id 与 mock 返回值不一致。
+  - GREEN: `pnpm --dir apps/web test`: 2 test files passed, 26 tests passed；仍有既有 React `act(...)` warning。
+  - `pnpm --dir apps/web build`: 通过，Vite build completed。
+  - `git diff --check`: 通过，exit 0，无输出。
+- Scope review:
+  - UI 只显示 evidence manifest/artifact status，不执行 checker，不直接调用 provider。
+  - Bounded controls 记录客户端操作意图，未声称实际 WorldEngine runtime 已完成对应 tick。
+  - `blocked`、`not_run`、`fail` 状态在 UI 中原样显示，不升级为 PASS。
+- Notes:
+  - 既有 v0.7 Playwright artifacts 仍未纳入本任务。
+
+## 当前实现结论
+
+Task 5 已通过 web focused verification，等待提交。

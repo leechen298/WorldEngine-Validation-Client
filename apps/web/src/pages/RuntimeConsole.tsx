@@ -10,6 +10,7 @@ interface RuntimeConsoleProps {
 
 export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
   const [command, setCommand] = useState("让世界偏向和平互动");
+  const [runTickBudget, setRunTickBudget] = useState(5);
   const {
     error,
     commitPointsBySession = {},
@@ -72,10 +73,17 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
     null;
   const evidenceCounts = evidenceBundle?.manifest.counts;
   const evidenceRedactionFlags = evidenceBundle?.manifest.redaction_flags;
+  const evidenceArtifactIndex = evidenceBundle?.manifest.artifact_index || [];
+  const scorecardArtifact = evidenceArtifactIndex.find((item) => item.name === "scorecard-summary.json");
+  const secondAgentArtifact = evidenceArtifactIndex.find((item) => item.name === "second-agent-review.md");
+  const requiredArtifacts = evidenceArtifactIndex.filter((item) => item.required);
   const evidenceClean =
     evidenceRedactionFlags &&
     !evidenceRedactionFlags.llm_keys_included &&
     !evidenceRedactionFlags.private_worldengine_internals_included;
+  const evidenceRedactionStatus = evidenceBundle?.manifest.redaction_status?.status || (evidenceClean ? "pass" : "fail");
+  const evidenceResultStatus = evidenceBundle?.manifest.result_status || "unknown";
+  const evidenceScenario = evidenceBundle?.manifest.scenario || "worldengine-full-lifecycle-autonomous";
   const [lastEvidenceDownload, setLastEvidenceDownload] = useState("");
 
   useEffect(() => {
@@ -200,26 +208,48 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
           onClick={() => {
             setRuntimeState("running");
             logOperation(sessionId, {
-              action_type: "runtime.run",
-              target_label: "Run",
-              visible_result: "runtime state changed to running",
+              action_type: "runtime.run_bounded",
+              target_label: "Run bounded ticks",
+              input_text: String(runTickBudget),
+              visible_result: `bounded runtime segment requested for ${runTickBudget} ticks`,
             });
           }}
         >
-          Run
+          Run {runTickBudget} ticks
         </button>
+        <label htmlFor="run-tick-budget">运行 tick 数</label>
+        <input
+          id="run-tick-budget"
+          min={1}
+          onChange={(event) => setRunTickBudget(Number(event.target.value))}
+          type="number"
+          value={runTickBudget}
+        />
         <button
           type="button"
           onClick={() => {
             setRuntimeState("paused");
             logOperation(sessionId, {
               action_type: "runtime.pause",
-              target_label: "Pause",
+              target_label: "Pause run",
               visible_result: "runtime state changed to paused",
             });
           }}
         >
-          Pause
+          Pause run
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setRuntimeState("running");
+            logOperation(sessionId, {
+              action_type: "runtime.resume",
+              target_label: "Resume run",
+              visible_result: "runtime state changed to running after resume",
+            });
+          }}
+        >
+          Resume run
         </button>
         <button
           type="button"
@@ -359,6 +389,21 @@ export function RuntimeConsole({ sessionId, onBack }: RuntimeConsoleProps) {
                   <span>api traces：{evidenceCounts?.api_traces ?? 0}</span>
                 </div>
                 <p>脱敏状态：{evidenceClean ? "clean" : "flagged"}</p>
+                <p>v0.8 scenario：{evidenceScenario}</p>
+                <p>结果状态：{evidenceResultStatus}</p>
+                <p>Redaction scan：{evidenceRedactionStatus}</p>
+                <p>Scorecard：{scorecardArtifact?.status || "not_run"}</p>
+                <p>Second Agent review：{secondAgentArtifact?.status || "not_run"}</p>
+                {requiredArtifacts.length ? (
+                  <ul className="runtime-list">
+                    {requiredArtifacts.slice(0, 6).map((artifact) => (
+                      <li key={artifact.name}>
+                        <strong>{artifact.name}</strong>
+                        <span>{artifact.status}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 {evidenceBundle.manifest.warnings.length ? (
                   <ul className="runtime-list">
                     {evidenceBundle.manifest.warnings.map((warning) => (

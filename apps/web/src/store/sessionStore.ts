@@ -116,7 +116,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         web_url: WEB_URL,
         api_base_url: API_BASE,
         worldengine_api_base: get().connectionStatus?.worldengineApiBase || null,
-        notes: "v0.7 browser validation run",
+        notes: "v0.8 WorldEngine v0.9 validation plan optimization run",
       });
       set((state) => ({
         validationRunBySession: {
@@ -185,6 +185,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 manifest_available: false,
                 openapi_available: false,
                 world_creation: "unknown",
+                v0_9_validation: "not_run",
+                v0_9_public_surfaces: {},
               },
               errors: [(worldengineError as Error).message],
             },

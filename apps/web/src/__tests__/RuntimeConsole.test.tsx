@@ -45,7 +45,7 @@ vi.mock("../api/client", () => ({
     api_base_url: "http://127.0.0.1:8765",
     worldengine_api_base: "http://127.0.0.1:8000",
     evidence_bundle_path: null,
-    notes: "v0.7 browser validation run",
+    notes: "v0.8 WorldEngine v0.9 validation plan optimization run",
     created_at: "2026-06-04T00:00:00Z",
     updated_at: "2026-06-04T00:00:00Z",
   }),
@@ -242,8 +242,9 @@ describe("RuntimeConsole", () => {
 
     render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
 
-    expect(screen.getByRole("button", { name: "Run" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pause" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run 5 ticks" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause run" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume run" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Single Tick" })).toBeInTheDocument();
     expect(screen.getByText("公开像素地图")).toBeInTheDocument();
     expect(screen.getByText("分支列表")).toBeInTheDocument();
@@ -1091,6 +1092,11 @@ describe("RuntimeConsole", () => {
     expect(screen.getByText("branches：1")).toBeInTheDocument();
     expect(screen.getByText("commit points：1")).toBeInTheDocument();
     expect(screen.getByText("脱敏状态：clean")).toBeInTheDocument();
+    expect(screen.getByText("v0.8 scenario：worldengine-full-lifecycle-autonomous")).toBeInTheDocument();
+    expect(screen.getByText("结果状态：unknown")).toBeInTheDocument();
+    expect(screen.getByText("Redaction scan：pass")).toBeInTheDocument();
+    expect(screen.getByText("Scorecard：not_run")).toBeInTheDocument();
+    expect(screen.getByText("Second Agent review：not_run")).toBeInTheDocument();
     expect(screen.getByText("public evaluator outputs unavailable")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "下载 evidence bundle" }));
@@ -1101,6 +1107,129 @@ describe("RuntimeConsole", () => {
     expect(await screen.findByText("已下载：evidence-bundle-session-id-2026-06-04.json")).toBeInTheDocument();
     expect(URL.createObjectURL).toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:evidence-bundle");
+  });
+
+  it("shows v0.8 artifact status and logs bounded runtime controls", async () => {
+    vi.mocked(getEvidenceBundleManifest).mockResolvedValueOnce({
+      manifest: {
+        bundle_schema_version: "0.7.0",
+        schema_version: "0.8.0",
+        bundle_id: "v0.8-session-id",
+        scenario: "provider-live-smoke-deepseek",
+        result_status: "blocked",
+        client_role: "display_export_only",
+        provider_owner: "worldengine",
+        evaluator_role: "worldengine_checker_or_second_agent_review",
+        generated_at: "2026-06-07T00:00:00Z",
+        session_id: "session-id",
+        session_name: "Evidence Session",
+        worldengine_world_id: null,
+        world_status: "created",
+        latest_validation_run_id: null,
+        evidence_bundle_filename: "evidence-bundle-session-id.json",
+        counts: {
+          branches: 1,
+          events: 0,
+          state_diffs: 0,
+          snapshots: 0,
+          commit_points: 1,
+          director_intents: 0,
+          api_traces: 0,
+          validation_runs: 0,
+          operation_log_entries: 0,
+          evaluator_outputs: 0,
+          replay_index: 1,
+        },
+        redaction_flags: {
+          llm_keys_included: false,
+          private_worldengine_internals_included: false,
+        },
+        redaction_status: { status: "pass", blocking_flags: [] },
+        artifact_index: [
+          {
+            name: "provider-live-summary.json",
+            path: "provider-live-summary.json",
+            required: true,
+            displayable: true,
+            exportable: true,
+            producer: "worldengine",
+            schema_version: "0.8.0",
+            status: "blocked",
+            redaction_status: "pass",
+          },
+          {
+            name: "scorecard-summary.json",
+            path: "scorecard-summary.json",
+            required: true,
+            displayable: true,
+            exportable: true,
+            producer: "worldengine_checker",
+            schema_version: "0.8.0",
+            status: "not_run",
+            redaction_status: "pass",
+          },
+          {
+            name: "second-agent-review.md",
+            path: "second-agent-review.md",
+            required: false,
+            displayable: true,
+            exportable: true,
+            producer: "second_agent_review",
+            schema_version: "0.8.0",
+            status: "not_run",
+            redaction_status: "pass",
+          },
+        ],
+        checker_contract: {},
+        unsupported_items: ["required artifact provider-live-summary.json is not generated"],
+        warnings: [],
+      },
+      records: {
+        branches: [],
+        commit_points: [],
+        events: [],
+        state_diffs: [],
+        snapshots: [],
+        director_intents: [],
+        api_traces: [],
+        validation_runs: [],
+        operation_log_entries: [],
+        evaluator_outputs: [],
+        replay_index: [],
+      },
+    });
+
+    render(<RuntimeConsole sessionId="session-id" onBack={() => null} />);
+
+    expect(await screen.findByText("v0.8 scenario：provider-live-smoke-deepseek")).toBeInTheDocument();
+    expect(screen.getByText("结果状态：blocked")).toBeInTheDocument();
+    expect(screen.getByText("provider-live-summary.json")).toBeInTheDocument();
+    expect(screen.getByText("Scorecard：not_run")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("运行 tick 数"), { target: { value: "7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run 7 ticks" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pause run" }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume run" }));
+
+    expect(await screen.findByText("状态：running")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(appendOperationLog).toHaveBeenCalledWith(
+        "run-1",
+        expect.objectContaining({
+          action_type: "runtime.run_bounded",
+          input_text: "7",
+          target_label: "Run bounded ticks",
+        }),
+      );
+    });
+    expect(appendOperationLog).toHaveBeenCalledWith(
+      "run-1",
+      expect.objectContaining({ action_type: "runtime.pause", target_label: "Pause run" }),
+    );
+    expect(appendOperationLog).toHaveBeenCalledWith(
+      "run-1",
+      expect.objectContaining({ action_type: "runtime.resume", target_label: "Resume run" }),
+    );
   });
 
   it("submits director guidance from the runtime console and shows intent status", async () => {

@@ -213,6 +213,13 @@ class EvidenceBundleRedactionFlags(BaseModel):
 
 class EvidenceBundleManifest(BaseModel):
     bundle_schema_version: str
+    schema_version: str = "0.8.0"
+    bundle_id: str
+    scenario: str = "worldengine-full-lifecycle-autonomous"
+    result_status: str = "blocked"
+    client_role: str = "display_export_only"
+    provider_owner: str = "worldengine"
+    evaluator_role: str = "worldengine_checker_or_second_agent_review"
     generated_at: datetime
     session_id: str
     session_name: str
@@ -222,6 +229,10 @@ class EvidenceBundleManifest(BaseModel):
     evidence_bundle_filename: Optional[str] = None
     counts: EvidenceBundleCounts
     redaction_flags: EvidenceBundleRedactionFlags
+    redaction_status: Dict[str, Any] = Field(default_factory=dict)
+    artifact_index: List[Dict[str, Any]] = Field(default_factory=list)
+    checker_contract: Dict[str, Any] = Field(default_factory=dict)
+    unsupported_items: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
 
 

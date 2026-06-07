@@ -69,6 +69,33 @@ Task 1 文档自审通过并已提交。按用户授权，已进入实现。
 - Notes:
   - GREEN 测试 warning 为既有 `StarletteDeprecationWarning`。
 
+Task 2 已通过 focused verification 并已提交。
+
+### Task 3: Scenario-aware evidence manifest 和 artifact index
+
+- Commit: pending
+- Files:
+  - `apps/api/app/routes/evidence.py`
+  - `apps/api/app/schemas.py`
+  - `apps/api/tests/test_evidence.py`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md`
+- Implementation:
+  - 保留旧 `bundle_schema_version=0.7.0`，新增 v0.8 `schema_version=0.8.0`、`bundle_id`、`scenario`、`result_status`、`client_role`、`provider_owner`、`evaluator_role`。
+  - 增加 scenario-aware `artifact_index`，记录 artifact name、bundle-relative path、required/displayable/exportable、producer、schema version、status 和 redaction status。
+  - 增加 `checker_contract`、`unsupported_items` 和 `redaction_status`。
+  - 对 `provider-live-smoke-deepseek`、`worldengine-full-lifecycle-autonomous`、`llm-backed-full-lifecycle-autonomous` 建立 required artifact set。
+  - 缺 required artifact 时保留 `blocked`，不映射为 PASS。
+- Commands:
+  - RED: `cd apps/api && uv run pytest tests/test_evidence.py -q`: 失败，2 failed，缺少 `schema_version` 和 `result_status`。
+  - GREEN: `cd apps/api && uv run pytest tests/test_evidence.py -q`: 11 passed, 1 warning。
+  - `git diff --check`: 通过，exit 0，无输出。
+- Scope review:
+  - 仅生成 manifest/index 层，不直接调用 provider，不运行 checker，不创建 WorldEngine result。
+  - artifact paths 均为 bundle-relative paths，测试覆盖不以 `/` 开头且不包含 `..`。
+  - status preservation 保持 `blocked` / `not_run`，未生成 required artifact 不会 PASS。
+- Notes:
+  - GREEN 测试 warning 为既有 `StarletteDeprecationWarning`。
+
 ## 当前实现结论
 
-Task 2 已通过 focused verification，等待提交。
+Task 3 已通过 focused verification，等待提交。

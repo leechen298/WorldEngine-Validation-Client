@@ -90,6 +90,55 @@ def test_evidence_bundle_manifest_preserves_metadata_endpoint_and_reserves_recor
     }
 
 
+def test_evidence_bundle_manifest_includes_v0_8_scenario_artifact_index(client):
+    session = client.post("/sessions", json={"session_name": "v0.8 Evidence"}).json()
+    session_id = session["id"]
+
+    response = client.get(
+        f"/sessions/{session_id}/evidence/bundle/manifest",
+        params={"scenario": "provider-live-smoke-deepseek"},
+    )
+
+    assert response.status_code == 200
+    manifest = response.json()["manifest"]
+    assert manifest["schema_version"] == "0.8.0"
+    assert manifest["bundle_id"] == f"v0.8-{session_id}"
+    assert manifest["scenario"] == "provider-live-smoke-deepseek"
+    assert manifest["result_status"] == "blocked"
+    assert manifest["client_role"] == "display_export_only"
+    assert manifest["provider_owner"] == "worldengine"
+    assert manifest["evaluator_role"] == "worldengine_checker_or_second_agent_review"
+    assert manifest["redaction_status"] == {"status": "pass", "blocking_flags": []}
+    assert manifest["checker_contract"]["status_values"] == ["pass", "fail", "blocked", "not_run"]
+    assert "required artifact provider-live-summary.json is not generated" in manifest["unsupported_items"]
+
+    artifacts = {item["name"]: item for item in manifest["artifact_index"]}
+    assert artifacts["manifest.json"]["required"] is True
+    assert artifacts["provider-live-summary.json"]["required"] is True
+    assert artifacts["provider-live-summary.json"]["status"] == "blocked"
+    assert artifacts["operation-log.jsonl"]["displayable"] is True
+    assert artifacts["api-summary.json"]["exportable"] is True
+    assert artifacts["scorecard-summary.json"]["producer"] == "worldengine_checker"
+    for item in manifest["artifact_index"]:
+        assert not item["path"].startswith("/")
+        assert ".." not in item["path"].split("/")
+
+
+def test_evidence_bundle_manifest_preserves_blocked_status_for_missing_required_artifacts(client):
+    session = client.post("/sessions", json={"session_name": "Blocked Evidence"}).json()
+
+    response = client.get(
+        f"/sessions/{session['id']}/evidence/bundle/manifest",
+        params={"scenario": "llm-backed-full-lifecycle-autonomous"},
+    )
+
+    assert response.status_code == 200
+    manifest = response.json()["manifest"]
+    assert manifest["result_status"] == "blocked"
+    assert manifest["unsupported_items"]
+    assert all(status in {"blocked", "not_run", "pass"} for status in [item["status"] for item in manifest["artifact_index"]])
+
+
 def test_evidence_bundle_manifest_aggregates_api_trace_redaction_flags(client):
     session = client.post("/sessions", json={"session_name": "Dirty Trace Session"}).json()
     session_id = session["id"]

@@ -82,6 +82,140 @@ SENSITIVE_VALUE_MARKERS = (
     "token",
 )
 
+STATUS_VALUES = ["pass", "fail", "blocked", "not_run"]
+
+ARTIFACT_SPECS: dict[str, dict[str, Any]] = {
+    "manifest.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "result.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "operation-log.jsonl": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "api-log.jsonl": {
+        "producer": "validation_client",
+        "displayable": False,
+        "exportable": True,
+    },
+    "api-summary.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "provider-live-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "world-creation-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "world-rule-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "rule-parameter-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "event-legality-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "agent-autonomy-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "diff-replay-summary.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "world-lifecycle-summary.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "narrative-projection-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "diagnostic-conversation-summary.json": {
+        "producer": "worldengine",
+        "displayable": True,
+        "exportable": True,
+    },
+    "redaction-scan.json": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "scorecard-summary.json": {
+        "producer": "worldengine_checker",
+        "displayable": True,
+        "exportable": True,
+    },
+    "second-agent-review.md": {
+        "producer": "second_agent_review",
+        "displayable": True,
+        "exportable": True,
+    },
+    "transcript.md": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+    "console.log": {
+        "producer": "validation_client",
+        "displayable": False,
+        "exportable": True,
+    },
+    "screenshots/": {
+        "producer": "validation_client",
+        "displayable": True,
+        "exportable": True,
+    },
+}
+
+SCENARIO_REQUIRED_ARTIFACTS: dict[str, set[str]] = {
+    "provider-live-smoke-deepseek": {
+        "manifest.json",
+        "result.json",
+        "operation-log.jsonl",
+        "api-summary.json",
+        "provider-live-summary.json",
+        "redaction-scan.json",
+    },
+    "llm-backed-full-lifecycle-autonomous": set(ARTIFACT_SPECS),
+    "worldengine-full-lifecycle-autonomous": {
+        "manifest.json",
+        "result.json",
+        "operation-log.jsonl",
+        "api-summary.json",
+        "world-lifecycle-summary.json",
+        "diff-replay-summary.json",
+        "redaction-scan.json",
+        "scorecard-summary.json",
+        "screenshots/",
+        "transcript.md",
+    },
+}
+
 
 def _bundle_counts(session_id: str, db: Session) -> EvidenceBundleCounts:
     def count(model) -> int:
@@ -170,6 +304,77 @@ def _sanitize_payload(value: Any) -> tuple[Any, bool, bool]:
 def _append_warning(warnings: list[str], warning: str) -> None:
     if warning not in warnings:
         warnings.append(warning)
+
+
+def _artifact_generated(name: str, counts: EvidenceBundleCounts) -> bool:
+    if name == "manifest.json":
+        return True
+    if name == "api-summary.json":
+        return counts.api_traces > 0
+    if name == "operation-log.jsonl":
+        return counts.operation_log_entries > 0
+    if name == "diff-replay-summary.json":
+        return counts.commit_points > 0 or counts.state_diffs > 0 or counts.snapshots > 0
+    if name == "world-lifecycle-summary.json":
+        return counts.events > 0 or counts.snapshots > 0 or counts.api_traces > 0
+    if name == "redaction-scan.json":
+        return True
+    return False
+
+
+def _build_artifact_index(
+    *,
+    scenario: str,
+    counts: EvidenceBundleCounts,
+    redaction_status: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    required_artifacts = SCENARIO_REQUIRED_ARTIFACTS.get(
+        scenario,
+        SCENARIO_REQUIRED_ARTIFACTS["worldengine-full-lifecycle-autonomous"],
+    )
+    unsupported_items: list[str] = []
+    artifact_index: list[dict[str, Any]] = []
+    for name, spec in ARTIFACT_SPECS.items():
+        required = name in required_artifacts
+        generated = _artifact_generated(name, counts)
+        status_value = "pass" if generated else "not_run"
+        if required and not generated:
+            status_value = "blocked"
+            unsupported_items.append(f"required artifact {name} is not generated")
+        artifact_index.append(
+            {
+                "name": name,
+                "path": name,
+                "required": required,
+                "displayable": bool(spec["displayable"]),
+                "exportable": bool(spec["exportable"]),
+                "producer": str(spec["producer"]),
+                "schema_version": "0.8.0",
+                "status": status_value,
+                "redaction_status": redaction_status["status"],
+            }
+        )
+    return artifact_index, unsupported_items
+
+
+def _redaction_status(redaction_flags: EvidenceBundleRedactionFlags) -> dict[str, Any]:
+    blocking_flags = [
+        field
+        for field, enabled in redaction_flags.model_dump().items()
+        if enabled
+    ]
+    return {
+        "status": "fail" if blocking_flags else "pass",
+        "blocking_flags": blocking_flags,
+    }
+
+
+def _result_status(*, redaction_status: dict[str, Any], unsupported_items: list[str]) -> str:
+    if redaction_status["status"] == "fail":
+        return "fail"
+    if unsupported_items:
+        return "blocked"
+    return "pass"
 
 
 def _bundle_records(session_id: str, db: Session) -> tuple[EvidenceBundleRecords, EvidenceBundleRedactionFlags, list[str]]:
@@ -436,11 +641,20 @@ def get_bundle(session_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/bundle/manifest", response_model=EvidenceBundleResponse)
-def get_bundle_manifest(session_id: str, db: Session = Depends(get_db)):
-    return _build_bundle_response(session_id, db)
+def get_bundle_manifest(
+    session_id: str,
+    scenario: str = "worldengine-full-lifecycle-autonomous",
+    db: Session = Depends(get_db),
+):
+    return _build_bundle_response(session_id, db, scenario=scenario)
 
 
-def _build_bundle_response(session_id: str, db: Session) -> EvidenceBundleResponse:
+def _build_bundle_response(
+    session_id: str,
+    db: Session,
+    *,
+    scenario: str = "worldengine-full-lifecycle-autonomous",
+) -> EvidenceBundleResponse:
     session = db.get(DbSession, session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
@@ -466,8 +680,23 @@ def _build_bundle_response(session_id: str, db: Session) -> EvidenceBundleRespon
         .first()
     )
 
+    counts = _bundle_counts(session_id, db)
+    redaction_status = _redaction_status(redaction_flags)
+    artifact_index, unsupported_items = _build_artifact_index(
+        scenario=scenario,
+        counts=counts,
+        redaction_status=redaction_status,
+    )
+
     manifest = EvidenceBundleManifest(
         bundle_schema_version="0.7.0",
+        schema_version="0.8.0",
+        bundle_id=f"v0.8-{session.id}",
+        scenario=scenario,
+        result_status=_result_status(redaction_status=redaction_status, unsupported_items=unsupported_items),
+        client_role="display_export_only",
+        provider_owner="worldengine",
+        evaluator_role="worldengine_checker_or_second_agent_review",
         generated_at=datetime.now(UTC),
         session_id=session.id,
         session_name=session.session_name,
@@ -475,8 +704,16 @@ def _build_bundle_response(session_id: str, db: Session) -> EvidenceBundleRespon
         world_status=session.public_world_status or session.status,
         latest_validation_run_id=latest_run.id if latest_run else None,
         evidence_bundle_filename=f"evidence-bundle-{session_id}.json",
-        counts=_bundle_counts(session_id, db),
+        counts=counts,
         redaction_flags=redaction_flags,
+        redaction_status=redaction_status,
+        artifact_index=artifact_index,
+        checker_contract={
+            "scenario": scenario,
+            "status_values": STATUS_VALUES,
+            "pass_source": "worldengine_checker_or_second_agent_review",
+        },
+        unsupported_items=unsupported_items,
         warnings=warnings,
     )
 

@@ -22,8 +22,20 @@ pnpm --dir apps/web build
 6. 选择 scenario。
 7. 执行 bounded operation flow。
 8. 导出 evidence bundle。
-9. 如支持，导出 saved-result directory。
-10. 如支持，运行 WorldEngine checker。
+9. 导出 v0.8 checker handoff directory：
+
+```bash
+VALIDATION_CLIENT_E2E_OUTPUT_DIR=../../docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/validation-runs/playwright-artifacts \
+VALIDATION_CLIENT_API_BASE=http://127.0.0.1:8765 \
+VALIDATION_CLIENT_SCENARIO=worldengine-full-lifecycle-autonomous \
+pnpm --dir apps/web test:e2e
+```
+
+Playwright 输出目录内的 `checker-handoff/` 是客户端 evidence directory。
+其中 `manifest.json`、`result.json`、`redaction-scan.json`、`scorecard-summary.json`
+和 `operation-log.jsonl` 必须保留 `blocked`、`fail` 或 `not_run`，不能改写为 PASS。
+
+10. 如 `checker-handoff/` 已生成且 WorldEngine checker 支持该目录，运行 WorldEngine checker。
 11. 运行第二 Agent 只读复核。
 12. 写入 validation run 报告。
 

@@ -157,4 +157,36 @@ Task 4 已通过 focused verification 并已提交。
 
 ## 当前实现结论
 
-Task 5 已通过 web focused verification，等待提交。
+Task 5 已通过 web focused verification 并已提交。
+
+### Task 6: v0.8 E2E / checker handoff readiness
+
+- Commit: pending
+- Files:
+  - `apps/web/e2e/v0.8-v0.9-validation-plan.spec.ts`
+  - `apps/web/playwright.config.ts`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/autonomous-validation-runbook.zh.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/autonomous-validation-runbook.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/validation-runs/2026-06-07-codex-e2e-blocked.zh.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/validation-runs/2026-06-07-codex-e2e-blocked.md`
+  - `docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/validation-runs/playwright-artifacts/`
+- Implementation:
+  - 将旧 v0.7 Playwright smoke flow 升级为 v0.8 flow，并重命名为 `v0.8-v0.9-validation-plan.spec.ts`。
+  - Playwright 默认 outputDir 改为 v0.8 milestone `validation-runs/playwright-artifacts`，同时支持 `VALIDATION_CLIENT_E2E_OUTPUT_DIR` 覆盖。
+  - Playwright config 增加 API/Web webServer 启动配置，允许 `test:e2e` 自行启动 Validation Client API/Web。
+  - E2E flow 增加 bounded `Run 7 ticks`、`Pause run`、`Resume run` 操作，并在成功路径导出 `checker-handoff/` named artifacts。
+  - Runbook 增加 v0.8 checker handoff 命令和 status preservation stop rule。
+- Commands:
+  - RED/BLOCKED: `pnpm --dir apps/web test:e2e`: sandbox 失败，`uv` 无法访问 `/Users/leechen/.cache/uv`。
+  - BLOCKED: `pnpm --dir apps/web test:e2e`（非沙箱批准后重跑）：API/Web server 启动成功；E2E 在 `/health/worldengine` preflight 阻塞，`world_creation` 为 `unknown`，WorldEngine `reachable=false`。
+  - `git diff --check`: pending。
+- Scope review:
+  - E2E 仅消费 public `/health/worldengine`、UI 和 evidence endpoints，不调用 provider key，不读取 WorldEngine 私有源码。
+  - 因 `checker-handoff/` 未完整生成，未运行 WorldEngine checker，也不声明 Validation Client PASS 或 WorldEngine v0.9 PASS。
+  - BLOCKED 证据记录在 `validation-runs/2026-06-07-codex-e2e-blocked.zh.md` 和 Playwright artifacts。
+- Notes:
+  - 既有 v0.7 Playwright artifacts 仍未纳入本任务。
+
+## 当前实现结论
+
+Task 6 已实现 E2E/handoff readiness，但当前环境缺少可达 WorldEngine public surface，E2E 真实结论为 `BLOCKED`。

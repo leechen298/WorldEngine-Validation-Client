@@ -5,6 +5,15 @@ import type { TestInfo } from "@playwright/test";
 
 const apiBase = process.env.VALIDATION_CLIENT_API_BASE || "http://127.0.0.1:8765";
 const scenario = process.env.VALIDATION_CLIENT_SCENARIO || "worldengine-full-lifecycle-autonomous";
+const BLOCKED_HANDOFF_ARTIFACTS = [
+  { name: "manifest.json", producer: "validation_client", status: "blocked" },
+  { name: "result.json", producer: "validation_client", status: "blocked" },
+  { name: "redaction-scan.json", producer: "validation_client", status: "pass" },
+  { name: "scorecard-summary.json", producer: "worldengine_checker", status: "blocked" },
+  { name: "operation-log.jsonl", producer: "validation_client", status: "blocked" },
+  { name: "api-summary.json", producer: "validation_client", status: "blocked" },
+  { name: "worldengine-health.json", producer: "validation_client", status: "blocked" },
+];
 
 async function writeJson(path: string, payload: unknown) {
   await fs.mkdir(dirname(path), { recursive: true });
@@ -32,7 +41,23 @@ async function writeHandoffArtifact(testInfo: TestInfo, name: string, payload: u
   await writeJson(artifactPath, payload);
 }
 
+function classifyWorldEngineBlocker(healthPayload: any): string {
+  const worldengine = healthPayload.worldengine || {};
+  if (!worldengine.reachable) {
+    return "WorldEngine public surface is not reachable";
+  }
+  if (!worldengine.openapi) {
+    return "WorldEngine OpenAPI is unavailable";
+  }
+  if (worldengine.capabilities?.world_creation !== "available") {
+    return "WorldEngine world creation public surface is unavailable";
+  }
+  return "WorldEngine public validation surface is unavailable";
+}
+
 async function writeBlockedHandoff(testInfo: TestInfo, healthPayload: any) {
+  const unsupportedItems = [classifyWorldEngineBlocker(healthPayload)];
+  const redactionStatus = { status: "pass", blocking_flags: [] };
   const manifest = {
     schema_version: "0.8.0",
     bundle_id: `v0.8-blocked-${Date.now()}`,
@@ -41,37 +66,24 @@ async function writeBlockedHandoff(testInfo: TestInfo, healthPayload: any) {
     client_role: "display_export_only",
     provider_owner: "worldengine",
     evaluator_role: "worldengine_checker_or_second_agent_review",
-    redaction_status: { status: "pass", blocking_flags: [] },
-    artifact_index: [
-      {
-        name: "result.json",
-        path: "result.json",
-        required: true,
-        displayable: true,
-        exportable: true,
-        producer: "validation_client",
-        schema_version: "0.8.0",
-        status: "blocked",
-        redaction_status: "pass",
-      },
-      {
-        name: "worldengine-health.json",
-        path: "worldengine-health.json",
-        required: true,
-        displayable: true,
-        exportable: true,
-        producer: "validation_client",
-        schema_version: "0.8.0",
-        status: "blocked",
-        redaction_status: "pass",
-      },
-    ],
+    redaction_status: redactionStatus,
+    artifact_index: BLOCKED_HANDOFF_ARTIFACTS.map((artifact) => ({
+      name: artifact.name,
+      path: artifact.name,
+      required: true,
+      displayable: !artifact.name.endsWith(".jsonl"),
+      exportable: true,
+      producer: artifact.producer,
+      schema_version: "0.8.0",
+      status: artifact.status,
+      redaction_status: redactionStatus.status,
+    })),
     checker_contract: {
       scenario,
       status_values: ["pass", "fail", "blocked", "not_run"],
       pass_source: "worldengine_checker_or_second_agent_review",
     },
-    unsupported_items: ["WorldEngine public surface is not reachable"],
+    unsupported_items: unsupportedItems,
   };
   await writeHandoffArtifact(testInfo, "manifest.json", manifest);
   await writeHandoffArtifact(testInfo, "result.json", {
@@ -123,6 +135,21 @@ test("v0.8 browser flow exports checker handoff artifacts", async ({ page, reque
       description: "WorldEngine public surface is not reachable; blocked handoff artifacts were exported.",
     });
     await writeBlockedHandoff(testInfo, healthPayload);
+    const blockedManifest = JSON.parse(
+      await fs.readFile(testInfo.outputPath("checker-handoff", "manifest.json"), "utf-8"),
+    );
+    const indexedArtifacts = blockedManifest.artifact_index.map((item: { name: string }) => item.name).sort();
+    expect(indexedArtifacts).toEqual(
+      [
+        "api-summary.json",
+        "manifest.json",
+        "operation-log.jsonl",
+        "redaction-scan.json",
+        "result.json",
+        "scorecard-summary.json",
+        "worldengine-health.json",
+      ].sort(),
+    );
     return;
   }
 
@@ -218,4 +245,25 @@ test("v0.8 browser flow exports checker handoff artifacts", async ({ page, reque
   for (const [name, payload] of Object.entries(artifacts)) {
     await writeHandoffArtifact(testInfo, name, payload);
   }
+});
+
+test("blocked handoff classifies reachable discovery gaps", async ({}, testInfo) => {
+  await writeBlockedHandoff(testInfo, {
+    status: "degraded",
+    worldengine: {
+      reachable: true,
+      health: { status: "ok" },
+      manifest: null,
+      openapi: null,
+      capabilities: {
+        world_creation: "unknown",
+        v0_9_validation: "not_run",
+      },
+      errors: ["openapi: 404"],
+    },
+  });
+
+  const result = JSON.parse(await fs.readFile(testInfo.outputPath("checker-handoff", "result.json"), "utf-8"));
+  expect(result.unsupported_items).toContain("WorldEngine OpenAPI is unavailable");
+  expect(result.unsupported_items).not.toContain("WorldEngine public surface is not reachable");
 });

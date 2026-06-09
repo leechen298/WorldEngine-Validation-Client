@@ -37,5 +37,6 @@ scenario: `worldengine-full-lifecycle-autonomous`
 ```
 
 The E2E now creates a complete `checker-handoff/` directory with `blocked`
-status when WorldEngine is unreachable. The WorldEngine checker was not run.
-This is not a Validation Client PASS or a WorldEngine v0.9 validation PASS.
+status when WorldEngine is unreachable. `manifest.artifact_index` lists every
+generated artifact in that directory. The WorldEngine checker was not run. This
+is not a Validation Client PASS or a WorldEngine v0.9 validation PASS.

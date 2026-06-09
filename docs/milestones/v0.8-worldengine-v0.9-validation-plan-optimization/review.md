@@ -13,3 +13,7 @@ passes client-side broad validation and now exports a structured `BLOCKED`
 checker handoff when WorldEngine is unreachable. The current handoff state
 remains `READY_FOR_CODEX_AUTONOMOUS_VALIDATION / BLOCKED_ON_WORLDENGINE_REACHABILITY`;
 no checker PASS is claimed.
+
+Latest follow-up: blocked handoff `manifest.artifact_index` now lists every
+generated handoff artifact, and unreachable/openapi/world-creation blockers are
+classified separately.

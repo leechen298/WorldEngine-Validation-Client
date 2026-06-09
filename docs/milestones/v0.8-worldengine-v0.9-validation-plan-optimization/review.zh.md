@@ -222,7 +222,7 @@ v0.8 implementation package 已完成并通过客户端侧 broad validation；�
 
 ### Code Review Remediation: scenario propagation, blocked handoff, and redaction
 
-- Commit: pending
+- Commit: `0cbb0ba`
 - Findings addressed:
   - P1 scenario 未贯穿 UI/manifest/download。
   - P1 WorldEngine 不可达时 E2E 只失败，没有干净 `BLOCKED` handoff。
@@ -250,3 +250,19 @@ v0.8 implementation package 已完成并通过客户端侧 broad validation；�
 - Scope review:
   - 仍不调用 provider，不读 WorldEngine 私有源码，不生成 PASS。
   - 当前 WorldEngine gate 仍是 `BLOCKED_ON_WORLDENGINE_REACHABILITY`，但 blocked handoff 现在是结构化产物而不是 Playwright failure。
+
+### Code Review Follow-up: blocked handoff artifact index completeness
+
+- Commit: current commit
+- Findings addressed:
+  - P2 不可达场景 `manifest.artifact_index` 未列出全部实际生成 artifacts。
+  - P2 `writeBlockedHandoff()` 对可达但 OpenAPI/创建入口缺失的场景分类过粗。
+- Implementation:
+  - blocked handoff 的 `artifact_index` 由 `BLOCKED_HANDOFF_ARTIFACTS` 统一生成，覆盖 `manifest.json`、`result.json`、`redaction-scan.json`、`scorecard-summary.json`、`operation-log.jsonl`、`api-summary.json` 和 `worldengine-health.json`。
+  - 新增 `classifyWorldEngineBlocker()`，区分 `reachable=false`、OpenAPI 不可用、world creation public surface 不可用和兜底 validation surface 不可用。
+- Commands:
+  - RED: `pnpm --dir apps/web test:e2e`：2 failed，分别证明 artifact index 不完整和 reachable/openapi 缺失分类错误。
+  - GREEN: `pnpm --dir apps/web test:e2e`：2 passed。
+  - `git diff --check`：通过，exit 0，无输出。
+- Scope review:
+  - 本轮只修改 v0.8 E2E/handoff helper 和 review 记录，不改 WorldEngine，不运行 checker，不声明 PASS。

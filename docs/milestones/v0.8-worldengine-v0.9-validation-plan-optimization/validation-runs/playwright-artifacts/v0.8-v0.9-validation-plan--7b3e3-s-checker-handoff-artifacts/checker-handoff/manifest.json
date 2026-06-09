@@ -1,6 +1,6 @@
 {
   "schema_version": "0.8.0",
-  "bundle_id": "v0.8-blocked-1780826230290",
+  "bundle_id": "v0.8-blocked-1781010547919",
   "scenario": "worldengine-full-lifecycle-autonomous",
   "result_status": "blocked",
   "client_role": "display_export_only",
@@ -12,8 +12,63 @@
   },
   "artifact_index": [
     {
+      "name": "manifest.json",
+      "path": "manifest.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    },
+    {
       "name": "result.json",
       "path": "result.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    },
+    {
+      "name": "redaction-scan.json",
+      "path": "redaction-scan.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "pass",
+      "redaction_status": "pass"
+    },
+    {
+      "name": "scorecard-summary.json",
+      "path": "scorecard-summary.json",
+      "required": true,
+      "displayable": true,
+      "exportable": true,
+      "producer": "worldengine_checker",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    },
+    {
+      "name": "operation-log.jsonl",
+      "path": "operation-log.jsonl",
+      "required": true,
+      "displayable": false,
+      "exportable": true,
+      "producer": "validation_client",
+      "schema_version": "0.8.0",
+      "status": "blocked",
+      "redaction_status": "pass"
+    },
+    {
+      "name": "api-summary.json",
+      "path": "api-summary.json",
       "required": true,
       "displayable": true,
       "exportable": true,

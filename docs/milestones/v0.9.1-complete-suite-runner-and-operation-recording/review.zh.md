@@ -37,7 +37,7 @@ implementation_authorized: no
 
 ### Documentation Draft
 
-- Commit: pending
+- Commit: `a930405`
 - Files:
   - `README.zh.md`
   - `plan.zh.md`
@@ -49,7 +49,10 @@ implementation_authorized: no
   - `agent-execution-handoff.zh.md`
   - English mirror files
 - Commands:
-  - pending
+  - `required files check`: `passed; missing=[] empty=[]`
+  - `rg -n "v0\\.9\\.1|complete-suite-runner-and-operation-recording|complete-worldengine-validation-suite|operation-log\\.jsonl|api-log\\.jsonl|scenario-assertion-matrix|result-directory-contract" docs/README.zh.md docs/roadmap.zh.md docs/agent-guides/routing.md docs/agent-guides/routing.zh.md docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording`: `passed`
+  - `false implementation/PASS claim scan`: `passed; hits are constraint text only`
+  - `git diff --check`: `passed`
 - Scope review:
   - Docs-only package draft. No runtime/API/UI/test code changed.
   - Implementation remains unauthorized until user explicitly approves.

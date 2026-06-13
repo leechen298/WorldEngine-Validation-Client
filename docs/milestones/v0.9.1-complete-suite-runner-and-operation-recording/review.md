@@ -31,7 +31,7 @@ Reason: this pass only creates the implementation package documents.
 
 ### Documentation Draft
 
-- Commit: pending
+- Commit: `a930405`
 - Files:
   - `README.zh.md`
   - `plan.zh.md`
@@ -43,7 +43,10 @@ Reason: this pass only creates the implementation package documents.
   - `agent-execution-handoff.zh.md`
   - English mirror files
 - Commands:
-  - pending
+  - `required files check`: `passed; missing=[] empty=[]`
+  - `v0.9.1 route/suite keyword scan`: `passed`
+  - `false implementation/PASS claim scan`: `passed; hits are constraint text only`
+  - `git diff --check`: `passed`
 - Scope review:
   - Docs-only package draft. No runtime/API/UI/test code changed.
   - Implementation remains unauthorized until user explicitly approves.

@@ -111,6 +111,27 @@ docs/
       review.zh.md
       review.md
       validation-runs/
+    v0.9-complete-worldengine-validation-suite/
+      README.zh.md
+      README.md
+      gap-analysis.zh.md
+      gap-analysis.md
+      phased-validation-plan.zh.md
+      phased-validation-plan.md
+      phased-validation-runbook.zh.md
+      phased-validation-runbook.md
+      scenario-matrix.zh.md
+      scenario-matrix.md
+      artifact-contract.zh.md
+      artifact-contract.md
+      plan.zh.md
+      plan.md
+      implementation-task-plan.zh.md
+      implementation-task-plan.md
+      validation.zh.md
+      validation.md
+      review.zh.md
+      review.md
   agent-guides/
     routing.zh.md
     workflow.zh.md
@@ -169,6 +190,8 @@ docs/
 人工验证 v0.7
 开发 v0.8
 自主验证 v0.8
+开发 v0.9
+自主验证 v0.9
 ```
 
 Agent 应先读取对应 milestone：
@@ -210,6 +233,21 @@ docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/artifact-cont
 docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/scenario-operation-matrix.zh.md
 docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/redaction-matrix.zh.md
 docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/review.zh.md
+```
+
+完整 WorldEngine 验证套件入口：
+
+```text
+docs/milestones/v0.9-complete-worldengine-validation-suite/README.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/gap-analysis.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-plan.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-runbook.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/scenario-matrix.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/artifact-contract.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/plan.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/implementation-task-plan.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/validation.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/review.zh.md
 ```
 
 ## 流程原则

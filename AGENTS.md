@@ -52,10 +52,10 @@ prompt requests, also read:
 20. the active milestone `planning-readiness-checklist.zh.md`, if it exists
 21. the active milestone `next-chat-quickstart.zh.md`, if it exists
 
-For v0.8, the active milestone is:
+For the complete WorldEngine validation suite, the active milestone is:
 
 ```text
-docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/
+docs/milestones/v0.9-complete-worldengine-validation-suite/
 ```
 
 ## Short Router

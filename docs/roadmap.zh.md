@@ -131,3 +131,31 @@ checker handoff 对齐 WorldEngine v0.9。
 
 v0.8 的客户端 PASS 只表示客户端证据承载和 handoff 能力满足当前门禁；WorldEngine
 validation PASS 仍由 WorldEngine checker/scorecard 和第二 Agent 复核决定。
+
+## v0.9 Complete WorldEngine Validation Suite
+
+目标：建立一套稳定的完整验证用例，用 Validation Client 一次性、端到端验证
+WorldEngine 是否能正常工作。
+
+v0.9 不跟随 WorldEngine 的每个迭代拆分验证。WorldEngine 版本、manifest 和
+capability 只是本次运行的被测对象状态；客户端验证结构保持稳定。
+
+范围：
+
+- `complete-worldengine-validation-suite` 主场景。
+- L0-L8 分层验证：preflight、world creation、runtime、timeline、direction、
+  Agent life、memory continuity、inspection surfaces、evidence handoff。
+- runtime controls 必须真实驱动 WorldEngine public APIs。
+- 完整 result directory、coverage matrix、command matrix、operation log、API log、
+  redaction report、scorecard input 和 second-Agent review。
+- 兼容 WorldEngine 当前 checker/scorecard，但不把 checker 版本作为客户端 milestone。
+
+非目标：
+
+- 客户端不管理 provider key。
+- 客户端不直接调用 LLM provider。
+- 客户端不生成权威世界事实。
+- 客户端不把 UI smoke 当 WorldEngine PASS。
+
+v0.9 的完整验证 suite 可以逐层 `pass`、`fail`、`blocked` 或 `not_run`。最终 PASS
+仍由 WorldEngine checker/scorecard、redaction PASS 和 second-Agent review 支持。

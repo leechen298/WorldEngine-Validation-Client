@@ -50,10 +50,10 @@
 20. active milestone 的 `planning-readiness-checklist.zh.md`，如果该文件存在
 21. active milestone 的 `next-chat-quickstart.zh.md`，如果该文件存在
 
-v0.8 的 active milestone 是：
+完整 WorldEngine 验证套件的 active milestone 是：
 
 ```text
-docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/
+docs/milestones/v0.9-complete-worldengine-validation-suite/
 ```
 
 ## 简短路由

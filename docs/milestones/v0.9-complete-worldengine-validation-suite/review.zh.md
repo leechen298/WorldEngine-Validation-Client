@@ -129,7 +129,7 @@ git diff --check -> passed
 
 ### Task 4：文档验证和 review
 
-- Commit: `pending`
+- Commit: `3a6c41b`
 - Files:
   - `docs/milestones/v0.9-complete-worldengine-validation-suite/README.zh.md`
   - `docs/milestones/v0.9-complete-worldengine-validation-suite/README.md`

@@ -31,3 +31,18 @@ commit。
 - `transcript.md` 存在且覆盖 Phase 1-4。
 - 每个 phase 有截图或 blocked screenshot status。
 
+## 实现前审计要求
+
+实现前必须读取：
+
+```text
+implementation-readiness-audit.zh.md
+```
+
+并按审计结论执行：
+
+- 第一版 runner 以 Playwright result directory 生成的 rich artifacts 为权威证据。
+- 旧版 backend operation log endpoint 只作为补充 evidence。
+- direct API harvest 必须写入 `api-log.jsonl`，不得伪装成用户操作。
+- WorldEngine capability 缺失时继续 closeout，输出 structured `BLOCKED` result
+  directory，而不是让测试进程在中途失败并丢失证据。

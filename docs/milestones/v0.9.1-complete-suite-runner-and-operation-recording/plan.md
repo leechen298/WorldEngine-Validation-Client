@@ -21,6 +21,16 @@ Requirements:
 - Never record secrets, authorization headers, raw prompts, raw provider
   responses, private memory, or raw thought.
 
+Read before implementation:
+
+```text
+implementation-readiness-audit.md
+```
+
+The audit confirms that the first v0.9.1 evidence authority is the E2E-local
+result directory. The backend operation log is supplemental evidence and cannot
+replace the step-by-step recorder.
+
 ## Task 2: Complete Suite Blocked Result Exporter
 
 Candidate files:

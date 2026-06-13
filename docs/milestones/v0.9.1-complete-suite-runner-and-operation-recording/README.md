@@ -33,15 +33,17 @@ persists detailed records for every operation.
 ## Complete Test Plan Files
 
 ```text
-test-plan.zh.md
-scenario-assertion-matrix.zh.md
-result-directory-contract.zh.md
-validation.zh.md
-agent-execution-handoff.zh.md
+test-plan.md
+scenario-assertion-matrix.md
+result-directory-contract.md
+validation.md
+agent-execution-handoff.md
+implementation-readiness-audit.md
 ```
 
 Together these files define test layers, per-step assertions, result-directory
-schema, verdict rules, and copy-ready implementation/validation prompts.
+schema, verdict rules, copy-ready implementation/validation prompts, reusable
+current code, implementation gaps, and the concrete implementation route.
 
 ## Non-Goals
 

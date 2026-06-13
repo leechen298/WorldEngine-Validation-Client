@@ -28,6 +28,15 @@ pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts
 git diff --check
 ```
 
+实现前先读取：
+
+```text
+implementation-readiness-audit.zh.md
+```
+
+该审计已经确认：第一版 v0.9.1 证据以 E2E-local result directory 为权威，
+backend operation log 只能作为补充 evidence，不能替代逐 step recorder。
+
 ## Task 2：complete suite blocked result exporter
 
 候选文件：

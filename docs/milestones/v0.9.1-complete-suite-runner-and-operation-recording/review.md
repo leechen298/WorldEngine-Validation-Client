@@ -50,3 +50,30 @@ Reason: this pass only creates the implementation package documents.
 - Scope review:
   - Docs-only package draft. No runtime/API/UI/test code changed.
   - Implementation remains unauthorized until user explicitly approves.
+
+### Test Plan Completion Audit
+
+- Files:
+  - `implementation-readiness-audit.zh.md`
+  - `implementation-readiness-audit.md`
+  - `README.zh.md`
+  - `README.md`
+  - `plan.zh.md`
+  - `plan.md`
+  - `implementation-task-plan.zh.md`
+  - `implementation-task-plan.md`
+- Review result:
+  - Current reusable code surfaces identified.
+  - Missing v0.9.1 runner and recorder capabilities identified.
+  - Implementation route clarified: E2E-local rich result directory first,
+    backend operation log as supplemental evidence only.
+  - Blocked-path closeout requirement clarified so evidence is preserved even
+    when WorldEngine is unreachable or a capability is missing.
+- Commands:
+  - `git diff --check`: `passed`
+  - `required v0.9.1 files non-empty check`: `passed`
+  - `rg -n 'implementation-readiness-audit|complete-worldengine-validation-suite|operation-log\.jsonl|api-log\.jsonl' ...`: `passed; hits are expected doc entries`
+  - `rg -n 'implementation_authorized: yes|external_validation_authorized: yes|provider_live_call_authorized: yes|WorldEngine PASS|最终.*PASS|status: pass' ...`: `passed; hits are constraint/verdict vocabulary only`
+- Scope review:
+  - Docs-only completion. No runtime/API/UI/test code changed.
+  - Implementation still remains unauthorized until explicit approval.

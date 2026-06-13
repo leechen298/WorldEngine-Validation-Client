@@ -75,6 +75,7 @@ scenario-assertion-matrix.zh.md
 result-directory-contract.zh.md
 validation.zh.md
 agent-execution-handoff.zh.md
+implementation-readiness-audit.zh.md
 ```
 
 这些文件合起来定义：
@@ -84,6 +85,7 @@ agent-execution-handoff.zh.md
 - result directory schema。
 - PASS/PARTIAL/BLOCKED/FAIL 规则。
 - 实现聊天和自主验证聊天可直接使用的 prompt。
+- 当前代码可复用点、缺口和实现落地路线。
 
 ## 入口文档
 
@@ -104,4 +106,5 @@ scenario-assertion-matrix.zh.md
 result-directory-contract.zh.md
 validation.zh.md
 agent-execution-handoff.zh.md
+implementation-readiness-audit.zh.md
 ```

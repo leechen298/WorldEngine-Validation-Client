@@ -46,6 +46,10 @@ WorldEngine version / manifest / capabilities，但不把 WorldEngine 迭代号�
 每阶段可以 `pass`、`fail`、`blocked`、`not_run`。前阶段 blocked 不允许后阶段伪造
 pass。阶段内的 L0-L8 分层定义见 `phased-validation-plan.zh.md`。
 
+Agent 自主测试必须使用 `agent-autonomous-operation-script.zh.md` 中的逐步操作脚本，
+并按 `operation-recording-contract.zh.md` 保存每一步操作记录、API 摘要、截图、
+console log 和 transcript。
+
 ## 当前判断
 
 当前客户端方向正确，但现有 v0.8 flow 还不是完整验证 suite：
@@ -61,7 +65,8 @@ pass。阶段内的 L0-L8 分层定义见 `phased-validation-plan.zh.md`。
 - 定义完整验证 suite 的 product contract。
 - 输出完整分阶段验证文档。
 - 更新客户端路由、roadmap 和验证入口。
-- 定义 scenario matrix、artifact contract、phased runbook、后续实现约束。
+- 定义 scenario matrix、artifact contract、phased runbook、Agent 自主操作脚本、
+  操作记录契约和后续实现约束。
 
 ## 非目标
 
@@ -75,5 +80,7 @@ pass。阶段内的 L0-L8 分层定义见 `phased-validation-plan.zh.md`。
 
 - 后续 Agent 能使用本 milestone 直接实现或执行完整验证 suite。
 - Validation Client 可以按 `phased-validation-plan.zh.md` 分阶段跑用例。
+- Agent 自主测试有明确到按钮、输入、下载和截图的操作步骤。
+- 每个操作的详细记录要求可由 `operation-recording-contract.zh.md` 验证。
 - 文档不再暗示 Validation Client 要跟随 WorldEngine 每个迭代生成验证计划。
 - 当前缺口清楚落到客户端 suite 能力，而不是 WorldEngine 版本命名。

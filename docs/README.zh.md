@@ -120,6 +120,10 @@ docs/
       phased-validation-plan.md
       phased-validation-runbook.zh.md
       phased-validation-runbook.md
+      agent-autonomous-operation-script.zh.md
+      agent-autonomous-operation-script.md
+      operation-recording-contract.zh.md
+      operation-recording-contract.md
       scenario-matrix.zh.md
       scenario-matrix.md
       artifact-contract.zh.md
@@ -242,6 +246,8 @@ docs/milestones/v0.9-complete-worldengine-validation-suite/README.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/gap-analysis.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-plan.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-runbook.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/agent-autonomous-operation-script.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/operation-recording-contract.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/scenario-matrix.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/artifact-contract.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/plan.zh.md

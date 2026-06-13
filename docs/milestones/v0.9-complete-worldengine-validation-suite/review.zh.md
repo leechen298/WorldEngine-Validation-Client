@@ -75,6 +75,42 @@ git diff --check -> passed
 - P2：当前客户端实现仍未完成完整 suite，需要后续实现。
 - P3：旧 v0.8 文档保留为历史，后续实现时要避免把它当 active flow。
 
+## 补充记录：Agent 自主测试操作脚本和记录契约
+
+用户要求 Agent 自主测试必须包含具体操作步骤，例如点击哪个按钮、输入哪些内容，
+并且保存每个操作的完整详细记录。本轮补齐：
+
+```text
+agent-autonomous-operation-script.zh.md
+agent-autonomous-operation-script.md
+operation-recording-contract.zh.md
+operation-recording-contract.md
+```
+
+同步更新：
+
+```text
+README.zh.md / README.md
+phased-validation-runbook.zh.md / phased-validation-runbook.md
+artifact-contract.zh.md / artifact-contract.md
+plan.zh.md / plan.md
+implementation-task-plan.zh.md / implementation-task-plan.md
+docs/README.zh.md
+docs/agent-guides/routing.zh.md
+docs/agent-guides/routing.md
+```
+
+补充后的文档要求：
+
+- Agent 自主测试必须按 `step_id` 执行 Phase 1-4。
+- 每一步明确 UI target、按钮、输入、下载、截图和 blocked 行为。
+- `operation-log.jsonl` 记录每个 UI 操作。
+- `api-log.jsonl` 记录每个 API 请求/响应摘要。
+- `console.log`、`transcript.md` 和 `screenshots/` 是 Phase 4 PASS 必需证据。
+- direct API harvest 不能伪装成用户点击。
+
+本补充仍是 docs-only，没有实现 `complete-worldengine-validation-suite.spec.ts`。
+
 ## Task Records
 
 ### Task 1：路由和产品口径修正

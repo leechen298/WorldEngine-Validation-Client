@@ -79,6 +79,46 @@ Reason: this pass only updates documentation scope and routing.
 - P3: old v0.8 docs remain historical and must not be treated as the active
   flow during later implementation.
 
+## Addendum: Agent Autonomous Operation Script And Recording Contract
+
+The user required Agent autonomous testing to include concrete operation steps,
+such as which button to click and what text to enter, and to preserve complete
+detailed records for every operation. This pass added:
+
+```text
+agent-autonomous-operation-script.zh.md
+agent-autonomous-operation-script.md
+operation-recording-contract.zh.md
+operation-recording-contract.md
+```
+
+Also updated:
+
+```text
+README.zh.md / README.md
+phased-validation-runbook.zh.md / phased-validation-runbook.md
+artifact-contract.zh.md / artifact-contract.md
+plan.zh.md / plan.md
+implementation-task-plan.zh.md / implementation-task-plan.md
+docs/README.zh.md
+docs/agent-guides/routing.zh.md
+docs/agent-guides/routing.md
+```
+
+The updated docs require:
+
+- Agent autonomous validation to execute Phase 1-4 by `step_id`.
+- Each step to define UI target, button, input, download, screenshot, and
+  blocked behavior.
+- `operation-log.jsonl` to record every UI operation.
+- `api-log.jsonl` to record every API request/response summary.
+- `console.log`, `transcript.md`, and `screenshots/` as required Phase 4 PASS
+  evidence.
+- Direct API harvest must not be disguised as a user click.
+
+This remains docs-only. It does not implement
+`complete-worldengine-validation-suite.spec.ts`.
+
 ## Task Records
 
 ### Task 1: Routing And Product Framing

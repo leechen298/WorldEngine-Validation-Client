@@ -8,6 +8,10 @@ Codex Agent 或人工验证者按阶段执行。每个阶段结束后都可以�
 
 不要跳过前置阶段。如果前置阶段 blocked，后续阶段只能 `not_run` 或 `blocked`。
 
+本文件只描述阶段顺序。Agent 自主测试必须按
+`agent-autonomous-operation-script.zh.md` 执行具体按钮点击、输入、下载、截图和
+closeout 步骤，并按 `operation-recording-contract.zh.md` 保存逐操作记录。
+
 ## Phase 1 Runbook
 
 1. 启动或连接 WorldEngine。
@@ -55,12 +59,21 @@ Codex Agent 或人工验证者按阶段执行。每个阶段结束后都可以�
 
 每阶段都必须记录：
 
-- 操作是否执行。
+- 每个具体操作是否执行，且必须能回溯到 operation script 的 `step_id`。
 - artifact 是否生成。
 - forbidden operation 是否触犯。
 - redaction 是否通过。
 - PASS 来源。
 - blocked/fail taxonomy。
+
+完整记录最低包括：
+
+- `operation-log.jsonl`：逐 UI 操作记录。
+- `api-log.jsonl`：逐 API 请求/响应摘要。
+- `api-summary.json`：按阶段聚合 API 状态。
+- `console.log`：浏览器和前端公开错误摘要。
+- `transcript.md`：Agent 自主执行叙事记录。
+- `screenshots/`：每阶段截图和关键 before/after 截图。
 
 ## Stop Rules
 
@@ -68,3 +81,5 @@ Codex Agent 或人工验证者按阶段执行。每个阶段结束后都可以�
 - UI smoke 不能作为完整 PASS。
 - 客户端不能直接调用 provider。
 - 客户端不能生成权威世界事实。
+- 缺少任一已执行操作的 `operation-log.jsonl` 记录时，最终不能 PASS。
+- direct API harvest 不能写成用户点击，必须进入 `api-log.jsonl`。

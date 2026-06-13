@@ -28,6 +28,8 @@ docs/agent-guides/routing.zh.md
 ```text
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-plan.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-runbook.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/agent-autonomous-operation-script.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/operation-recording-contract.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/scenario-matrix.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/artifact-contract.zh.md
 ```
@@ -38,6 +40,9 @@ docs/milestones/v0.9-complete-worldengine-validation-suite/artifact-contract.zh.
 - 定义 Phase 1-4 分阶段验证。
 - 定义 L0-L8 分层和阶段映射。
 - 定义 required artifacts、compatibility artifacts 和 redaction rules。
+- 定义 Agent 自主测试的具体 UI 操作步骤，包括按钮、输入、下载和截图。
+- 定义逐操作记录契约，包括 `operation-log.jsonl`、`api-log.jsonl`、`console.log`、
+  `transcript.md` 和 screenshots。
 
 ## Task 3：后续实现约束文档
 

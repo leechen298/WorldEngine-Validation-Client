@@ -36,11 +36,16 @@
 ### Future Task 5：E2E 和 autonomous runbook
 
 - 新增 `complete-worldengine-validation-suite.spec.ts`。
-- 记录 Codex Agent 操作流程。
+- 按 `agent-autonomous-operation-script.zh.md` 实现 Phase 1-4 的 UI 操作流程。
+- 每个 Playwright action 都要生成对应 `operation-log.jsonl` entry。
+- 所有 API request/response 摘要都要生成 `api-log.jsonl` entry。
+- 每阶段保存截图，最终保存 `console.log`、`transcript.md` 和完整 result directory。
+- 如果控件缺失或 capability 不支持，写 blocked artifact，不能静默跳过。
 
 ## Done Criteria
 
 - 完整 suite 可以运行到 PASS / PARTIAL / BLOCKED / FAIL 之一。
 - 所有层级都有明确 evidence 或 blocked 原因。
 - 没有把 UI smoke 当 WorldEngine PASS。
+- 每个 Agent 操作都有详细完整记录。
 - 没有 provider key、raw prompt、raw response、private memory、raw thought 泄露。

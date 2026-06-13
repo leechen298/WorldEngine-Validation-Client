@@ -28,6 +28,8 @@ Candidate files:
 ```text
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-plan.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/phased-validation-runbook.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/agent-autonomous-operation-script.zh.md
+docs/milestones/v0.9-complete-worldengine-validation-suite/operation-recording-contract.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/scenario-matrix.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/artifact-contract.zh.md
 ```
@@ -38,6 +40,10 @@ Requirements:
 - Define Phase 1-4 validation.
 - Define L0-L8 layers and phase mapping.
 - Define required artifacts, compatibility artifacts, and redaction rules.
+- Define concrete Agent autonomous UI steps, including buttons, inputs,
+  downloads, and screenshots.
+- Define the per-operation recording contract for `operation-log.jsonl`,
+  `api-log.jsonl`, `console.log`, `transcript.md`, and screenshots.
 
 ## Task 3: Future Implementation Constraints
 

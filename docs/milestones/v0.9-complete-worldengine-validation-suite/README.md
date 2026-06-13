@@ -33,3 +33,7 @@ discovery, not the organizing structure of the client validation suite.
 Each phase can be `pass`, `fail`, `blocked`, or `not_run`. Earlier blockers
 must not be converted into later PASS claims. Detailed L0-L8 layer rules live
 in `phased-validation-plan.md`.
+
+Agent autonomous validation must use `agent-autonomous-operation-script.md` for
+button-level UI steps and `operation-recording-contract.md` for operation
+logs, API logs, screenshots, console logs, and transcripts.

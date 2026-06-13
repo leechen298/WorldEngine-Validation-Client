@@ -159,3 +159,28 @@ capability 只是本次运行的被测对象状态；客户端验证结构保持
 
 v0.9 的完整验证 suite 可以逐层 `pass`、`fail`、`blocked` 或 `not_run`。最终 PASS
 仍由 WorldEngine checker/scorecard、redaction PASS 和 second-Agent review 支持。
+
+## v0.9.1 Complete Suite Runner And Operation Recording
+
+目标：把 v0.9 的完整验证方案变成可执行 runner，并确保 Agent 自主测试保存每一步
+完整操作记录。
+
+范围：
+
+- `complete-worldengine-validation-suite` E2E runner。
+- 按 v0.9 operation script 执行 Phase 1-4。
+- `operation-log.jsonl` 记录每个 UI 操作。
+- `api-log.jsonl` / `api-summary.json` 记录每个 API 摘要。
+- `console.log`、`transcript.md`、`screenshots/` 和完整 result directory。
+- WorldEngine 不可达或 capability 缺失时输出 structured `BLOCKED`，不伪造 PASS。
+- 第二 Agent 只读复核输入和 result directory schema。
+
+非目标：
+
+- 不调用 LLM provider。
+- 不管理 provider key。
+- 不生成 WorldEngine 权威事实。
+- 不修补 WorldEngine 缺失 capability。
+
+v0.9.1 的测试通过只证明 Validation Client 的完整验证执行和证据承载能力。WorldEngine
+是否 PASS 仍由 WorldEngine checker/scorecard 和第二 Agent review 决定。

@@ -136,6 +136,25 @@ docs/
       validation.md
       review.zh.md
       review.md
+    v0.9.1-complete-suite-runner-and-operation-recording/
+      README.zh.md
+      README.md
+      plan.zh.md
+      plan.md
+      implementation-task-plan.zh.md
+      implementation-task-plan.md
+      test-plan.zh.md
+      test-plan.md
+      scenario-assertion-matrix.zh.md
+      scenario-assertion-matrix.md
+      result-directory-contract.zh.md
+      result-directory-contract.md
+      validation.zh.md
+      validation.md
+      agent-execution-handoff.zh.md
+      agent-execution-handoff.md
+      review.zh.md
+      review.md
   agent-guides/
     routing.zh.md
     workflow.zh.md
@@ -196,6 +215,7 @@ docs/
 自主验证 v0.8
 开发 v0.9
 自主验证 v0.9
+开发 v0.9.1
 ```
 
 Agent 应先读取对应 milestone：
@@ -254,6 +274,20 @@ docs/milestones/v0.9-complete-worldengine-validation-suite/plan.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/implementation-task-plan.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/validation.zh.md
 docs/milestones/v0.9-complete-worldengine-validation-suite/review.zh.md
+```
+
+v0.9.1 完整 suite runner 和操作记录测试方案入口：
+
+```text
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/README.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/plan.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/implementation-task-plan.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/test-plan.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/scenario-assertion-matrix.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/result-directory-contract.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/validation.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/agent-execution-handoff.zh.md
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md
 ```
 
 ## 流程原则

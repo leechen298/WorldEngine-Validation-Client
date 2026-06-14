@@ -2,7 +2,7 @@
 
 英文镜像：`review.md`。
 
-状态：implementation authorized / ready for code implementation
+状态：implementation in progress / Task 1 implemented
 
 ## 当前状态
 
@@ -19,19 +19,20 @@ E2E runner。
 - 第二 Agent 只读复核清单。
 - 后续实现/验证聊天 prompt。
 
-当前已授权实现：
+当前已授权实现，且 Task 1 已进入实现记录：
 
 ```text
 implementation_authorized: yes
 ```
 
-## 未运行
+## 历史未运行记录
 
 - 未运行代码测试。
 - 未启动服务。
 - 未运行 E2E。
 
-原因：本轮只记录用户对实现阶段的授权，未修改 runtime/API/UI/test code。
+原因：Implementation Authorization 记录当轮只记录用户对实现阶段的授权，未修改
+runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Records。
 
 ## Task Records
 
@@ -104,3 +105,26 @@ implementation_authorized: yes
   - Authorization-only docs update. No runtime/API/UI/test code changed.
   - External validation and provider live calls remain unauthorized.
   - Next development chat may begin `plan.zh.md` Task 1.
+
+### Task 1: E2E operation recorder
+
+- Commit: Task 1 implementation commit in this work session
+- Files:
+  - `apps/web/e2e/support/operationRecorder.ts`
+  - `apps/web/src/__tests__/operationRecorder.test.ts`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `RED failed as expected because ../../e2e/support/operationRecorder did not exist`
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `passed; 4 tests`
+  - `git diff --check`: `passed`
+- Scope review:
+  - Added an E2E-local operation recorder helper for `operation-log.jsonl`,
+    `api-log.jsonl`, `api-summary.json`, transcript writing, screenshot operation
+    recording, API ref aggregation, and blocking-marker redaction scanning.
+  - Added focused Vitest coverage for contract-shaped UI operation records,
+    blocked operation records, API summary aggregation, transcript output, and
+    blocking marker detection.
+- Notes:
+  - No external validation or provider live call was run.
+  - Task 2 has not started.

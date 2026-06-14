@@ -2,7 +2,7 @@
 
 Chinese mirror: `review.zh.md`.
 
-Status: implementation authorized / ready for code implementation
+Status: implementation in progress / Task 1 implemented
 
 ## Current State
 
@@ -13,20 +13,21 @@ It also completes the test plan for E2E layers, Agent autonomous per-step
 assertions, operation/API records, result-directory schema, verdict rules,
 second-Agent review, and copy-ready handoff prompts.
 
-Implementation is now authorized:
+Implementation is authorized, and Task 1 now has an implementation record:
 
 ```text
 implementation_authorized: yes
 ```
 
-## Not Run
+## Historical Not Run Record
 
 - Code tests.
 - Services.
 - E2E.
 
-Reason: this pass records implementation authorization only. No runtime/API/UI/test
-code was changed.
+Reason: the Implementation Authorization record only captured user authorization
+for implementation. No runtime/API/UI/test code was changed in that pass. Current
+Task 1 verification is recorded in Task Records below.
 
 ## Task Records
 
@@ -99,3 +100,26 @@ code was changed.
   - Authorization-only docs update. No runtime/API/UI/test code changed.
   - External validation and provider live calls remain unauthorized.
   - Next development chat may begin `plan.zh.md` Task 1.
+
+### Task 1: E2E operation recorder
+
+- Commit: Task 1 implementation commit in this work session
+- Files:
+  - `apps/web/e2e/support/operationRecorder.ts`
+  - `apps/web/src/__tests__/operationRecorder.test.ts`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `RED failed as expected because ../../e2e/support/operationRecorder did not exist`
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `passed; 4 tests`
+  - `git diff --check`: `passed`
+- Scope review:
+  - Added an E2E-local operation recorder helper for `operation-log.jsonl`,
+    `api-log.jsonl`, `api-summary.json`, transcript writing, screenshot operation
+    recording, API ref aggregation, and blocking-marker redaction scanning.
+  - Added focused Vitest coverage for contract-shaped UI operation records,
+    blocked operation records, API summary aggregation, transcript output, and
+    blocking marker detection.
+- Notes:
+  - No external validation or provider live call was run.
+  - Task 2 has not started.

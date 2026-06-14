@@ -236,12 +236,13 @@ And:
 
 ## Implementation Authorization Status
 
-Current status remains:
+The user explicitly authorized implementation on 2026-06-14:
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
-This audit only completes the test plan and implementation route. It does not
-modify runtime, API, UI, or test code.
-
+This audit only completed the test plan and implementation route. Future
+development chats may implement runtime/API/UI/test code by following
+`plan.zh.md` Task 1-4. External validation and provider live calls remain
+unauthorized.

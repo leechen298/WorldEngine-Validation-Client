@@ -220,11 +220,11 @@ validation-runs/<timestamp>-complete-worldengine-validation-suite/
 
 ## 实现授权状态
 
-当前仍是：
+当前已由用户在 2026-06-14 明确授权进入实现：
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
-本审计只补完整测试方案和实现路线，不改 runtime/API/UI/test 代码。
-
+本审计只补完整测试方案和实现路线；后续开发聊天可以按 `plan.zh.md` Task 1-4
+实现 runtime/API/UI/test code。external validation 和 provider live call 仍未授权。

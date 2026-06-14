@@ -4,14 +4,13 @@
 
 ## 执行边界
 
-本包是实现包，但当前仍未授权：
+本包是实现包，当前已由用户在 2026-06-14 明确授权进入实现：
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
-收到明确授权后，按 `plan.zh.md` 的 Task 1-4 顺序执行，每个 task 独立验证、独立
-commit。
+按 `plan.zh.md` 的 Task 1-4 顺序执行，每个 task 独立验证、独立 commit。
 
 ## RED/GREEN 要求
 

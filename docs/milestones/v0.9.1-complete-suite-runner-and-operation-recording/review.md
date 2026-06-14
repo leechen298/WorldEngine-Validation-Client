@@ -2,7 +2,7 @@
 
 Chinese mirror: `review.zh.md`.
 
-Status: drafted / pending authorization
+Status: implementation authorized / ready for code implementation
 
 ## Current State
 
@@ -13,10 +13,10 @@ It also completes the test plan for E2E layers, Agent autonomous per-step
 assertions, operation/API records, result-directory schema, verdict rules,
 second-Agent review, and copy-ready handoff prompts.
 
-Implementation is not yet authorized:
+Implementation is now authorized:
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
 ## Not Run
@@ -25,7 +25,8 @@ implementation_authorized: no
 - Services.
 - E2E.
 
-Reason: this pass only creates the implementation package documents.
+Reason: this pass records implementation authorization only. No runtime/API/UI/test
+code was changed.
 
 ## Task Records
 
@@ -49,7 +50,8 @@ Reason: this pass only creates the implementation package documents.
   - `git diff --check`: `passed`
 - Scope review:
   - Docs-only package draft. No runtime/API/UI/test code changed.
-  - Implementation remains unauthorized until user explicitly approves.
+  - Historical note: implementation was unauthorized at draft time; superseded
+    by the 2026-06-14 authorization record below.
 
 ### Test Plan Completion Audit
 
@@ -76,4 +78,24 @@ Reason: this pass only creates the implementation package documents.
   - `rg -n 'implementation_authorized: yes|external_validation_authorized: yes|provider_live_call_authorized: yes|WorldEngine PASS|最终.*PASS|status: pass' ...`: `passed; hits are constraint/verdict vocabulary only`
 - Scope review:
   - Docs-only completion. No runtime/API/UI/test code changed.
-  - Implementation still remains unauthorized until explicit approval.
+  - Historical note: implementation was unauthorized at audit time; superseded
+    by the 2026-06-14 authorization record below.
+
+### Implementation Authorization
+
+- Authorization: user explicitly approved
+  `Validation Client v0.9.1-complete-suite-runner-and-operation-recording` for
+  implementation on 2026-06-14.
+- Files:
+  - `README.zh.md`
+  - `README.md`
+  - `review.zh.md`
+  - `review.md`
+- Commands:
+  - `git diff --check`: `passed`
+  - `unauthorized residue scan`: `passed; no current unauthorized marker remains`
+  - `authorization field scan`: `passed; implementation authorization and external/provider boundaries are present`
+- Scope review:
+  - Authorization-only docs update. No runtime/API/UI/test code changed.
+  - External validation and provider live calls remain unauthorized.
+  - Next development chat may begin `plan.zh.md` Task 1.

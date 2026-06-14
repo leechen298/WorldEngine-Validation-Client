@@ -2,10 +2,15 @@
 
 Chinese mirror: `README.zh.md`.
 
-Status: implementation package drafted / ready for user approval
-implementation_authorized: no
+Status: implementation authorized / ready for code implementation
+implementation_authorized: yes
 external_validation_authorized: no
 provider_live_call_authorized: no
+
+Authorization record: the user explicitly approved this package for
+implementation on 2026-06-14. Future development chats may start code
+implementation by following `plan.zh.md` Task 1-4; external validation and
+provider live calls remain unauthorized.
 
 ## Goal
 

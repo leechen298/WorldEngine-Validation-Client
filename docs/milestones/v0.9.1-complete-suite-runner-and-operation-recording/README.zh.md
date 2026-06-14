@@ -2,10 +2,14 @@
 
 英文镜像：`README.md`。
 
-状态：implementation package drafted / ready for user approval
-implementation_authorized: no
+状态：implementation authorized / ready for code implementation
+implementation_authorized: yes
 external_validation_authorized: no
 provider_live_call_authorized: no
+
+授权记录：用户已在 2026-06-14 明确批准本包进入实现。后续开发聊天可以按
+`plan.zh.md` Task 1-4 开始代码实现；仍不授权 external validation 或 provider live
+call。
 
 ## 目标
 

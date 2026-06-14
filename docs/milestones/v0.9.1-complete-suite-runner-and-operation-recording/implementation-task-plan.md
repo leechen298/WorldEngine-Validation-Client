@@ -4,14 +4,15 @@ Chinese mirror: `implementation-task-plan.zh.md`.
 
 ## Boundary
 
-This is an implementation package, but it is not yet authorized:
+This is an implementation package, and the user explicitly authorized
+implementation on 2026-06-14:
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
-After explicit approval, execute Task 1-4 from `plan.zh.md` in order. Each task
-needs focused verification and a task-scoped commit.
+Execute Task 1-4 from `plan.zh.md` in order. Each task needs focused
+verification and a task-scoped commit.
 
 ## RED/GREEN Requirements
 

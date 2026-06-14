@@ -2,7 +2,7 @@
 
 英文镜像：`review.md`。
 
-状态：drafted / pending authorization
+状态：implementation authorized / ready for code implementation
 
 ## 当前状态
 
@@ -19,10 +19,10 @@ E2E runner。
 - 第二 Agent 只读复核清单。
 - 后续实现/验证聊天 prompt。
 
-当前未授权实现：
+当前已授权实现：
 
 ```text
-implementation_authorized: no
+implementation_authorized: yes
 ```
 
 ## 未运行
@@ -31,7 +31,7 @@ implementation_authorized: no
 - 未启动服务。
 - 未运行 E2E。
 
-原因：当前只创建实现包文档。
+原因：本轮只记录用户对实现阶段的授权，未修改 runtime/API/UI/test code。
 
 ## Task Records
 
@@ -55,7 +55,8 @@ implementation_authorized: no
   - `git diff --check`: `passed`
 - Scope review:
   - Docs-only package draft. No runtime/API/UI/test code changed.
-  - Implementation remains unauthorized until user explicitly approves.
+  - Historical note: implementation was unauthorized at draft time; superseded
+    by the 2026-06-14 authorization record below.
 
 ### Test Plan Completion Audit
 
@@ -82,4 +83,24 @@ implementation_authorized: no
   - `rg -n 'implementation_authorized: yes|external_validation_authorized: yes|provider_live_call_authorized: yes|WorldEngine PASS|最终.*PASS|status: pass' ...`: `passed; hits are constraint/verdict vocabulary only`
 - Scope review:
   - Docs-only completion. No runtime/API/UI/test code changed.
-  - Implementation still remains unauthorized until explicit approval.
+  - Historical note: implementation was unauthorized at audit time; superseded
+    by the 2026-06-14 authorization record below.
+
+### Implementation Authorization
+
+- Authorization: user explicitly approved
+  `Validation Client v0.9.1-complete-suite-runner-and-operation-recording` for
+  implementation on 2026-06-14.
+- Files:
+  - `README.zh.md`
+  - `README.md`
+  - `review.zh.md`
+  - `review.md`
+- Commands:
+  - `git diff --check`: `passed`
+  - `unauthorized residue scan`: `passed; no current unauthorized marker remains`
+  - `authorization field scan`: `passed; implementation authorization and external/provider boundaries are present`
+- Scope review:
+  - Authorization-only docs update. No runtime/API/UI/test code changed.
+  - External validation and provider live calls remain unauthorized.
+  - Next development chat may begin `plan.zh.md` Task 1.

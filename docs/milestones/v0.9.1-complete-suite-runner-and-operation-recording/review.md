@@ -2,22 +2,27 @@
 
 Chinese mirror: `review.zh.md`.
 
-Status: implementation in progress / Task 3 implemented
+Status: implementation complete / Validation Client runner checks passed
 
 ## Current State
 
-This package is drafted to implement the v0.9 Agent autonomous operation script
-and operation recording contract as an executable E2E runner.
+This package implements the v0.9 Agent autonomous operation script and operation
+recording contract as an executable E2E blocked-path runner, with E2E-local
+result directory generation.
 
 It also completes the test plan for E2E layers, Agent autonomous per-step
 assertions, operation/API records, result-directory schema, verdict rules,
 second-Agent review, and copy-ready handoff prompts.
 
-Implementation is authorized, and Task 1-3 now have implementation records:
+Implementation is authorized, and Task 1-4 now have implementation records:
 
 ```text
 implementation_authorized: yes
 ```
+
+This package currently proves the Validation Client complete suite runner,
+operation/API recording, and blocked-evidence carrying capability. The current
+E2E output is structured `BLOCKED` evidence; it does not claim WorldEngine PASS.
 
 ## Historical Not Run Record
 
@@ -103,7 +108,7 @@ Task 1 verification is recorded in Task Records below.
 
 ### Task 1: E2E operation recorder
 
-- Commit: Task 1 implementation commit in this work session
+- Commit: `f637d22`
 - Files:
   - `apps/web/e2e/support/operationRecorder.ts`
   - `apps/web/src/__tests__/operationRecorder.test.ts`
@@ -122,11 +127,11 @@ Task 1 verification is recorded in Task Records below.
     blocking marker detection.
 - Notes:
   - No external validation or provider live call was run.
-  - Task 2 has not started.
+  - Task 2 was completed in a later task commit.
 
 ### Task 2: complete suite blocked result exporter
 
-- Commit: Task 2 implementation commit in this work session
+- Commit: `5d9d87a`
 - Files:
   - `apps/web/e2e/support/completeSuiteResult.ts`
   - `apps/web/src/__tests__/completeSuiteResult.test.ts`
@@ -146,11 +151,11 @@ Task 1 verification is recorded in Task Records below.
     failure, and coverage matrix step mapping.
 - Notes:
   - No external validation or provider live call was run.
-  - Task 3 has not started.
+  - Task 3 was completed in a later task commit.
 
 ### Task 3: complete-worldengine-validation-suite E2E runner
 
-- Commit: Task 3 implementation commit in this work session
+- Commit: `3bc6bc7`
 - Files:
   - `apps/web/e2e/complete-worldengine-validation-suite.spec.ts`
   - `apps/web/e2e/support/operationRecorder.ts`
@@ -177,4 +182,28 @@ Task 1 verification is recorded in Task Records below.
 - Notes:
   - The current E2E result is `BLOCKED` evidence, not WorldEngine PASS.
   - No provider live call was run.
-  - Task 4 has not started.
+  - Task 4 closeout was completed in a later docs commit.
+
+### Task 4: docs/review closeout
+
+- Commit: Task 4 closeout commit in this work session
+- Files:
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `passed; 4 tests`
+  - `pnpm --dir apps/web test src/__tests__/completeSuiteResult.test.ts`: `passed; 5 tests`
+  - `pnpm --dir apps/web test:e2e -- --grep "complete-worldengine-validation-suite"`: `passed; 1 Playwright test`
+  - `pnpm --dir apps/web test`: `passed; 36 tests; existing React act(...) warnings printed by RuntimeConsole tests`
+  - `pnpm --dir apps/web build`: `passed`
+  - `git diff --check`: `passed`
+  - `rg -n "v0\\.9\\.1|complete-worldengine-validation-suite" docs/README.zh.md docs/agent-guides docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording`: `passed`
+- Scope review:
+  - Recorded Task 1-3 implementation commits and final required command results.
+  - Confirmed routing already points `develop v0.9.1` to this package.
+  - Did not claim WorldEngine PASS; the current runner result remains structured
+    `BLOCKED` evidence unless a real WorldEngine checker/scorecard and second
+    Agent review later support PASS.
+- Notes:
+  - No external validation beyond the local Playwright blocked-path E2E was run.
+  - No provider live call was run.

@@ -2,12 +2,12 @@
 
 英文镜像：`review.md`。
 
-状态：implementation in progress / Task 3 implemented
+状态：implementation complete / Validation Client runner checks passed
 
 ## 当前状态
 
-本包已起草，用于把 v0.9 的 Agent 自主测试操作脚本和操作记录契约实现为可执行
-E2E runner。
+本包已把 v0.9 的 Agent 自主测试操作脚本和操作记录契约实现为可执行 E2E
+blocked-path runner，并补齐 E2E-local result directory 生成能力。
 
 本包同时补齐完整测试方案，覆盖：
 
@@ -19,11 +19,15 @@ E2E runner。
 - 第二 Agent 只读复核清单。
 - 后续实现/验证聊天 prompt。
 
-当前已授权实现，且 Task 1-3 已进入实现记录：
+当前已授权实现，且 Task 1-4 已进入实现记录：
 
 ```text
 implementation_authorized: yes
 ```
+
+本包当前只能证明 Validation Client 的完整 suite runner、operation/API 记录和
+blocked evidence 承载能力。当前 E2E 输出为 structured `BLOCKED` evidence，不声明
+WorldEngine PASS。
 
 ## 历史未运行记录
 
@@ -108,7 +112,7 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
 
 ### Task 1: E2E operation recorder
 
-- Commit: Task 1 implementation commit in this work session
+- Commit: `f637d22`
 - Files:
   - `apps/web/e2e/support/operationRecorder.ts`
   - `apps/web/src/__tests__/operationRecorder.test.ts`
@@ -127,11 +131,11 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
     blocking marker detection.
 - Notes:
   - No external validation or provider live call was run.
-  - Task 2 has not started.
+  - Task 2 was completed in a later task commit.
 
 ### Task 2: complete suite blocked result exporter
 
-- Commit: Task 2 implementation commit in this work session
+- Commit: `5d9d87a`
 - Files:
   - `apps/web/e2e/support/completeSuiteResult.ts`
   - `apps/web/src/__tests__/completeSuiteResult.test.ts`
@@ -151,11 +155,11 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
     failure, and coverage matrix step mapping.
 - Notes:
   - No external validation or provider live call was run.
-  - Task 3 has not started.
+  - Task 3 was completed in a later task commit.
 
 ### Task 3: complete-worldengine-validation-suite E2E runner
 
-- Commit: Task 3 implementation commit in this work session
+- Commit: `3bc6bc7`
 - Files:
   - `apps/web/e2e/complete-worldengine-validation-suite.spec.ts`
   - `apps/web/e2e/support/operationRecorder.ts`
@@ -182,4 +186,28 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
 - Notes:
   - The current E2E result is `BLOCKED` evidence, not WorldEngine PASS.
   - No provider live call was run.
-  - Task 4 has not started.
+  - Task 4 closeout was completed in a later docs commit.
+
+### Task 4: docs/review closeout
+
+- Commit: Task 4 closeout commit in this work session
+- Files:
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `passed; 4 tests`
+  - `pnpm --dir apps/web test src/__tests__/completeSuiteResult.test.ts`: `passed; 5 tests`
+  - `pnpm --dir apps/web test:e2e -- --grep "complete-worldengine-validation-suite"`: `passed; 1 Playwright test`
+  - `pnpm --dir apps/web test`: `passed; 36 tests; existing React act(...) warnings printed by RuntimeConsole tests`
+  - `pnpm --dir apps/web build`: `passed`
+  - `git diff --check`: `passed`
+  - `rg -n "v0\\.9\\.1|complete-worldengine-validation-suite" docs/README.zh.md docs/agent-guides docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording`: `passed`
+- Scope review:
+  - Recorded Task 1-3 implementation commits and final required command results.
+  - Confirmed routing already points `开发 v0.9.1` to this package.
+  - Did not claim WorldEngine PASS; current runner result remains structured
+    `BLOCKED` evidence unless a real WorldEngine checker/scorecard and second
+    Agent review later support PASS.
+- Notes:
+  - No external validation beyond the local Playwright blocked-path E2E was run.
+  - No provider live call was run.

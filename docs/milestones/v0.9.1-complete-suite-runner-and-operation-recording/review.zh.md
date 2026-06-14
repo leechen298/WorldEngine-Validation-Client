@@ -2,7 +2,7 @@
 
 英文镜像：`review.md`。
 
-状态：implementation in progress / Task 2 implemented
+状态：implementation in progress / Task 3 implemented
 
 ## 当前状态
 
@@ -19,7 +19,7 @@ E2E runner。
 - 第二 Agent 只读复核清单。
 - 后续实现/验证聊天 prompt。
 
-当前已授权实现，且 Task 1-2 已进入实现记录：
+当前已授权实现，且 Task 1-3 已进入实现记录：
 
 ```text
 implementation_authorized: yes
@@ -152,3 +152,34 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
 - Notes:
   - No external validation or provider live call was run.
   - Task 3 has not started.
+
+### Task 3: complete-worldengine-validation-suite E2E runner
+
+- Commit: Task 3 implementation commit in this work session
+- Files:
+  - `apps/web/e2e/complete-worldengine-validation-suite.spec.ts`
+  - `apps/web/e2e/support/operationRecorder.ts`
+  - `apps/web/playwright.config.ts`
+  - `.gitignore`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test:e2e -- --grep "complete-worldengine-validation-suite"`: `sandbox blocked before test execution because uv cache access under /Users/leechen/.cache/uv was denied`
+  - `pnpm --dir apps/web test:e2e -- --grep "complete-worldengine-validation-suite"`: `RED failed as expected with complete-worldengine-validation-suite runner not implemented`
+  - `pnpm --dir apps/web test src/__tests__/operationRecorder.test.ts`: `passed; 4 tests`
+  - `pnpm --dir apps/web test:e2e -- --grep "complete-worldengine-validation-suite"`: `passed; 1 Playwright test`
+  - `git diff --check`: `passed`
+- Scope review:
+  - Added the `complete-worldengine-validation-suite` E2E runner blocked path.
+  - The runner opens the Validation Client UI, records `P1-01`, calls the public
+    Validation Client health endpoint for WorldEngine discovery, records `P1-02`
+    API evidence and blocked classification, and exports a structured result
+    directory with operation log, API log, API summary, console log, transcript,
+    screenshot status, coverage matrix, and `result.json`.
+  - Moved default Playwright output to the v0.9.1 milestone path and ignored that
+    generated artifact directory so E2E verification does not delete or dirty
+    tracked v0.8 artifacts.
+- Notes:
+  - The current E2E result is `BLOCKED` evidence, not WorldEngine PASS.
+  - No provider live call was run.
+  - Task 4 has not started.

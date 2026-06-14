@@ -23,3 +23,6 @@ dist/
 # Frontend build
 apps/web/node_modules/
 apps/web/dist/
+
+# Generated Playwright verification artifacts
+docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/validation-runs/playwright-artifacts/

@@ -264,6 +264,8 @@ export function createOperationRecorder(options: OperationRecorderOptions) {
     recordScreenshot,
     recordTranscript,
     writeTranscript: recordTranscript,
+    getOperationLog: () => operations,
+    getApiLog: () => apiCalls,
     writeAll,
   };
 }

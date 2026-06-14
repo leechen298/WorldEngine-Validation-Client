@@ -4,7 +4,7 @@ const webPort = Number(process.env.VALIDATION_CLIENT_WEB_PORT || 5173);
 const apiBase = process.env.VALIDATION_CLIENT_API_BASE || "http://127.0.0.1:8765";
 const outputDir =
   process.env.VALIDATION_CLIENT_E2E_OUTPUT_DIR ||
-  "../../docs/milestones/v0.8-worldengine-v0.9-validation-plan-optimization/validation-runs/playwright-artifacts";
+  "../../docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/validation-runs/playwright-artifacts";
 
 export default defineConfig({
   testDir: "./e2e",

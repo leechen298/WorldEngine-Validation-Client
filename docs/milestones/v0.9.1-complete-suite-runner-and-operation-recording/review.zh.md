@@ -2,7 +2,7 @@
 
 英文镜像：`review.md`。
 
-状态：implementation in progress / Task 1 implemented
+状态：implementation in progress / Task 2 implemented
 
 ## 当前状态
 
@@ -19,7 +19,7 @@ E2E runner。
 - 第二 Agent 只读复核清单。
 - 后续实现/验证聊天 prompt。
 
-当前已授权实现，且 Task 1 已进入实现记录：
+当前已授权实现，且 Task 1-2 已进入实现记录：
 
 ```text
 implementation_authorized: yes
@@ -128,3 +128,27 @@ runtime/API/UI/test code。Task 1 的当前会话验证记录见下方 Task Reco
 - Notes:
   - No external validation or provider live call was run.
   - Task 2 has not started.
+
+### Task 2: complete suite blocked result exporter
+
+- Commit: Task 2 implementation commit in this work session
+- Files:
+  - `apps/web/e2e/support/completeSuiteResult.ts`
+  - `apps/web/src/__tests__/completeSuiteResult.test.ts`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.zh.md`
+  - `docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/review.md`
+- Commands:
+  - `pnpm --dir apps/web test src/__tests__/completeSuiteResult.test.ts`: `RED failed as expected because ../../e2e/support/completeSuiteResult did not exist`
+  - `pnpm --dir apps/web test src/__tests__/completeSuiteResult.test.ts`: `passed; 5 tests`
+  - `git diff --check`: `passed`
+- Scope review:
+  - Added a suite result exporter for coverage matrix generation, API summary
+    placeholders, command matrix, compatibility artifacts, structured BLOCKED
+    result directories, phase-level blocked verdicts, redaction-forces-fail, and
+    missing-artifact PASS downgrade.
+  - Added focused Vitest coverage for WorldEngine unreachable blocked handoff,
+    missing capability phase blocked output, missing required artifacts, redaction
+    failure, and coverage matrix step mapping.
+- Notes:
+  - No external validation or provider live call was run.
+  - Task 3 has not started.

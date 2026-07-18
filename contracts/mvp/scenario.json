@@ -1,0 +1,35 @@
+{
+  "contract_version": "worldengine-godot-mvp-1",
+  "worldengine_contract_version": "engine-v1-mvp",
+  "state_variable": {
+    "key": "world_signal",
+    "initial": 0,
+    "minimum": -20,
+    "maximum": 20,
+    "step": 1
+  },
+  "initial_step_count": 2,
+  "post_feedback_step_count": 1,
+  "final_tick": 3,
+  "feedback_decision_mode": "feedback_adjusted_experience_policy",
+  "required_operations": [
+    {"label": "capabilities", "operation_id": "capabilities.read"},
+    {"label": "package_create", "operation_id": "world_packages.create"},
+    {"label": "package_repeat", "operation_id": "world_packages.create"},
+    {"label": "session_create", "operation_id": "sessions.create"},
+    {"label": "direction_accept", "operation_id": "directions.submit"},
+    {"label": "direction_reject", "operation_id": "directions.submit"},
+    {"label": "step", "operation_id": "sessions.step"},
+    {"label": "action", "operation_id": "actions.submit"},
+    {"label": "feedback", "operation_id": "feedback.submit"},
+    {"label": "step_after_feedback", "operation_id": "sessions.step"},
+    {"label": "events", "operation_id": "events.poll"},
+    {"label": "projection", "operation_id": "projection.read"},
+    {"label": "evidence", "operation_id": "evidence.export"}
+  ],
+  "required_frames": [
+    "initial.png",
+    "after-step.png",
+    "final.png"
+  ]
+}

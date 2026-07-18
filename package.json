@@ -4,7 +4,10 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "test:api": "uv run --project apps/api pytest -q",
+    "test:checker": "uv run --project checkers/mvp pytest -q checkers/mvp/tests",
+    "test:godot": "godot --headless --path executors/godot --script res://tests/test_contract.gd",
+    "run:mvp": "python3 scripts/run_mvp.py",
+    "test:api": "uv run --project apps/api pytest -q apps/api/tests",
     "test:web": "pnpm --dir apps/web test",
     "test": "pnpm run test:web && pnpm run test:api",
     "build:api": "echo \"No build step for FastAPI\"",

@@ -1,0 +1,27 @@
+[project]
+name = "worldengine-mvp-checker"
+version = "0.1.0"
+description = "Independent checker for the WorldEngine Godot MVP."
+requires-python = ">=3.9"
+dependencies = [
+  "Pillow>=11.0.0"
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0"
+]
+
+[project.scripts]
+worldengine-mvp-checker = "worldengine_mvp_checker:main"
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["worldengine_mvp_checker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

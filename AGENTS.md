@@ -1,102 +1,27 @@
 # AGENTS.md
 
-Guidance for Codex and other AI coding agents working in this repository.
+This repository is an external WorldEngine client and independent validator.
+The active goal is documented in `docs/current/MVP.zh.md`.
 
-Chinese mirror: `AGENTS.zh.md`.
+Historical milestone files under `docs/milestones/` are reference material.
+They do not require a new milestone package, task-by-task commits, or review
+records before implementation.
 
-## Project Role
+## Hard Boundaries
 
-`WorldEngine-Validation-Client` is an external validation and observation
-client for WorldEngine. It is a separate repository from WorldEngine and must
-not become a WorldEngine submodule, private test fixture, or implementation
-backdoor.
+1. Communicate with WorldEngine through public HTTP, OpenAPI, manifests, and
+   public evidence only. Never import WorldEngine source or read its storage.
+2. The Godot executor renders public projections and records raw execution
+   evidence. It must not write PASS/FAIL verdicts.
+3. The checker is a separate process, must not import executor code, and alone
+   owns the final verdict.
+4. This repository does not own LLM keys, authoritative world facts, private
+   Agent state, or provider traces.
+5. Preserve legacy Web/API code unless the active MVP requires a scoped
+   compatibility fix. Do not use legacy green E2E results as MVP PASS.
+6. Verify claims with commands run in the current work session.
+7. Preserve unrelated user changes and avoid destructive git operations.
 
-The client may communicate with WorldEngine only through public interfaces:
-
-- `WORLDENGINE_API_BASE`
-- public HTTP APIs
-- public schemas, manifests, and OpenAPI descriptions
-- public event, state, timeline, and evaluator outputs
-
-## Required Reading
-
-Before planning, implementing, reviewing, or completing milestone work, read:
-
-1. `docs/README.zh.md`
-2. `docs/roadmap.zh.md`
-3. `docs/specs/validation-client-design.zh.md`
-4. the active milestone `README.zh.md`
-5. the active milestone `plan.zh.md`
-6. the active milestone `implementation-task-plan.zh.md`, if that file exists
-7. the active milestone `cross-repo-validation-gate-matrix.zh.md`, if that file exists
-8. the active milestone `planning-readiness-checklist.zh.md`, if that file exists
-9. the active milestone `review.zh.md`
-10. relevant ADRs under `docs/adr/`
-11. `docs/agent-guides/routing.md`
-12. `docs/agent-guides/workflow.md`
-13. `docs/agent-guides/boundaries.md`
-
-For validation requests such as autonomous validation, Agent validation, or
-human validation, also read:
-
-14. the active milestone `validation.zh.md`
-15. `docs/agent-guides/validation-workflow.md`
-16. the active milestone `autonomous-validation-runbook.zh.md`, if it exists
-17. the active milestone `codex-run-report-template.zh.md`, if it exists
-18. the active milestone `agent-review-template.zh.md`, if it exists
-19. the active milestone `human-validation-template.zh.md`, if it exists
-
-For next-chat handoff, next-step, handoff, quickstart, or copy-ready `/goal`
-prompt requests, also read:
-
-20. the active milestone `planning-readiness-checklist.zh.md`, if it exists
-21. the active milestone `next-chat-quickstart.zh.md`, if it exists
-
-For the complete WorldEngine validation suite, the active milestone is:
-
-```text
-docs/milestones/v0.9-complete-worldengine-validation-suite/
-```
-
-## Short Router
-
-| User request | Route | Primary guide |
-| --- | --- | --- |
-| develop / implement / continue vX.Y | `docs/milestones/vX.Y-*/` | `docs/agent-guides/routing.md` |
-| plan / create docs / prepare vX.Y | create or update `docs/milestones/vX.Y-*/` | `docs/agent-guides/routing.md` |
-| review / audit / inspect vX.Y | matching milestone plus current git diff | `docs/agent-guides/workflow.md` |
-| change tech stack or architecture decision | `docs/adr/` | `docs/agent-guides/workflow.md` |
-| change product boundary or overall design | `docs/specs/validation-client-design.zh.md` | `docs/agent-guides/boundaries.md` |
-| autonomous / Agent validation vX.Y | matching milestone plus `validation.zh.md` | `docs/agent-guides/validation-workflow.md` |
-| human validation vX.Y | matching milestone, latest Codex run, and `validation.zh.md` | `docs/agent-guides/validation-workflow.md` |
-
-A trigger phrase is routing only. It does not authorize skipping milestone
-documents, task order, verification, review records, or task-level commits.
-
-## Non-Negotiable Execution Rules
-
-Detailed rules live in `docs/agent-guides/workflow.md`. The short version:
-
-- Execute milestone work strictly in `plan.zh.md` task order.
-- Work on only one numbered task at a time.
-- Do not start the next task until the current task is implemented, verified,
-  recorded in `review.zh.md`, and committed.
-- Every numbered task needs its own commit unless the user explicitly approves
-  combining tasks before implementation.
-- Do not mark a milestone complete while related implementation files remain
-  unstaged or uncommitted.
-- Do not claim a check passed unless it ran in the current work session.
-- Branches ending in `-local` are local-only working branches. Never push a
-  `*-local` branch; when sharing work, merge or replay its patch-equivalent
-  commits onto the matching non-local branch first, then push only that target
-  branch when the user explicitly requests a push.
-
-## Boundary Rules
-
-Detailed boundaries live in `docs/agent-guides/boundaries.md`.
-
-The validation client must not manage LLM keys, call LLM providers directly,
-generate authoritative world facts, import WorldEngine source code, or mutate
-Agent internal state. Timeline branches are modeled like code branches:
-reconstructable ticks or event points are commit points; branches are named
-world lines for naming, switching, replay, and continued progression.
+Implement complete vertical slices directly. Keep current decisions and
+evidence in `docs/current/MVP.zh.md`; detailed milestone documents and routine
+evaluator gates are optional.

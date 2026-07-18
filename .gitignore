@@ -7,6 +7,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
 .venv/
@@ -26,3 +27,8 @@ apps/web/dist/
 
 # Generated Playwright verification artifacts
 docs/milestones/v0.9.1-complete-suite-runner-and-operation-recording/validation-runs/playwright-artifacts/
+
+# Current MVP runtime artifacts
+.validation-state/
+validation-runs/
+executors/godot/.godot/
